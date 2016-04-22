@@ -1,0 +1,257 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>brian_tools &mdash; brian 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> brian
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/modules.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">brian</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>brian_tools</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for brian_tools</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># This file contains tools for the BRIAN routines to fit the stellar continuum and the </span>
+<span class="c1"># emission lines in an IFU data cube (i.e. MUSE).</span>
+<span class="c1">#</span>
+<span class="c1"># Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">signal</span> 
+ 
+ <span class="c1"># ----------------------------------------------------------------------------------------      </span>
+  
+<div class="viewcode-block" id="init_worker"><a class="viewcode-back" href="../modules/brian_tools.html#brian_tools.init_worker">[docs]</a><span class="k">def</span> <span class="nf">init_worker</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    THis function is designed to handle KeyboardInterrupt during multiprocessing.</span>
+<span class="sd">    See https://noswap.com/blog/python-multiprocessing-keyboardinterrupt</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">signal</span><span class="o">.</span><span class="n">SIG_IGN</span><span class="p">)</span></div>
+
+    
+<span class="c1"># ----------------------------------------------------------------------------------------      </span>
+  
+<div class="viewcode-block" id="hdu_add_wcs"><a class="viewcode-back" href="../modules/brian_tools.html#brian_tools.hdu_add_wcs">[docs]</a><span class="k">def</span> <span class="nf">hdu_add_wcs</span><span class="p">(</span><span class="n">newheader</span><span class="p">,</span><span class="n">refheader</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function adds the WCS coordinates from a reference header to a new header.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRPIX1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRPIX1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD1_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD1_1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CUNIT1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CUNIT1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRPIX2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRPIX2&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD2_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD2_2&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CUNIT2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CUNIT2&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD1_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD1_2&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD2_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD2_1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRVAL2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRVAL2&#39;</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">newheader</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------      </span>
+    
+<div class="viewcode-block" id="hdu_add_lams"><a class="viewcode-back" href="../modules/brian_tools.html#brian_tools.hdu_add_lams">[docs]</a><span class="k">def</span> <span class="nf">hdu_add_lams</span><span class="p">(</span><span class="n">newheader</span><span class="p">,</span><span class="n">refheader</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function adds the Wavelength information from a reference header to a new header.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CTYPE3&#39;</span><span class="p">]</span> 
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CUNIT3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CUNIT3&#39;</span><span class="p">]</span>   
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRPIX3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRPIX3&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD1_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD1_3&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD2_3&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD2_3&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD3_1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD3_1&#39;</span><span class="p">]</span>
+    <span class="n">newheader</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CD3_2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">refheader</span><span class="p">[</span><span class="s1">&#39;CD3_2&#39;</span><span class="p">]</span>
+ 
+    <span class="k">return</span> <span class="n">newheader</span>    </div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

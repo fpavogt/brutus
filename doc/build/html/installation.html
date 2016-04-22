@@ -1,0 +1,274 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Installing brian &mdash; brian 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brian 0.1.0 documentation" href="index.html"/>
+        <link rel="next" title="Running brian" href="running.html"/>
+        <link rel="prev" title="brian 0.1.0" href="index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> brian
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing brian</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-the-installation">Testing the installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">brian</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+      
+    <li>Installing brian</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="installing-brian">
+<h1>Installing brian<a class="headerlink" href="#installing-brian" title="Permalink to this headline">¶</a></h1>
+<p>The most recent release of brian is available for download from its Github repository:
+<a class="reference external" href="https://github.com/fpavogt/brian/releases">https://github.com/fpavogt/brian/releases</a></p>
+<p>Installing brian merely requires to let your Python installation know about its existence.
+Specifically:</p>
+<ol class="arabic simple">
+<li>Unzip the compressed files (downloaded from the link above),</li>
+<li>place the <code class="docutils literal"><span class="pre">brian/</span></code> folder anywhere you like, and</li>
+<li>add its location to your Python path.</li>
+</ol>
+<p>In my case (on MAC OSX), my <code class="docutils literal"><span class="pre">.bash_profile</span></code> would look like :</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brian/
+</pre></div>
+</div>
+<p>Github users are welcome to fork the brian repository if they want to get access to the
+latest updates not yet released. <em>Push requests</em> for bug fixes and new features are
+welcome and will be examined in detail.</p>
+<div class="section" id="requirements">
+<span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>The basic packages below are required for pyqz to work properly:</p>
+<ul class="simple">
+<li>numpy (1.8.1 or or above)</li>
+<li>scipy (0.14.0 or above)</li>
+<li>matplotlib (1.4.2 or above)</li>
+<li>aplpy</li>
+<li>montage (both the Python module and the stand-alone program)</li>
+<li>statsmodel</li>
+</ul>
+</div>
+<div class="section" id="testing-the-installation">
+<h2>Testing the installation<a class="headerlink" href="#testing-the-installation" title="Permalink to this headline">¶</a></h2>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Create an elegant little thing to test that brian is working fine. For now, just try to
+<code class="docutils literal"><span class="pre">import</span> <span class="pre">brian</span></code>.</p>
+</div>
+</div>
+<div class="section" id="troubleshooting">
+<span id="id2"></span><h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
+<p>If something goes bad, here is what you should do (mind the order!):</p>
+<p>1.
+Are all the required packages up-to-date ? Check the <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a>.</p>
+<p>2.
+Still no luck ? Check the <a class="reference internal" href="faq.html#faq"><span class="std std-ref">FAQ</span></a>.</p>
+<p>3.
+Still no luck ? Check if the issue has been reported before: <a class="reference external" href="https://github.com/fpavogt/brian/issues">https://github.com/fpavogt/brian/issues</a></p>
+<p>4.
+Still no luck ? Please submit a new issue on the Github repository of the project:
+<a class="reference external" href="https://github.com/fpavogt/brian/issues">https://github.com/fpavogt/brian/issues</a>.
+Provide as much detail as possible (error message, minimal example able to reproduce the
+error, operating system, Python version, multiprocessing state, etc ...)..</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Submitting a Github issue is the best way for you to get help rapidly, for me to keep
+track of the problems that need solving, and for future users to see what changes have
+been made over time (and look for existing solutions to their problem which may be the
+same as yours). Submitting a new issue on Github is rapid and easy, but if you are
+really against doing it (why would you ?), you can always email
+<a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a> for help.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="running.html" class="btn btn-neutral float-right" title="Running brian" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="brian 0.1.0" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

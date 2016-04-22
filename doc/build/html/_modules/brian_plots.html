@@ -1,0 +1,275 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>brian_plots &mdash; brian 0.1.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> brian
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/modules.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">brian</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>brian_plots</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for brian_plots</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># This file contains tools for the BRIAN routines to create pretty plots seamlessly.</span>
+<span class="c1">#</span>
+<span class="c1"># Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">aplpy</span>
+
+<span class="c1"># ---------------------------------------------------------------------------------------- </span>
+     
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="kn">as</span> <span class="nn">mpl</span>
+<span class="c1"># Use tex - a pain to setup, but it looks great when it works !</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;MacOSX&#39;</span><span class="p">)</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;family&#39;</span><span class="p">:</span><span class="s1">&#39;sans-serif&#39;</span><span class="p">,</span> <span class="s1">&#39;serif&#39;</span><span class="p">:[</span><span class="s1">&#39;Computer Modern Serif&#39;</span><span class="p">],</span> 
+                 <span class="s1">&#39;sans-serif&#39;</span><span class="p">:[</span><span class="s1">&#39;Helvetica&#39;</span><span class="p">],</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">,</span> 
+                 <span class="s1">&#39;weight&#39;</span><span class="p">:</span><span class="mi">500</span><span class="p">,</span> <span class="s1">&#39;variant&#39;</span><span class="p">:</span><span class="s1">&#39;normal&#39;</span><span class="p">})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;labelweight&#39;</span><span class="p">:</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="s1">&#39;linewidth&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;ytick&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;major.pad&#39;</span><span class="p">:</span><span class="mi">12</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span><span class="s1">&#39;k&#39;</span><span class="p">})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;xtick&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;major.pad&#39;</span><span class="p">:</span><span class="mi">8</span><span class="p">,})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;mathtext&#39;</span><span class="p">,</span><span class="o">**</span><span class="p">{</span><span class="s1">&#39;default&#39;</span><span class="p">:</span><span class="s1">&#39;regular&#39;</span><span class="p">,</span><span class="s1">&#39;fontset&#39;</span><span class="p">:</span><span class="s1">&#39;cm&#39;</span><span class="p">,</span> 
+                     <span class="s1">&#39;bf&#39;</span><span class="p">:</span><span class="s1">&#39;monospace:bold&#39;</span><span class="p">})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text&#39;</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s1">&#39;usetex&#39;</span><span class="p">:</span><span class="bp">True</span><span class="p">})</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;text.latex&#39;</span><span class="p">,</span><span class="n">preamble</span><span class="o">=</span><span class="s1">r&#39;\usepackage{cmbright},\usepackage{relsize},&#39;</span><span class="o">+</span>\
+                             <span class="s1">r&#39;\usepackage{upgreek}, \usepackage{amsmath}&#39;</span><span class="p">)</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s1">&#39;contour&#39;</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s1">&#39;negative_linestyle&#39;</span><span class="p">:</span><span class="s1">&#39;solid&#39;</span><span class="p">})</span> <span class="c1"># dashed | solid</span>
+<span class="c1"># ----------------------------------------------------------------------------------------      </span>
+
+<div class="viewcode-block" id="make_2Dplot"><a class="viewcode-back" href="../modules/brian_plots.html#brian_plots.make_2Dplot">[docs]</a><span class="k">def</span> <span class="nf">make_2Dplot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="c1"># path to the data (complete!)</span>
+                <span class="n">ext</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="c1"># Which extension am I looking for ?</span>
+                <span class="n">ofn</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="c1"># Savefig filename</span>
+                <span class="n">contours</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="c1"># Draw any contours </span>
+                <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;arcsinh&#39;</span><span class="p">,</span>
+                <span class="n">vmin</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+                <span class="n">vmax</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="n">cmap</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function generates an image from a 2-D fits image. </span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># Plot the BW image using the 2d image to indicate the projection</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">fig1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+    
+    <span class="n">ax1</span> <span class="o">=</span> <span class="n">aplpy</span><span class="o">.</span><span class="n">FITSFigure</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span> <span class="n">figure</span><span class="o">=</span><span class="n">fig1</span><span class="p">,</span> <span class="n">north</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">cmap</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">show_colorscale</span><span class="p">(</span><span class="n">stretch</span><span class="o">=</span><span class="n">stretch</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">,</span> 
+                            <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">show_grayscale</span><span class="p">(</span><span class="n">invert</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">stretch</span><span class="o">=</span><span class="n">stretch</span><span class="p">,</span><span class="n">vmax</span> <span class="o">=</span> <span class="n">vmax</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="n">vmin</span><span class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_tick_color</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">add_grid</span><span class="p">()</span>
+ 
+    <span class="k">if</span> <span class="n">contours</span><span class="p">:</span>
+        <span class="n">ax1</span><span class="o">.</span><span class="n">show_contour</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">ext</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">contours</span><span class="p">,</span><span class="n">colors</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;darkorange&#39;</span><span class="p">],</span><span class="n">smooth</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span> 
+        <span class="c1">#Smooth~seeing</span>
+
+    <span class="c1"># Make it look pretty</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_labels</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s1">&#39;Dec. (J2000)&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">set_axis_labels</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;R.A. (J2000)&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">tick_labels</span><span class="o">.</span><span class="n">set_xformat</span><span class="p">(</span><span class="s1">&#39;hh:mm:ss&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">tick_labels</span><span class="o">.</span><span class="n">set_yformat</span><span class="p">(</span><span class="s1">&#39;dd:mm:ss&#39;</span><span class="p">)</span>
+
+    <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s1">&#39;k&#39;</span><span class="p">)</span>
+    <span class="n">ax1</span><span class="o">.</span><span class="n">grid</span><span class="o">.</span><span class="n">set_linestyle</span><span class="p">(</span><span class="s1">&#39;dotted&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Save it</span>
+    <span class="n">fig1</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">ofn</span><span class="p">,</span> <span class="n">bbox_inches</span><span class="o">=</span><span class="s1">&#39;tight&#39;</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">True</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------      </span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>
