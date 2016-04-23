@@ -146,8 +146,82 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="brian-elf-module">
-<h1>brian_elf module<a class="headerlink" href="#brian-elf-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-brian_elf">
+<span id="brian-elf-module"></span><h1>brian_elf module<a class="headerlink" href="#module-brian_elf" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="brian_elf.els_mpfit">
+<code class="descclassname">brian_elf.</code><code class="descname">els_mpfit</code><span class="sig-paren">(</span><em>specerr</em>, <em>lams=None</em>, <em>be=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#els_mpfit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.els_mpfit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The master function calling mpfit. Its construction implicitly assumes a single 
+wavelength array over the entire cube !</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.els_spec">
+<code class="descclassname">brian_elf.</code><code class="descname">els_spec</code><span class="sig-paren">(</span><em>x</em>, <em>p</em>, <em>method='gauss'</em>, <em>be=None</em>, <em>inst='MUSE'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#els_spec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.els_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes a pure emission line spectrum, given a set of parameters.
+&#8216;method&#8217; allows to choose between gaussian profile or gauss-hermite profile (not yet
+supported). 
+if gaussian profile: p = lam0 (no shift), I, v (km/s), sigma (km/s), etc ...
+if gauss-hermite :   p = lam0 (no shift), I, v (km/s), sigma (km/s), h3, h4 etc ...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.gauss_hermite_hist">
+<code class="descclassname">brian_elf.</code><code class="descname">gauss_hermite_hist</code><span class="sig-paren">(</span><em>x</em>, <em>binedges</em>, <em>I</em>, <em>mu</em>, <em>sigma</em>, <em>h3</em>, <em>h4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_hermite_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_hermite_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the histogram profile of a line, given a Gauss-Hermite profile, and certain
+binedges for each sampling point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.gauss_hermite_profile">
+<code class="descclassname">brian_elf.</code><code class="descname">gauss_hermite_profile</code><span class="sig-paren">(</span><em>x</em>, <em>I</em>, <em>mu</em>, <em>sigma</em>, <em>h3</em>, <em>h4</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_hermite_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_hermite_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a Gauss-Hermite profile, following van der Marel (1993) and Riffel (2010)
+Set h2 = h1 = 0, h0 = 1 =&gt; it&#8217;s a gaussian plus h3 and h4
+mu and sigma in Angstroem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.gauss_hist">
+<code class="descclassname">brian_elf.</code><code class="descname">gauss_hist</code><span class="sig-paren">(</span><em>x</em>, <em>binedges</em>, <em>I</em>, <em>mu</em>, <em>sigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_hist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the proper histogram of an emission line, given certain bin sizes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.gauss_profile">
+<code class="descclassname">brian_elf.</code><code class="descname">gauss_profile</code><span class="sig-paren">(</span><em>x</em>, <em>I</em>, <em>mu</em>, <em>sigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a normal gaussian, normalized to peak. mu and sigma in Angstroem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.hermite_poly_scale">
+<code class="descclassname">brian_elf.</code><code class="descname">hermite_poly_scale</code><span class="sig-paren">(</span><em>deg</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#hermite_poly_scale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.hermite_poly_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the scaling factor to be applied to Hermite polynomials, when using offcenter
+&amp; broad gaussian line profiles (i.e. with mu !=0 and and sigma != 1).
+See footnote 3 on p. 555 of van der Marel (1993).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.inst_resolution">
+<code class="descclassname">brian_elf.</code><code class="descname">inst_resolution</code><span class="sig-paren">(</span><em>inst='MUSE'</em>, <em>get_ff=False</em>, <em>show_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#inst_resolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.inst_resolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function returns the resolution as a function of the wavelength
+for different instruments.</p>
+<p>Returns a callable function of the wavelength (in Angstroem !).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.line_fit_erf">
+<code class="descclassname">brian_elf.</code><code class="descname">line_fit_erf</code><span class="sig-paren">(</span><em>p</em>, <em>fjac=None</em>, <em>x=None</em>, <em>y=None</em>, <em>err=None</em>, <em>method='gauss'</em>, <em>be=None</em>, <em>inst='MUSE'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#line_fit_erf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.line_fit_erf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes the residuals to be minimized by mpfit, given a model and data.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_elf.obs_sigma">
+<code class="descclassname">brian_elf.</code><code class="descname">obs_sigma</code><span class="sig-paren">(</span><em>sigma</em>, <em>lam</em>, <em>inst='MUSE'</em>, <em>z=0</em>, <em>in_errs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#obs_sigma"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.obs_sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function compute the observed sigma (in [A]) for an emission line, given a &#8220;real&#8221; 
+sigma in km/s and the line position. Set &#8216;inst&#8217;=None to NOT account for the instrument
+dispersion.</p>
+</dd></dl>
+
 </div>
 
 

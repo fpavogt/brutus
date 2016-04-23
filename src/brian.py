@@ -464,12 +464,13 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
        
     # Very well, what do I want to extract ?
     # 1) A "full emission line spectrum"
-    # 2) For each line, a flux map, an intensity map, a velocity map and a dispersion map
+    # 2) For each line, a flux map, an intensity map, a velocity map and a dispersion map,
+    # and h3 and h4 maps
     # Let's get to it.
     elines_fullspec_cube = data * np.nan # That way, I keep the nan's in the raw data
-    elines_params_cube = np.zeros((4*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    elines_params_cube = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
     # And the associated errors !
-    elines_params_err = np.zeros((4*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    elines_params_err = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
     
     if params['verbose']:
         print '-> Constructing the datacubes for the emission line fitting parameters.'
@@ -520,18 +521,18 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
         
         # Calculate the sigma of the fit, in A (incl. instrument dispersion,etc ...)
         # as well as the associated error.
-        zlams = elines_params_cube[4*k] * (1.+ elines_params_cube[4*k+2] / c )
-        zlams_err = elines_params_cube[4*k]**2 * elines_params_err[4*k+2]/c**2
-        sigma_obs_A = brian_elf.obs_sigma(elines_params_cube[4*k+3],zlams, 
+        zlams = elines_params_cube[6*k] * (1.+ elines_params_cube[6*k+2] / c )
+        zlams_err = elines_params_cube[6*k]**2 * elines_params_err[6*k+2]/c**2
+        sigma_obs_A = brian_elf.obs_sigma(elines_params_cube[6*k+3],zlams, 
                                           inst=params['inst'], 
-                                          in_errs=[elines_params_err[4*k+2],zlams_err,0.] )
+                                          in_errs=[elines_params_err[6*k+2],zlams_err,0.] )
         
         # Compute the line flux
-        elines_params_cube[4*k,:,:] = np.sqrt(2*np.pi) * elines_params_cube[4*k+1,:,:] * \
+        elines_params_cube[6*k,:,:] = np.sqrt(2*np.pi) * elines_params_cube[6*k+1,:,:] * \
                                       sigma_obs_A[0]                           
         # What about the error ?
-        elines_params_err[4*k,:,:] = 2*np.pi * (elines_params_err[4*k+1,:,:]**2 * sigma_obs_A[0] + \
-                                                sigma_obs_A[1] * elines_params_cube[4*k+1,:,:]**2)           
+        elines_params_err[6*k,:,:] = 2*np.pi * (elines_params_err[6*k+1,:,:]**2 * sigma_obs_A[0] + \
+                                                sigma_obs_A[1] * elines_params_cube[6*k+1,:,:]**2)           
     
     # Export the cube for each emission line parameters as a multi-extension fits file        
     # Do the same for the errors - i.e. params and errors are in two distinct cubes
@@ -541,7 +542,7 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
         hdus = [hdu0]
         # Use the sorted keys, to ensure the same order as the fit parameters
         for (k,key) in enumerate(np.sort(params['elines'].keys())):
-            hduk = pyfits.ImageHDU(epc[4*k:4*k+4,:,:])
+            hduk = pyfits.ImageHDU(epc[6*k:6*k+6,:,:])
             # Make sure the WCS coordinates are included as well
             hduk = tools.hdu_add_wcs(hduk,header1)
             # Also include a brief mention about which version of BRIAN is being used
@@ -581,7 +582,9 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
     This function is designed to create some plots for the emission lines, namely
     Flux, Intensity, velocity and sigma.
     '''    
-    
+    if params['verbose']:
+        print '-> Making some nifty plots from the emission line fitting output.'
+       
     fn = os.path.join(params['prod_loc'], prev_suffix+'_'+params['target']+
                                           '_elines_params.fits')
     
@@ -603,7 +606,7 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
         this_data = hdu[k+1].data
         
         # Make single pretty plots for Flux, Intensity, velocity and velocity dispersion                                        
-        for (t,typ) in enumerate(['F','I','v','sigma']):
+        for (t,typ) in enumerate(['F','I','v','sigma',]): #'h3', 'h4']):
             # Create a dedicated HDU
             tmphdu = pyfits.PrimaryHDU(this_data[t])
             # Add the WCS information
@@ -618,21 +621,46 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
                                                         typ+'.pdf') 
             
             # For the velocity fields, set the vmin and vmax
-            if t == 2 and vrange:
+            if t == 0:
+                my_vmin = None
+                my_vmax = None
+                my_cmap = None
+                my_stretch = 'arcsinh'
+                my_label = r'F [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]'
+                my_cbticks = [125,250,500,1000,2000,4000]
+            elif t == 1:
+                my_vmin = None
+                my_vmax = None
+                my_cmap = None
+                my_stretch = 'arcsinh'
+                my_label = r'I [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]'
+                my_cbticks = [50,100,200,400,800,1600]
+            elif t == 2 and vrange:
                 my_vmin = vrange[0]
                 my_vmax = vrange[1]
                 my_cmap = 'magma'
+                my_stretch = 'linear'
+                my_label = r'$v$ [km s$^{-1}$]'
+                my_cbticks = None
             elif t ==3 and sigrange:
                 my_vmin = sigrange[0]
                 my_vmax = sigrange[1]
                 my_cmap = 'magma'
+                my_stretch = 'linear'
+                my_label = r'$\sigma_{tot}$ [km s$^{-1}$]'
+                my_cbticks = None
             else:
                 my_vmin = None
                 my_vmax = None
                 my_cmap = None
+                my_stretch = 'arcsinh'
+                my_label = ''
+                my_cbticks = None
                                                             
             brian_plots.make_2Dplot(fn_tmp,ext=0, ofn=this_ofn, contours=False, 
-                                    vmin=my_vmin, vmax = my_vmax, cmap=my_cmap)                                   
+                                    vmin=my_vmin, vmax = my_vmax, cmap=my_cmap,
+                                    stretch = my_stretch, cblabel=my_label, 
+                                    cbticks = my_cbticks)                                   
     
     # Delete the temporary fits file
     os.remove(fn_tmp)
@@ -641,5 +669,73 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
     hdu.close()
     
     return True
+# ----------------------------------------------------------------------------------------
+
+def run_find_structures(params, suffix=None, interactive_mode=True):   
+    ''' 
+    This function is designed to identify structures (e.g. HII regions) in the data from
+    a 2D image (i.e. an line intensity map), and save them to a pickle file. When
+    interactive_mode=True, the user can manually refine the selection.
+    '''
     
+    if params['verbose']:
+        print '-> Starting the semi-automated procedure for structure identification.'
+    
+    
+    # Where am I going to save the apertures information ?
+    fn_ap = os.path.join(params['prod_loc'],suffix+'_'+params['target']+'_aplist.pkl')
+    
+    # Do we want to build apertures based on multiple maps ? Loop, one after the other.
+    for key in params['ap_map_lines']:
+        print '   Loading eline %s' %key 
+        # Is the file already there ? Do I want to overwrite it ? And/or use its content ?
+        if os.path.isfile(fn_ap):
+            print '    '
+            print '   Existing aperture list (%s)' % fn_ap.split('/')[-1]
+            print '   Type [a] to load this aperture list and edit it manually'
+            print '        [b] to start from scratch, detecting structures automatically'
+            print '        [c] to do nothing, and continue to the next processing step'
+            while True:
+                letter = raw_input()
+            
+                if letter in ['a','b','c']:
+                    break
+                else:
+                    print '        [%s] unrecognized. Try again.' % letter
+        else:
+            letter = 'b'
+            
+        # Open the file, load the list of apertures
+        if letter == 'a':
+            f = open(fn_ap, 'r')
+            start_aps = pickle.load(f)
+            f.close()
+        elif letter =='b':
+            start_aps = None
+        elif letter =='c':
+            return True
+    
+        # Now, open the elines param datacube, and extract the Flux map I want to detect
+        # stuctures from.
+        fn = os.path.join(params['prod_loc'],'04_'+params['target']+'_elines_params.fits')
+        hdu = pyfits.open(fn)
+        header0 = hdu[0].header
+        plane = np.sort(params['elines'].keys()).tolist().index(key)
+        data = hdu[plane+1].data[0]
+        hdu.close()
+        
+        # Launch the aperture finding routine
+        apertures = brian_plots.build_ap_list(data, start_aps = start_aps, 
+                                              radius = params['ap_radius'])    
+        
+        # Only if the user wants to save the apertures, do it
+        if apertures:
+            # Save the results for later use
+            f = open(fn_ap, 'w')
+            pickle.dump(apertures,f)
+            f.close()
+        
+    return True
+        
+             
     

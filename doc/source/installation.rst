@@ -9,13 +9,13 @@ Installing brian merely requires to let your Python installation know about its 
 Specifically:
 
 1. Unzip the compressed files (downloaded from the link above), 
-2. place the ``brian/`` folder anywhere you like, and 
-3. add its location to your Python path. 
+2. place them anywhere you like, and 
+3. add ``brian/src/`` to your Python path. 
 
 In my case (on MAC OSX), my ``.bash_profile`` would look like : 
 ::
 
-      export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brian/
+      export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brian/src/
 
 
 Github users are welcome to fork the brian repository if they want to get access to the 

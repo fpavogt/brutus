@@ -146,8 +146,70 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="brian-plots-module">
-<h1>brian_plots module<a class="headerlink" href="#brian-plots-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-brian_plots">
+<span id="brian-plots-module"></span><h1>brian_plots module<a class="headerlink" href="#module-brian_plots" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="brian_plots.ApManager">
+<em class="property">class </em><code class="descclassname">brian_plots.</code><code class="descname">ApManager</code><span class="sig-paren">(</span><em>fig</em>, <em>ax</em>, <em>points</em>, <em>rs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#ApManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.ApManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class is designed to add and remove apertures of different radii to a
+matplotlib plot interactively. It handles right-clicks, left-clicks and keyPressEvents
+I understand half-of-it, the rest being some black magic from the web.</p>
+<dl class="method">
+<dt id="brian_plots.ApManager.onKeyPress">
+<code class="descname">onKeyPress</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#ApManager.onKeyPress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.ApManager.onKeyPress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows to change the aperture size by typing a number. Currently in pixels.
+Number needs to be typed while the cursor is on the plot window.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="brian_plots.ApManager.onpick">
+<code class="descname">onpick</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#ApManager.onpick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.ApManager.onpick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines what happens with pickEvent. Namely, remove the near-by aperture.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="brian_plots.ApManager.onpress">
+<code class="descname">onpress</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#ApManager.onpress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.ApManager.onpress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define what happens when a click happens on the matplotlib window.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_plots.ap_outline">
+<code class="descclassname">brian_plots.</code><code class="descname">ap_outline</code><span class="sig-paren">(</span><em>x0</em>, <em>y0</em>, <em>radius</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#ap_outline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.ap_outline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the exact aperture outline, for all pixels within &#8220;radius&#8221; of a given pixel.
+This works well for R &lt;5, but starts to look weird afterwards. Basically, my function
+starts missing pixels, and the area start looking like a diamond. The alternative is
+to define all the otuline polygons by hand - but I really do not feel like doing this.
+Is there a way to construct them with a smarter routine than below ?
+This function is left here for legacy purposes and remind me of what I did. But it
+is not used by brian at the moment.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_plots.build_ap_list">
+<code class="descclassname">brian_plots.</code><code class="descname">build_ap_list</code><span class="sig-paren">(</span><em>data</em>, <em>start_aps=None</em>, <em>radius=3.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#build_ap_list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.build_ap_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function finds local maxima in an image, and then offers the user the ability
+to check/modify the found peaks manually. It associate a circular aperture to each 
+peak, used later to to extract the integrated spectra of these areas.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_plots.make_2Dplot">
+<code class="descclassname">brian_plots.</code><code class="descname">make_2Dplot</code><span class="sig-paren">(</span><em>fn</em>, <em>ext=1</em>, <em>ofn=''</em>, <em>contours=False</em>, <em>stretch='arcsinh'</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>cmap=None</em>, <em>cblabel=None</em>, <em>cbticks=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#make_2Dplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.make_2Dplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function generates an image from a 2-D fits image.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_plots.my_ap_scatter">
+<code class="descclassname">brian_plots.</code><code class="descname">my_ap_scatter</code><span class="sig-paren">(</span><em>ax</em>, <em>xs</em>, <em>ys</em>, <em>rs</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_plots.html#my_ap_scatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_plots.my_ap_scatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is a &#8220;pseudo-plt.scatter&#8221; function, but that instead use the plt.Circle
+routine to show individual apertures of different radii. Importantly, the radii
+are thus expressed in data units, and not in points !</p>
+</dd></dl>
+
 </div>
 
 

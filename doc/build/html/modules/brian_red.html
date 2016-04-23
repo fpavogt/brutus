@@ -146,8 +146,80 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="brian-red-module">
-<h1>brian_red module<a class="headerlink" href="#brian-red-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-brian_red">
+<span id="brian-red-module"></span><h1>brian_red module<a class="headerlink" href="#module-brian_red" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="brian_red.D_fm90">
+<code class="descclassname">brian_red.</code><code class="descname">D_fm90</code><span class="sig-paren">(</span><em>x</em>, <em>gamma</em>, <em>x0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#D_fm90"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.D_fm90" title="Permalink to this definition">¶</a></dt>
+<dd><p>The UV points from Fitzpatrick &amp; Massa (1990). x is in 1/microns</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.F_fm90">
+<code class="descclassname">brian_red.</code><code class="descname">F_fm90</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#F_fm90"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.F_fm90" title="Permalink to this definition">¶</a></dt>
+<dd><p>The UV points from Fitzpatrick &amp; Massa (1990). x is in 1/microns</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.alam">
+<code class="descclassname">brian_red.</code><code class="descname">alam</code><span class="sig-paren">(</span><em>lams</em>, <em>ab</em>, <em>av</em>, <em>curve='f99'</em>, <em>rv=None</em>, <em>cal00_stellar=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#alam"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.alam" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the value of A_lambda for different curves -&gt; bring everyone together !
+Input : lambda(angstroem), ab &amp; av (e.g. from NED), rv and extinction curve</p>
+<blockquote>
+<div>cal00_stellar (True/False), whethert o add the 0.44 correction factor for 
+stellar extinction (vs gas)</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.cal00_ke">
+<code class="descclassname">brian_red.</code><code class="descname">cal00_ke</code><span class="sig-paren">(</span><em>lams</em>, <em>rv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#cal00_ke"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.cal00_ke" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Calzetti (2000) law. lams in Angstroem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.ccm89_alav">
+<code class="descclassname">brian_red.</code><code class="descname">ccm89_alav</code><span class="sig-paren">(</span><em>lams</em>, <em>rv</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#ccm89_alav"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.ccm89_alav" title="Permalink to this definition">¶</a></dt>
+<dd><p>The law from Caredelli, CLayton and Mathis (1989). lams in Angstroem.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.check">
+<code class="descclassname">brian_red.</code><code class="descname">check</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make some quick plots to test the reddening functions of BRIAN, by comparing with
+the original papers. ANd make sure I did not mess things up ...</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.extragalactic_red">
+<code class="descclassname">brian_red.</code><code class="descname">extragalactic_red</code><span class="sig-paren">(</span><em>lam</em>, <em>ha_hb</em>, <em>ha_hb_0</em>, <em>curve='fd05'</em>, <em>rv=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#extragalactic_red"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.extragalactic_red" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate extragalactic reddening (based on Halpha/Hbeta) 
+Input: wavelengths (angstroem), Halpha/Hbeta (observed), 
+Halpha/Hbeta (reference), extinction curve, rv
+Return F unreddened/ F observed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.f99_alebv">
+<code class="descclassname">brian_red.</code><code class="descname">f99_alebv</code><span class="sig-paren">(</span><em>lams</em>, <em>rv=3.1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#f99_alebv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.f99_alebv" title="Permalink to this definition">¶</a></dt>
+<dd><p>The spline-interpolated Fitzpatrick, PASP (1999) Alambda/E(B-V) function.
+lams in Ansgtroem</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.galactic_red">
+<code class="descclassname">brian_red.</code><code class="descname">galactic_red</code><span class="sig-paren">(</span><em>lams</em>, <em>ab</em>, <em>av</em>, <em>curve='f99'</em>, <em>rv=3.1</em>, <em>cal00_stellar=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#galactic_red"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.galactic_red" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate galactic reddening (flux_ratio). 
+Input: curve (which function) and lams, the wavelength in Angstroem,
+ab and av, the extinction from NED
+Return F unreddened/ F observed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_red.hahb_to_av">
+<code class="descclassname">brian_red.</code><code class="descname">hahb_to_av</code><span class="sig-paren">(</span><em>ha_hb</em>, <em>ha_hb_0</em>, <em>curve='fd05'</em>, <em>rv=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_red.html#hahb_to_av"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_red.hahb_to_av" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function to get the reddening in Av mag, from Ha/Hb ratio</p>
+</dd></dl>
+
 </div>
 
 

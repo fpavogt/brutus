@@ -9,6 +9,8 @@
 from __future__ import print_function
 
 import numpy as np
+import scipy as sp
+import math
 import sys
 import os
 import scipy.stats as stats
@@ -189,7 +191,7 @@ def gauss_hermite_hist(x,binedges,I,mu,sigma,h3,h4):
 # ----------------------------------------------------------------------------------------
 
 # A function that constructs the spectrum of emission lines
-def els_spec(x, p, method ='gauss_hist', be=None, inst='MUSE'):
+def els_spec(x, p, method ='gauss', be=None, inst='MUSE'):
     '''
     Computes a pure emission line spectrum, given a set of parameters.
     'method' allows to choose between gaussian profile or gauss-hermite profile (not yet
@@ -199,30 +201,47 @@ def els_spec(x, p, method ='gauss_hist', be=None, inst='MUSE'):
     '''
     
     spec = np.zeros_like(x)
-    if method=='gauss_hist':
-        for i in range(len(p)/4):
-            # What is the wavelength we are at ? Convert from km/s to Angstroem
-            this_lam = (p[4*i+2]/c+1)*p[4*i]
-            # Get the observed sigma in Angstroem, accounting for the instrumental res.
-            this_sigma = obs_sigma(p[4*i+3],this_lam, inst=inst)
-            spec += gauss_hist(x,be,p[4*i+1],this_lam,this_sigma)
+    nplp = 6 # Always use h3 and h4, even if they are fixed.
+    
+    for i in range(len(p)/nplp):
+        # What is the wavelength we are at ? Convert from km/s to Angstroem
+        this_lam = (p[nplp*i+2]/c+1)*p[nplp*i]
+        # Get the observed sigma in Angstroem, accounting for the instrumental res.
+        this_sigma = obs_sigma(p[nplp*i+3],this_lam, inst=inst)
+    
+        if method=='gauss':
+            spec += gauss_hist(x,be,p[nplp*i+1],this_lam,this_sigma)
             
-    elif method=='gauss_profile':
-        for i in range(len(p)/4):
-            # What is the wavelength we are at ? Convert from km/s to Angstroem
-            this_lam = (p[4*i+2]/c+1)*p[4*i]
-            # Get the observed sigma in Angstroem, accounting for the instrumental res.
-            this_sigma = obs_sigma(p[4*i+3],this_lam, inst=inst)
-            spec += gauss_profile(x,be,p[4*i+1],this_lam,this_sigma)       
-            
-    #elif method =='gaussherm_hist':
-    else:
-        sys.exit('Method %s not yet supported !' % method)    
+        elif method=='gauss_profile': 
+            # This is a "pure" gaussian profile. It does NOT take into account the fact that
+            # we are measuring lines with a given bin -size. I.e. this assumes that the middle 
+            # of the bin is at the "mean intensity" of the bin - which is not true for a 
+            # gaussian, especially with crude bins !
+        
+            # This is for test purposes only - DON'T USE THIS UNLESS YOU KNOW WHAT THIS MEANS !
+            spec += gauss_profile(x,be,p[nplp*i+1],this_lam,this_sigma)       
+               
+        elif method =='gauss-herm':
+            spec += gauss_hermite_hist(x,be,p[nplp*i+1],this_lam,this_sigma,p[nplp*i+4],
+                                                                            p[nplp*i+5])
+    
+        elif method =='gauss-herm_profile':
+            # This is a "pure" gaussian-hermite profile. It does NOT take into account the fact 
+            # that we are measuring lines with a given bin-size. I.e. this assumes that the 
+            # middle of the bin is at the "mean intensity" of the bin - which is not true for  
+            # a gaussian, especially with crude bins !
+        
+            # This is for test purposes only - DON'T USE THIS UNLESS YOU KNOW WHAT THIS MEANS !
+            spec += gauss_hermite_profile(x,p[nplp*i+1],this_lam,this_sigma,p[nplp*i+4],
+                                                                            p[nplp*i+5])
+           
+        else:
+            sys.exit('Method %s unknown !' % method)    
     
     return spec
 # ----------------------------------------------------------------------------------------
 
-def line_fit_erf(p,fjac=None, x=None,y=None,err=None, method='gauss_hist', be=None, 
+def line_fit_erf(p,fjac=None, x=None,y=None,err=None, method='gauss', be=None, 
                  inst='MUSE'):
     '''
     Computes the residuals to be minimized by mpfit, given a model and data.
@@ -250,12 +269,20 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
     # First of all, create the parinfo and p0 structures for the fit.
     elines = params['elines']
     
+    # Assume a fixed size for the 'eline' paramt structure - always with h3 and h4, even 
+    # if NOT used ...
+    if params['line_profile'] in ['gauss','gauss_profile']:
+        nplp = 6 
+    elif params['line_profile'] in ['gauss-herm','gauss-herm_profile']:
+        nplp = 6
+    
     # Create the parinfo: each line has a ref wavelength, a peak intensity, a mean and 
     # a width. Note that the ref wavelength WILL NOT BE FITTED, IT IS FOR REF. ONLY !
     parinfo = [{'fixed':0, 'limited':[0,0], 'limits':[0.,0.]} 
-               for i in range(4*len(elines.keys()))]
+               for i in range(nplp * len(elines.keys()))]
+               
     # And the list with our initial guesses
-    p0 = [0 for i in range(len(elines.keys()*4))]
+    p0 = [0 for i in range(len(elines.keys() * nplp))]
 
     # Calculate the references starting velocity
     ref_dv_line = params['ref_dv_line']
@@ -277,17 +304,26 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
     for (i,line) in enumerate(np.sort(elines.keys())):
         # Make sure the "reference wavelength of the line is fixed, and just carried over 
         # for "fun". This is not something to fit, but I need access to it later on.
-        parinfo[4*i]['fixed'] = 1
-        p0[4*i] = elines[line][0][0]
+        parinfo[nplp*i]['fixed'] = 1
+        p0[nplp*i] = elines[line][0][0]
 
         # Fill sigma and v inside p0
-        p0[i*4+3] = elines[line][0][2]
-        p0[i*4+2] = v0
+        p0[i*nplp+3] = elines[line][0][2]
+        p0[i*nplp+2] = v0
 	
         # For the intensity, pick the max of the area
         loc_spec = spec[(lams > elines[line][0][0] * (params['z_target'] + 1 -300./c))*
                         (lams < elines[line][0][0] * (params['z_target'] + 1 +300./c))]
-        p0[i*4+1] = np.max(loc_spec)
+        p0[i*nplp+1] = np.max(loc_spec)
+        
+        # If gauss-hermite, let the h3 and h4 = 0 as starting guesses.
+        # Make sure to fix those parameters to 0 if I only want to do a normal gauss fit !
+        # Otherwise, do as the user pleases ...
+        if not('herm' in params['line_profile']):
+             parinf[nplp*i+4]['fixed'] = 1
+             parinf[nplp*i+5]['fixed'] = 1
+             p0[i*nplp+4] = 0.
+             p0[i*nplp+5] = 0.
     
         # And now fill all the associated constraints
         for (j,constraints) in enumerate(elines[line][1:]):
@@ -297,10 +333,10 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
                     ties = constraints[key].split('p(')
                     tied_line = np.where(np.sort(elines.keys()) == ties[-1][:-1])[0][0]
                     ties = ties[0]+'p['+np.str(4*tied_line+j+1)+']'
-                    parinfo[4*i+j+1][key] = ties
+                    parinfo[nplp*i+j+1][key] = ties
                 else:
                     # Assign the constraints
-                    parinfo[4*i+j+1][key] = constraints[key]
+                    parinfo[nplp*i+j+1][key] = constraints[key]
         
     # Create the dictionary containing the spectra, error, etc ...    
     fa = {'x':lams, 'y':spec, 'err':np.sqrt(err), 'method':params['line_profile'], 
