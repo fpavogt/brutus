@@ -25,7 +25,6 @@ inside ``brian_param.py``, via the dictionary ``brian_params``.
 Once everything is set as it should be, run the script ::
 
     >>> run brian_params.py
-    >>> print 4
 
 This exports all the parameters to the pickle file ``pickle_fn``, defined in 
 ``brian_params.py``.  
