@@ -150,10 +150,11 @@
 <span id="brian-module"></span><h1>brian module<a class="headerlink" href="#module-brian" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="brian.run_find_structures">
-<code class="descclassname">brian.</code><code class="descname">run_find_structures</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>interactive_mode=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_find_structures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_find_structures" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_find_structures</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>interactive_mode=True</em>, <em>automatic_mode=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_find_structures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_find_structures" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to identify structures (e.g. HII regions) in the data from
 a 2D image (i.e. an line intensity map), and save them to a pickle file. When
-interactive_mode=True, the user can manually refine the selection.</p>
+interactive_mode=True, the user can manually refine the selection. Set
+automatic_mode=False to skip the automatic detection.</p>
 </dd></dl>
 
 <dl class="function">
@@ -172,6 +173,18 @@ can be restarted mid-course, in case of a crash.</p>
 derived using LOWESSS or PPXF. It is designed to use multiprocessing to speed
 things up on good computers. It deals with the data columns-per-columns, and 
 can be restarted mid-course, in case of a crash.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian.run_make_ap_cube">
+<code class="descclassname">brian.</code><code class="descname">run_make_ap_cube</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_ap_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_ap_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to make a cube from a series of apertures (x,y,rs).
+For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube
+the same size as the original, and repleace each spectra in a given aperture by the
+total aperture spectra. Spaxels outside any apertures are nan&#8217;s. 
+Assigned spaxels to one aperture only, in order of decreasing flux peak. This makes 
+the data redondant, but will allow for a rapid and direct processing of the resulting
+cube by brian.</p>
 </dd></dl>
 
 <dl class="function">

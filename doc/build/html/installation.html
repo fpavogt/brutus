@@ -140,8 +140,12 @@
             
   <div class="section" id="installing-brian">
 <h1>Installing brian<a class="headerlink" href="#installing-brian" title="Permalink to this headline">¶</a></h1>
-<p>The most recent release of brian is available for download from its Github repository:
-<a class="reference external" href="https://github.com/fpavogt/brian/releases">https://github.com/fpavogt/brian/releases</a></p>
+<p>The most recent release of brian is available for download from its <a class="reference external" href="https://github.com/fpavogt/brian/releases">Github repository</a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">You can also get the current (unreleased and possibly buggy) code from
+<a class="reference external" href="https://github.com/fpavogt/brian/archive/master.zip">here</a>.</p>
+</div>
 <p>Installing brian merely requires to let your Python installation know about its existence.
 Specifically:</p>
 <ol class="arabic simple">
@@ -153,12 +157,12 @@ Specifically:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brian/src/
 </pre></div>
 </div>
-<p>Github users are welcome to fork the brian repository if they want to get access to the
-latest updates not yet released. <em>Push requests</em> for bug fixes and new features are
-welcome and will be examined in detail.</p>
+<p>Github users can fork the brian repository if they want to get access to the
+latest updates not yet formally released. <em>Push requests</em> for bug fixes and new features
+are welcome and will be examined in detail.</p>
 <div class="section" id="requirements">
 <span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>The basic packages below are required for pyqz to work properly:</p>
+<p>The basic packages below are required for brian to work properly:</p>
 <ul class="simple">
 <li>numpy (1.8.1 or or above)</li>
 <li>scipy (0.14.0 or above)</li>
@@ -166,6 +170,8 @@ welcome and will be examined in detail.</p>
 <li>aplpy</li>
 <li>montage (both the Python module and the stand-alone program)</li>
 <li>statsmodel</li>
+<li>astropy</li>
+<li>photutils</li>
 </ul>
 </div>
 <div class="section" id="testing-the-installation">
@@ -178,27 +184,29 @@ welcome and will be examined in detail.</p>
 </div>
 <div class="section" id="troubleshooting">
 <span id="id2"></span><h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permalink to this headline">¶</a></h2>
-<p>If something goes bad, here is what you should do (mind the order!):</p>
-<p>1.
-Are all the required packages up-to-date ? Check the <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a>.</p>
-<p>2.
-Still no luck ? Check the <a class="reference internal" href="faq.html#faq"><span class="std std-ref">FAQ</span></a>.</p>
-<p>3.
-Still no luck ? Check if the issue has been reported before: <a class="reference external" href="https://github.com/fpavogt/brian/issues">https://github.com/fpavogt/brian/issues</a></p>
-<p>4.
-Still no luck ? Please submit a new issue on the Github repository of the project:
-<a class="reference external" href="https://github.com/fpavogt/brian/issues">https://github.com/fpavogt/brian/issues</a>.
-Provide as much detail as possible (error message, minimal example able to reproduce the
-error, operating system, Python version, multiprocessing state, etc ...)..</p>
+<p>If something goes bad, here is what you should do (mind the order !):</p>
+<ol class="arabic">
+<li><p class="first">Are all the required packages up-to-date ? Check the <a class="reference internal" href="#requirements"><span class="std std-ref">Requirements</span></a>.</p>
+</li>
+<li><p class="first">Still no luck ? Check the <a class="reference internal" href="faq.html#faq"><span class="std std-ref">FAQ</span></a>.</p>
+</li>
+<li><p class="first">Still no luck ? Check if the issue has been <a class="reference external" href="https://github.com/fpavogt/brian/issues">reported before</a>.</p>
+</li>
+<li><p class="first">Still no luck ? Please <a class="reference external" href="https://github.com/fpavogt/brian/issues">submit a new issue</a>
+on the Github repository of the project.</p>
+<p>Provide as much detail as possible (error message, minimal example able to reproduce
+the error, operating system, Python version, multiprocessing state, etc ...).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Submitting a Github issue is the best way for you to get help rapidly, for me to keep
-track of the problems that need solving, and for future users to see what changes have
-been made over time (and look for existing solutions to their problem which may be the
-same as yours). Submitting a new issue on Github is rapid and easy, but if you are
-really against doing it (why would you ?), you can always email
+<p class="last">Submitting a Github issue is the best way for you to get help rapidly, for everyone
+to keep track of the problems that need solving, and for future users to see what
+changes have been made over time (and look for existing solutions to their problem
+which may be the same as yours). Submitting a new issue on Github is rapid and easy,
+but if you are really against doing it (why would you ?), you can always email
 <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a> for help.</p>
 </div>
+</li>
+</ol>
 </div>
 </div>
 

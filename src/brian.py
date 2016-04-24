@@ -671,11 +671,12 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
     return True
 # ----------------------------------------------------------------------------------------
 
-def run_find_structures(params, suffix=None, interactive_mode=True):   
+def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mode=True):   
     ''' 
     This function is designed to identify structures (e.g. HII regions) in the data from
     a 2D image (i.e. an line intensity map), and save them to a pickle file. When
-    interactive_mode=True, the user can manually refine the selection.
+    interactive_mode=True, the user can manually refine the selection. Set
+    automatic_mode=False to skip the automatic detection.
     '''
     
     if params['verbose']:
@@ -693,8 +694,8 @@ def run_find_structures(params, suffix=None, interactive_mode=True):
             print '    '
             print '   Existing aperture list (%s)' % fn_ap.split('/')[-1]
             print '   Type [a] to load this aperture list and edit it manually'
-            print '        [b] to start from scratch, detecting structures automatically'
-            print '        [c] to do nothing, and continue to the next processing step'
+            print '        [b] to start from scratch, (file will be overwritten!)'
+            print '        [c] to do nothing, and continue to the next step'
             while True:
                 letter = raw_input()
             
@@ -713,7 +714,7 @@ def run_find_structures(params, suffix=None, interactive_mode=True):
         elif letter =='b':
             start_aps = None
         elif letter =='c':
-            return True
+            continue
     
         # Now, open the elines param datacube, and extract the Flux map I want to detect
         # stuctures from.
@@ -726,7 +727,15 @@ def run_find_structures(params, suffix=None, interactive_mode=True):
         
         # Launch the aperture finding routine
         apertures = brian_plots.build_ap_list(data, start_aps = start_aps, 
-                                              radius = params['ap_radius'])    
+                                              radius = params['ap_radius'],
+                                              automatic_mode = automatic_mode,
+                                              interactive_mode = interactive_mode,
+                                              lam = params['elines'][key][0][0],
+                                              save_plot = os.path.join(params['plot_loc'],
+                                                                       suffix+'_'+
+                                                                       params['target']+
+                                                                       '_aplist_'),
+                                             )    
         
         # Only if the user wants to save the apertures, do it
         if apertures:
@@ -736,6 +745,145 @@ def run_find_structures(params, suffix=None, interactive_mode=True):
             f.close()
         
     return True
+# ----------------------------------------------------------------------------------------
+
+def run_make_ap_cube(params, suffix=None, do_plot=True):   
+    ''' 
+    This function is designed to make a cube from a series of apertures (x,y,rs).
+    For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube
+    the same size as the original, and repleace each spectra in a given aperture by the
+    total aperture spectra. Spaxels outside any apertures are nan's. 
+    Assigned spaxels to one aperture only, in order of decreasing flux peak. This makes 
+    the data redondant, but will allow for a rapid and direct processing of the resulting
+    cube by brian.
+    '''        
+    
+    if params['verbose']:
+        print '-> Constructing the cube with the integrated '+\
+              'aperture spectra.'
+    
+    # Very well, where is the aperture file ?
+    fn_ap = os.path.join(params['prod_loc'],'06_'+params['target']+'_aplist.pkl')
+    f = open(fn_ap, 'r')
+    start_aps = pickle.load(f)
+    f.close()
+    
+    xs,ys,rs = zip(*start_aps)
+    
+    # I will also need the Flux map from the strongest line - use that set for the 
+    # velocity reference of the line fitting
+    for key in params['elines'].keys():
+        if params['elines'][key][0][0] == params['ref_dv_line']:
+            ref_key = key
+    
+    # Very well, now load the corresponding flux map
+    fn = os.path.join(params['prod_loc'],'04_'+params['target']+'_elines_params.fits')
+    hdu = pyfits.open(fn)
+    fheader0 = hdu[0].header
+    plane = np.sort(params['elines'].keys()).tolist().index(ref_key)
+    flux = hdu[plane+1].data[0]
+    fheader1 = hdu[plane+1].header
+    hdu.close()
+    
+    # I also need to load the raw data cube
+    hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close()
+    
+    # Get all the peak intensities associated with each aperture. Needed for sorting them.
+    fs = flux[ys,xs]
+    
+    # Sort them in decreasing order of peak intensity
+    sort_index = np.argsort(fs)[::-1]
+    
+    # Now, construct a map where each pixel contains the number of the region it belongs 
+    # to. Starting from 0.
+    ap_map = np.zeros_like(flux) * np.nan
+    (ny,nx) = np.shape(flux)
+    indices = np.mgrid[0:ny,0:nx]
+    
+    # Also construct an aperture spectra cube
+    ap_spec_cube = np.zeros_like(data) * np.nan
+    ap_spec_err = np.zeros_like(data) * np.nan
+    
+    # Loop through each ap. Hopefully not too slow ...
+    for (i,ind) in enumerate(sort_index):
+        progress = 100. * (i+1.)/len(sort_index)
+        sys.stdout.write('\r   Dealing with aperture %i [%5.1f%s]' % 
+                         (i,progress,'%'))
+        sys.stdout.flush()
+        x = xs[ind]
+        y = ys[ind]
+        r = rs[ind]
+        # Find all spaxels with the ap radius 
+        # Don't do anything fancy, just measure the distance to each spaxel center.
+        in_ap = (indices[1]-x)**2+(indices[0]-y)**2 <= r**2
         
+        # Assign each spaxel (not yet assigned to another brighter feature) the 
+        # corresponding ap number.
+        ap_map[in_ap * np.isnan(ap_map)] = i
+        #if i == 431:
+        #    import pdb
+        #    pdb.set_trace()
+        #For this aperture, sum all spaxels into master aperture spectra, and fill the 
+        # cube. Avoid the nans (e.g. mosaic edges, etc ...)
+
+        spec = np.nansum(data[:,indices[0][ap_map==i],indices[1][ap_map==i]],axis=1)
+        err = np.nansum(error[:,indices[0][ap_map==i],indices[1][ap_map==i]],axis=1)
+
+        # Loop through each spaxel in the aperture. There MUST be a smarter way, but I
+        # can't figure it out. Should not be too costly time-wise anyway ...
+        for k in range(len(indices[1][ap_map==i])):
+            xi = indices[1][ap_map==i][k]
+            yi = indices[0][ap_map==i][k]
+            ap_spec_cube[:,yi,xi] = spec
+            ap_spec_err[:,yi,xi]  = err
+        
+    # All done. Save the aperture map to a fits file.
+    hdu0 = pyfits.PrimaryHDU(None,fheader0)
+    hdu1 = pyfits.ImageHDU(ap_map)
+    # Make sure the WCS coordinates are included as well
+    hdu1 = tools.hdu_add_wcs(hdu1,fheader1)
+    # Also include a brief mention about which version of BRIAN is being used
+    hdu1.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+    fn_out = os.path.join(params['prod_loc'],
+                          suffix+'_'+params['target']+'_ap_map.fits')
+    hdu.writeto(fn_out, clobber=True)    
+    
+    # Make a plot of the apertures ?
+    if do_plot:
+        this_ofn = os.path.join(params['plot_loc'],
+                          suffix+'_'+params['target']+'_ap_map.pdf')
+        brian_plots.make_2Dplot(fn_out,ext=1, ofn=this_ofn, contours=False, 
+                                    vmin=0, vmax = len(xs), cmap='viridis',
+                                    stretch = 'linear', 
+                                    cblabel=r'Aperture idendification number', 
+                                    cbticks = None)  
+    
+    # And also save the aperture spectral cube to a fits file
+    hdu0 = pyfits.PrimaryHDU(None,header0)
+    hdu1 = pyfits.ImageHDU(ap_spec_cube)
+    hdu2 = pyfits.ImageHDU(ap_spec_err)
+    # Make sure the WCS coordinates are included as well
+    for hdu in [hdu1,hdu2]:
+        hdu = tools.hdu_add_wcs(hdu,header1)
+        hdu = tools.hdu_add_lams(hdu,header1)
+        # Also include a brief mention about which version of BRIAN is being used
+        hdu.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+        
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1,hdu2])
+    fn_out = os.path.join(params['prod_loc'],
+                          suffix+'_'+params['target']+'_ap_spec_cube.fits')
+    hdu.writeto(fn_out, clobber=True)   
+                                     
+    
+    print ' '
+    
+    return True
              
     

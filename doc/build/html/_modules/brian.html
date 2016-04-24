@@ -806,11 +806,12 @@
     <span class="k">return</span> <span class="bp">True</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_find_structures"><a class="viewcode-back" href="../modules/brian.html#brian.run_find_structures">[docs]</a><span class="k">def</span> <span class="nf">run_find_structures</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interactive_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
+<div class="viewcode-block" id="run_find_structures"><a class="viewcode-back" href="../modules/brian.html#brian.run_find_structures">[docs]</a><span class="k">def</span> <span class="nf">run_find_structures</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interactive_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">automatic_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function is designed to identify structures (e.g. HII regions) in the data from</span>
 <span class="sd">    a 2D image (i.e. an line intensity map), and save them to a pickle file. When</span>
-<span class="sd">    interactive_mode=True, the user can manually refine the selection.</span>
+<span class="sd">    interactive_mode=True, the user can manually refine the selection. Set</span>
+<span class="sd">    automatic_mode=False to skip the automatic detection.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
@@ -828,8 +829,8 @@
             <span class="k">print</span> <span class="s1">&#39;    &#39;</span>
             <span class="k">print</span> <span class="s1">&#39;   Existing aperture list (</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="n">fn_ap</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">print</span> <span class="s1">&#39;   Type [a] to load this aperture list and edit it manually&#39;</span>
-            <span class="k">print</span> <span class="s1">&#39;        [b] to start from scratch, detecting structures automatically&#39;</span>
-            <span class="k">print</span> <span class="s1">&#39;        [c] to do nothing, and continue to the next processing step&#39;</span>
+            <span class="k">print</span> <span class="s1">&#39;        [b] to start from scratch, (file will be overwritten!)&#39;</span>
+            <span class="k">print</span> <span class="s1">&#39;        [c] to do nothing, and continue to the next step&#39;</span>
             <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
                 <span class="n">letter</span> <span class="o">=</span> <span class="nb">raw_input</span><span class="p">()</span>
             
@@ -848,7 +849,7 @@
         <span class="k">elif</span> <span class="n">letter</span> <span class="o">==</span><span class="s1">&#39;b&#39;</span><span class="p">:</span>
             <span class="n">start_aps</span> <span class="o">=</span> <span class="bp">None</span>
         <span class="k">elif</span> <span class="n">letter</span> <span class="o">==</span><span class="s1">&#39;c&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">True</span>
+            <span class="k">continue</span>
     
         <span class="c1"># Now, open the elines param datacube, and extract the Flux map I want to detect</span>
         <span class="c1"># stuctures from.</span>
@@ -861,7 +862,15 @@
         
         <span class="c1"># Launch the aperture finding routine</span>
         <span class="n">apertures</span> <span class="o">=</span> <span class="n">brian_plots</span><span class="o">.</span><span class="n">build_ap_list</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">start_aps</span> <span class="o">=</span> <span class="n">start_aps</span><span class="p">,</span> 
-                                              <span class="n">radius</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ap_radius&#39;</span><span class="p">])</span>    
+                                              <span class="n">radius</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ap_radius&#39;</span><span class="p">],</span>
+                                              <span class="n">automatic_mode</span> <span class="o">=</span> <span class="n">automatic_mode</span><span class="p">,</span>
+                                              <span class="n">interactive_mode</span> <span class="o">=</span> <span class="n">interactive_mode</span><span class="p">,</span>
+                                              <span class="n">lam</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                                              <span class="n">save_plot</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
+                                                                       <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span>
+                                                                       <span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>
+                                                                       <span class="s1">&#39;_aplist_&#39;</span><span class="p">),</span>
+                                             <span class="p">)</span>    
         
         <span class="c1"># Only if the user wants to save the apertures, do it</span>
         <span class="k">if</span> <span class="n">apertures</span><span class="p">:</span>
@@ -871,7 +880,146 @@
             <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         
     <span class="k">return</span> <span class="bp">True</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_make_ap_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_ap_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_ap_cube</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">    This function is designed to make a cube from a series of apertures (x,y,rs).</span>
+<span class="sd">    For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube</span>
+<span class="sd">    the same size as the original, and repleace each spectra in a given aperture by the</span>
+<span class="sd">    total aperture spectra. Spaxels outside any apertures are nan&#39;s. </span>
+<span class="sd">    Assigned spaxels to one aperture only, in order of decreasing flux peak. This makes </span>
+<span class="sd">    the data redondant, but will allow for a rapid and direct processing of the resulting</span>
+<span class="sd">    cube by brian.</span>
+<span class="sd">    &#39;&#39;&#39;</span>        
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the cube with the integrated &#39;</span><span class="o">+</span>\
+              <span class="s1">&#39;aperture spectra.&#39;</span>
+    
+    <span class="c1"># Very well, where is the aperture file ?</span>
+    <span class="n">fn_ap</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;06_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_aplist.pkl&#39;</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn_ap</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">start_aps</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">xs</span><span class="p">,</span><span class="n">ys</span><span class="p">,</span><span class="n">rs</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">start_aps</span><span class="p">)</span>
+    
+    <span class="c1"># I will also need the Flux map from the strongest line - use that set for the </span>
+    <span class="c1"># velocity reference of the line fitting</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ref_dv_line&#39;</span><span class="p">]:</span>
+            <span class="n">ref_key</span> <span class="o">=</span> <span class="n">key</span>
+    
+    <span class="c1"># Very well, now load the corresponding flux map</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;04_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_params.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">fheader0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">plane</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ref_key</span><span class="p">)</span>
+    <span class="n">flux</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">plane</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">fheader1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">plane</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># I also need to load the raw data cube</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Get all the peak intensities associated with each aperture. Needed for sorting them.</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="n">flux</span><span class="p">[</span><span class="n">ys</span><span class="p">,</span><span class="n">xs</span><span class="p">]</span>
+    
+    <span class="c1"># Sort them in decreasing order of peak intensity</span>
+    <span class="n">sort_index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">fs</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="c1"># Now, construct a map where each pixel contains the number of the region it belongs </span>
+    <span class="c1"># to. Starting from 0.</span>
+    <span class="n">ap_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="p">(</span><span class="n">ny</span><span class="p">,</span><span class="n">nx</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ny</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">nx</span><span class="p">]</span>
+    
+    <span class="c1"># Also construct an aperture spectra cube</span>
+    <span class="n">ap_spec_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">ap_spec_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="c1"># Loop through each ap. Hopefully not too slow ...</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">ind</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sort_index</span><span class="p">):</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="mf">100.</span> <span class="o">*</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="nb">len</span><span class="p">(</span><span class="n">sort_index</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Dealing with aperture </span><span class="si">%i</span><span class="s1"> [</span><span class="si">%5.1f%s</span><span class="s1">]&#39;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">progress</span><span class="p">,</span><span class="s1">&#39;%&#39;</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">xs</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">rs</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="c1"># Find all spaxels with the ap radius </span>
+        <span class="c1"># Don&#39;t do anything fancy, just measure the distance to each spaxel center.</span>
+        <span class="n">in_ap</span> <span class="o">=</span> <span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="o">+</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">y</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="o">**</span><span class="mi">2</span>
         
+        <span class="c1"># Assign each spaxel (not yet assigned to another brighter feature) the </span>
+        <span class="c1"># corresponding ap number.</span>
+        <span class="n">ap_map</span><span class="p">[</span><span class="n">in_ap</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ap_map</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="c1">#if i == 431:</span>
+        <span class="c1">#    import pdb</span>
+        <span class="c1">#    pdb.set_trace()</span>
+        <span class="c1">#For this aperture, sum all spaxels into master aperture spectra, and fill the </span>
+        <span class="c1"># cube. Avoid the nans (e.g. mosaic edges, etc ...)</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">],</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nansum</span><span class="p">(</span><span class="n">error</span><span class="p">[:,</span><span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">],</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="c1"># Loop through each spaxel in the aperture. There MUST be a smarter way, but I</span>
+        <span class="c1"># can&#39;t figure it out. Should not be too costly time-wise anyway ...</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">])):</span>
+            <span class="n">xi</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">yi</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">ap_map</span><span class="o">==</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">ap_spec_cube</span><span class="p">[:,</span><span class="n">yi</span><span class="p">,</span><span class="n">xi</span><span class="p">]</span> <span class="o">=</span> <span class="n">spec</span>
+            <span class="n">ap_spec_err</span><span class="p">[:,</span><span class="n">yi</span><span class="p">,</span><span class="n">xi</span><span class="p">]</span>  <span class="o">=</span> <span class="n">err</span>
+        
+    <span class="c1"># All done. Save the aperture map to a fits file.</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">fheader0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ap_map</span><span class="p">)</span>
+    <span class="c1"># Make sure the WCS coordinates are included as well</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">fheader1</span><span class="p">)</span>
+    <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_map.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>    
+    
+    <span class="c1"># Make a plot of the apertures ?</span>
+    <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
+        <span class="n">this_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_map.pdf&#39;</span><span class="p">)</span>
+        <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+                                    <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
+                                    <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;Aperture idendification number&#39;</span><span class="p">,</span> 
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>  
+    
+    <span class="c1"># And also save the aperture spectral cube to a fits file</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ap_spec_cube</span><span class="p">)</span>
+    <span class="n">hdu2</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ap_spec_err</span><span class="p">)</span>
+    <span class="c1"># Make sure the WCS coordinates are included as well</span>
+    <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">]:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+        
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_spec_cube.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>   
+                                     
+    
+    <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+    
+    <span class="k">return</span> <span class="bp">True</span></div>
              
     
 </pre></div>

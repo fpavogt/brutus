@@ -136,29 +136,49 @@
 <h1>brian 0.1.0<a class="headerlink" href="#brian-release" title="Permalink to this headline">¶</a></h1>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p>These pages describe brian 0.1.0. The module is currently under construction, and
+<p class="last">These pages describe brian 0.1.0. The module is currently under construction, and
 NOT yet ready for deployment. For more information, send an email to
 <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a>.</p>
-<p>You can track the latest changes on the Github repository of the code:
-<a class="reference external" href="https://github.com/fpavogt/brian">https://github.com/fpavogt/brian</a></p>
-<p class="last">See the <a class="reference internal" href="changelog.html#changelog"><span class="std std-ref">Changelog</span></a> for more details.</p>
 </div>
-<p>brian is a Python module designed to post-process datacubes from Integral Field Spectrographs,
-and in particular MUSE on the VLT/UT-4 at Paranal Observatory. brian is designed as a
-comprehensive set of routines to fit the stellar continuum and emission lines efficiently,
-and automatically, with no input from the user - other than an inital sets of parameters.</p>
-<p>brian is build in a modular fashion, with a structure inspired by
-<a class="reference external" href="http://pywifes.github.io/pipeline/">pywifes</a>, the Python data reduction module for the
-WiFeS integral field spectrograph
-(<a class="reference external" href="http://adsabs.harvard.edu/abs/2014Ap%26SS.349..617C">Childress+, 2014</a>). Namely, brian
-contains a series of core modules, called by via a modular &#8220;execution sequence&#8221; defined by
-the user, alongside dedicated parameters.</p>
-<p>In particular, brian is designed to allow users to easily insert extra processing steps,
-or by-pass others at will. brian uses the multiprocessing module, and can exploit up to
-300 cpus at once. brian also exploits existing tools with proven track-records developed
-by the community and individuals, including <a class="reference external" href="http://www.astropy.org/">astropy</a>,
+<p>brian is a Python module designed to post-process datacubes from Integral Field
+Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. <strong>The focus
+of brian is primarily set on performing a detailed emission line analysis, including a
+good quality removal of the continuum.</strong> As such, brian
+is suitable for post-processing both extragalactic targets (e.g. star-forming galaxies)
+and galactic objects (PNs, SNRs, HII regions).</p>
+<p>Some of the features of brian include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><strong>the direct use of reduced datacubes</strong> (e.g. produced from the official MUSE data reduction
+pipeline) without requiring prior modifications,</li>
+<li><strong>the fitting of the stellar/nebular continuum</strong> using either a non-parametric Locally
+Weighted Scatterplot Smoothing (LOWESS) technique, or alternatively using
+<a class="reference external" href="http://www-astro.physics.ox.ac.uk/~mxc/software/">ppxf</a> ,</li>
+<li><strong>the fitting of emission lines</strong> via <code class="docutils literal"><span class="pre">mpfit</span></code> that uses the Levenberg-Marquardt technique
+to solve the least-squares problem,</li>
+<li>the ability to use <strong>a varying number of gaussian components</strong> for different emission
+lines, tie parameters to one another, and set upper and lower bounds,</li>
+<li><strong>an automated routine for identifying structures in the data</strong> (e.g. HII regions) and
+define associated extraction apertures, with the ability to then refine the selection
+interactively,</li>
+<li><strong>a modular structure</strong> (inspired by
+<a class="reference external" href="http://pywifes.github.io/pipeline/">pywifes</a>; <a class="reference external" href="http://adsabs.harvard.edu/abs/2014Ap%26SS.349..617C">Childress+, 2014</a>) allowing users to choose
+specific processing steps, or add their own with minimal efforts, and</li>
+<li>the connection to <a class="reference external" href="http://fpavogt.github.io/pyqz/">pyqz</a> to <strong>derive the oxygen
+abundance and the ionization parameters for HII regions</strong>, based on their strong
+emission line spectra.</li>
+</ul>
+</div></blockquote>
+<p>brian can use up to ~300 cpus at once to speed up the processing of large datasets.
+brian also exploits existing tools with proven track-records developed by the community
+and individuals, including <a class="reference external" href="http://www.astropy.org/">astropy</a>,
 <a class="reference external" href="http://www.iac.es/proyecto/PyNeb/">pyneb</a> and
 <a class="reference external" href="http://www-astro.physics.ox.ac.uk/~mxc/software/">ppxf</a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>You can track the latest changes in the code via the <a class="reference external" href="https://github.com/fpavogt/brian">associated Github repository</a>.</p>
+<p class="last">See also the <a class="reference internal" href="changelog.html#changelog"><span class="std std-ref">Changelog</span></a> for a global overview.</p>
+</div>
 <div class="section" id="contents">
 <h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">

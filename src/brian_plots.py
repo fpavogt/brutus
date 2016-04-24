@@ -85,6 +85,7 @@ def make_2Dplot(fn, # path to the data (complete!)
         ax1.colorbar.set_ticks(cbticks)
     ax1.grid.set_color('k')
     ax1.grid.set_linestyle('dotted')
+    ax1.set_nan_color((0.5,0.5,0.5))
 
     # Save it
     fig1.savefig(ofn, bbox_inches='tight')
@@ -249,7 +250,11 @@ def my_ap_scatter(ax, xs, ys, rs, **kwargs):
         
 def build_ap_list(data, 
                   start_aps = None,
-                  radius = 3.0
+                  radius = 3.0,
+                  automatic_mode=True,
+                  interactive_mode=False,
+                  lam = None,
+                  save_plot = None,
                   ):
     '''
     This function finds local maxima in an image, and then offers the user the ability
@@ -274,16 +279,20 @@ def build_ap_list(data,
     #                [1,1,1,1,1],
     #                [0,1,1,1,0]])               
     
-    if not(start_aps):
+    if not(start_aps) and automatic_mode:
         # Find the local peak in the data.
         tbl = photutils.find_peaks(data, threshold, box_size=5, subpixel=False)
         xs = tbl['x_peak']
         ys = tbl['y_peak']
         rs = np.zeros(len(xs))+radius
-    else:
+    elif start_aps:
         # User provided us with apertures already. No need to start from scratch
         xs,ys,rs = zip(*start_aps)
-    
+    else:
+        xs = np.zeros(0)
+        ys = np.zeros(0)
+        rs = np.ones(0)
+        
     # Start the plotting
     plt.close(90)
     fig = plt.figure(90, figsize=(10,8))
@@ -310,36 +319,49 @@ def build_ap_list(data,
     # Also for now, just use a Circle            
     my_ap_scatter(ax, xs, ys, rs, facecolor='none',edgecolor='tomato')  
     
-    # Now, the 1-line black magic command that deals with the user interaction          
-    apmanager = ApManager(fig, ax, line, rs)          
+    # Now, the 1-line black magic command that deals with the user interaction
+    if interactive_mode:          
+        apmanager = ApManager(fig, ax, line, rs)          
 
     ax.grid(True)
     ax.set_xlim((-10,np.shape(data)[1]+10))
+    ax.set_xlabel(r'x [pixels]', labelpad = 10)
     ax.set_ylim((-10,np.shape(data)[0]+10))
+    ax.set_ylabel(r'y [pixels]', labelpad = 10)
+    ax.set_title(r'$\lambda$:%.2f' % lam)
     plt.show()
 
-    print '   Starting interactive mode:'
-    print '   Aperture radius: 3 pixels'
-    print '      [left-click]      : add an aperture' 
-    print '      [right-click]     : remove an aperture'
-    print '      [u]+cursor on plot: larger aperture '
-    print '      [d]+cursor on plot: smaller aperture '                    
+    if interactive_mode:
+        print '   Starting interactive mode:'
+        print '   Aperture radius: 3 pixels'
+        print '      [left-click]      : add an aperture' 
+        print '      [right-click]     : remove an aperture'
+        print '      [u]+cursor on plot: larger aperture '
+        print '      [d]+cursor on plot: smaller aperture '                    
     
-    # A little trick to wait for the user to be done before proceeding
-    while True:
+        # A little trick to wait for the user to be done before proceeding
+        while True:
     
-        letter = raw_input('   [m] to save and continue, [zzz] to NOT save and crash. \n')
-        if letter in ['m','zzz']:
-            break
-        else:
-            print '   [%s] unrecognized !' % letter
+            letter = raw_input('   [m] to save and continue, [zzz] to NOT save and '+
+                               'crash (maybe). \n')
+            if letter in ['m','zzz']:
+                break
+            else:
+                print '   [%s] unrecognized !' % letter
         
-    plt.close()
-    
-    if letter =='m':
-        return zip(apmanager.xs, apmanager.ys, apmanager.rs)
+        line.remove()
+        plt.savefig(save_plot+np.str(lam)+'.pdf',bbox_inches='tight')            
+        plt.close()
+        
+        if letter =='m':
+            return zip(apmanager.xs, apmanager.ys, apmanager.rs)
+        else:
+            return False
     else:
-        return False
+        line.remove()
+        plt.savefig(save_plot+np.str(lam)+'.pdf',bbox_inches='tight')            
+        plt.close()
+        return zip(xs,ys,rs)
 # ----------------------------------------------------------------------------------------      
     
     

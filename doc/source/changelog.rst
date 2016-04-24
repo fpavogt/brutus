@@ -13,3 +13,4 @@ v0.1, April 2016, F.P.A. Vogt
  - added license info
  - added semi-automatic detection of structures, and ability to interact to add/remove
    apertures of varying radii
+ - added creation of "aperture spectra cube" based on a given aperture list
