@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian module &mdash; brian 0.1.0 documentation</title>
+  <title>brian module &mdash; brian 0.1.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
         <link rel="up" title="Functions" href="modules.html"/>
         <link rel="next" title="brian_cof module" href="brian_cof.html"/>
         <link rel="prev" title="Functions" href="modules.html"/> 
@@ -150,7 +150,7 @@
 <span id="brian-module"></span><h1>brian module<a class="headerlink" href="#module-brian" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
 <dt id="brian.run_find_structures">
-<code class="descclassname">brian.</code><code class="descname">run_find_structures</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>interactive_mode=True</em>, <em>automatic_mode=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_find_structures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_find_structures" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_find_structures</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>interactive_mode=True</em>, <em>automatic_mode=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_find_structures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_find_structures" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to identify structures (e.g. HII regions) in the data from
 a 2D image (i.e. an line intensity map), and save them to a pickle file. When
 interactive_mode=True, the user can manually refine the selection. Set
@@ -159,7 +159,7 @@ automatic_mode=False to skip the automatic detection.</p>
 
 <dl class="function">
 <dt id="brian.run_fit_continuum">
-<code class="descclassname">brian.</code><code class="descname">run_fit_continuum</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em>, <em>method='lowess'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_fit_continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_fit_continuum" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_fit_continuum</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em>, <em>method='lowess'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_fit_continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_fit_continuum" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function fits the continuum in the datacube, either using ppxf (if SNR is decent)
 or using a simple polynomial value. It is designed to use multiprocessing to speed
 things up on good computers. It deals with the data columns-per-columns, and 
@@ -168,7 +168,7 @@ can be restarted mid-course, in case of a crash.</p>
 
 <dl class="function">
 <dt id="brian.run_fit_elines">
-<code class="descclassname">brian.</code><code class="descname">run_fit_elines</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_fit_elines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_fit_elines" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_fit_elines</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_fit_elines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_fit_elines" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function fits the emission lines in the datacube, after subtracting the continuum
 derived using LOWESSS or PPXF. It is designed to use multiprocessing to speed
 things up on good computers. It deals with the data columns-per-columns, and 
@@ -177,7 +177,7 @@ can be restarted mid-course, in case of a crash.</p>
 
 <dl class="function">
 <dt id="brian.run_make_ap_cube">
-<code class="descclassname">brian.</code><code class="descname">run_make_ap_cube</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_ap_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_ap_cube" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_make_ap_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_ap_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_ap_cube" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to make a cube from a series of apertures (x,y,rs).
 For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube
 the same size as the original, and repleace each spectra in a given aperture by the
@@ -188,8 +188,16 @@ cube by brian.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="brian.run_make_continuum_cube">
+<code class="descclassname">brian.</code><code class="descname">run_make_continuum_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>method='lowess'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_continuum_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_continuum_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to construct a &#8220;usable and decent&#8221; datacube out of the
+mess generated by the continuum fitting function, i.e. out of the many pickle 
+files generated.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="brian.run_make_elines_cube">
-<code class="descclassname">brian.</code><code class="descname">run_make_elines_cube</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>prev_suffix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_elines_cube" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_make_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_elines_cube" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to construct a &#8220;usable and decent&#8221; datacube out of the
 mess generated by the emission line fitting function, i.e. out of the many pickle 
 files generated.</p>
@@ -197,14 +205,14 @@ files generated.</p>
 
 <dl class="function">
 <dt id="brian.run_plot_elines_cube">
-<code class="descclassname">brian.</code><code class="descname">run_plot_elines_cube</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>prev_suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_plot_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_plot_elines_cube" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_plot_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_plot_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_plot_elines_cube" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to create some plots for the emission lines, namely
 Flux, Intensity, velocity and sigma.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="brian.run_snr_maps">
-<code class="descclassname">brian.</code><code class="descname">run_snr_maps</code><span class="sig-paren">(</span><em>params</em>, <em>suffix=None</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_snr_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_snr_maps" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brian.</code><code class="descname">run_snr_maps</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_snr_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_snr_maps" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function computes the SNR maps for the continuum and Ha (or other line) for a 
 MUSE datacube. It also creates a map of spaxels with any signal at all.
 The resulting maps are saved to a fits file with full header and WCS coordinates.</p>
@@ -253,7 +261,7 @@ The resulting maps are saved to a fits file with full header and WCS coordinates
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.0',
+            VERSION:'0.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

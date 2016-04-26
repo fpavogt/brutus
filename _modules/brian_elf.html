@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_elf &mdash; brian 0.1.0 documentation</title>
+  <title>brian_elf &mdash; brian 0.1.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -145,11 +145,12 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">scipy</span> <span class="kn">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
-<span class="kn">import</span> <span class="nn">cap_mpfit</span> <span class="kn">as</span> <span class="nn">mpfit</span>
+<span class="kn">import</span> <span class="nn">brian_mpfit</span> <span class="kn">as</span> <span class="nn">mpfit</span>
 
 <span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="o">*</span>
 
@@ -196,45 +197,51 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;Unknown instrument...&#39;</span><span class="p">)</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------      </span>
 
-<div class="viewcode-block" id="obs_sigma"><a class="viewcode-back" href="../modules/brian_elf.html#brian_elf.obs_sigma">[docs]</a><span class="k">def</span> <span class="nf">obs_sigma</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">inst</span><span class="o">=</span><span class="s1">&#39;MUSE&#39;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">in_errs</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="obs_sigma"><a class="viewcode-back" href="../modules/brian_elf.html#brian_elf.obs_sigma">[docs]</a><span class="k">def</span> <span class="nf">obs_sigma</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">inst</span><span class="o">=</span><span class="s1">&#39;MUSE&#39;</span><span class="p">,</span> <span class="n">in_errs</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    This function compute the observed sigma (in [A]) for an emission line, given a &quot;real&quot; </span>
 <span class="sd">    sigma in km/s and the line position. Set &#39;inst&#39;=None to NOT account for the instrument</span>
 <span class="sd">    dispersion.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
+    <span class="c1"># Do I want to propagate errors ?</span>
     <span class="k">if</span> <span class="n">in_errs</span><span class="p">:</span>
         <span class="n">errs</span> <span class="o">=</span> <span class="n">in_errs</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">errs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-    
-    <span class="c1"># Here, also account for the redshift. I.e. redshifted lines become a bit fatter.</span>
-    <span class="n">obj_sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="o">/</span><span class="n">c</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">z</span><span class="p">)</span>
-    <span class="c1"># WARNING: THIS SHOULD ALSO BE CORRECTED FOR THE LINE REDSHIFT !</span>
-    <span class="c1"># TODO IN THE REST OF CODE</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+     
+    <span class="c1"># From km/s to A    </span>
+    <span class="n">obj_sigma</span> <span class="o">=</span> <span class="n">sigma</span><span class="o">/</span><span class="n">c</span> <span class="o">*</span> <span class="n">lam</span>
+    <span class="c1"># Note: here, lam is the redshifted wavelength. It includes the effect of</span>
+    <span class="c1"># the redshift in fattening the line, i.e. sigma is the &quot;true&quot; sigma in the object</span>
+    <span class="c1"># rest frame.</span>
+        
     <span class="n">obj_sigma_err</span> <span class="o">=</span> <span class="n">obj_sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">errs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> 
-                                        <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">lam</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> 
-                                        <span class="n">errs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">inst</span><span class="p">:</span>
+                                    <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">lam</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>    
+        
+    <span class="k">if</span> <span class="n">inst</span><span class="o">==</span><span class="s1">&#39;MUSE&#39;</span><span class="p">:</span>
+        
         <span class="c1"># TODO: understand what is the TRUE spectral resolution of MUSE !</span>
         <span class="c1"># Measure it from the sky emission lines + arc lines ?      </span>
-            
-        <span class="c1"># What is the velocity dispersion we have ? Convert from km/s to Angstroem</span>
-        <span class="c1"># and account for the instrumental dispersion too !        </span>
+        <span class="c1"># For now, get it from the ref. file.    </span>
+        
+        <span class="c1"># What is the velocity dispersion we have in A?     </span>
         <span class="n">inst_sigma</span> <span class="o">=</span> <span class="n">lam</span><span class="o">/</span><span class="p">(</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">)(</span><span class="n">lam</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
         <span class="c1"># Here, assume no error coming from the Resolution curve ... sigh...</span>
+        
         <span class="n">inst_sigma_err</span> <span class="o">=</span> <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">)(</span><span class="n">lam</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span><span class="o">**</span><span class="mi">2</span>
         
         <span class="c1"># Then combine sigma, in A</span>
         <span class="n">this_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">obj_sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">inst_sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        
         <span class="n">this_sigma_err</span> <span class="o">=</span> <span class="n">inst_sigma_err</span> <span class="o">*</span> <span class="p">(</span><span class="n">inst_sigma</span><span class="o">/</span><span class="n">this_sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> \
                          <span class="n">obj_sigma_err</span> <span class="o">*</span> <span class="p">(</span><span class="n">obj_sigma</span><span class="o">/</span><span class="n">this_sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
         
     <span class="k">else</span><span class="p">:</span>
+    
+        <span class="c1"># Pretend there is no instrumental dispersion</span>
         <span class="n">this_sigma</span> <span class="o">=</span> <span class="n">obj_sigma</span>
         <span class="n">this_sigma_err</span> <span class="o">=</span> <span class="n">obj_sigma_err</span>
-
 
     <span class="k">if</span> <span class="n">in_errs</span><span class="p">:</span>        
         <span class="k">return</span> <span class="p">[</span><span class="n">this_sigma</span><span class="p">,</span><span class="n">this_sigma_err</span><span class="p">]</span>
@@ -340,7 +347,7 @@
     
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span><span class="o">/</span><span class="n">nplp</span><span class="p">):</span>
         <span class="c1"># What is the wavelength we are at ? Convert from km/s to Angstroem</span>
-        <span class="n">this_lam</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">this_lam</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">*</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="p">]</span>
         <span class="c1"># Get the observed sigma in Angstroem, accounting for the instrumental res.</span>
         <span class="n">this_sigma</span> <span class="o">=</span> <span class="n">obs_sigma</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="n">this_lam</span><span class="p">,</span> <span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">)</span>
     
@@ -354,7 +361,7 @@
             <span class="c1"># gaussian, especially with crude bins !</span>
         
             <span class="c1"># This is for test purposes only - DON&#39;T USE THIS UNLESS YOU KNOW WHAT THIS MEANS !</span>
-            <span class="n">spec</span> <span class="o">+=</span> <span class="n">gauss_profile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">be</span><span class="p">,</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">this_lam</span><span class="p">,</span><span class="n">this_sigma</span><span class="p">)</span>       
+            <span class="n">spec</span> <span class="o">+=</span> <span class="n">gauss_profile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">this_lam</span><span class="p">,</span><span class="n">this_sigma</span><span class="p">)</span>       
                
         <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span><span class="s1">&#39;gauss-herm&#39;</span><span class="p">:</span>
             <span class="n">spec</span> <span class="o">+=</span> <span class="n">gauss_hermite_hist</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">be</span><span class="p">,</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="n">this_lam</span><span class="p">,</span><span class="n">this_sigma</span><span class="p">,</span><span class="n">p</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">],</span>
@@ -423,6 +430,7 @@
     <span class="n">ref_dv_line</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ref_dv_line&#39;</span><span class="p">]</span>
 
     <span class="c1"># Extract a spectrum around that line</span>
+    <span class="c1"># WARNING: this could be a problem, if the velocities in the data are larger than this</span>
     <span class="n">loc_spec</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[(</span><span class="n">lams</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">ref_dv_line</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">)))</span> <span class="o">*</span> \
                     <span class="p">(</span><span class="n">lams</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">ref_dv_line</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">)))]</span>
     <span class="n">loc_lams</span> <span class="o">=</span> <span class="n">lams</span><span class="p">[(</span><span class="n">lams</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">ref_dv_line</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">)))</span> <span class="o">*</span> \
@@ -445,18 +453,45 @@
         <span class="c1"># Fill sigma and v inside p0</span>
         <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">elines</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
         <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">v0</span>
+        
+        <span class="c1"># Make sure the starting guess for the velocity is within the boundaries</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s1">&#39;limited&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># There is a lower boundary ...</span>
+            <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s1">&#39;limits&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">2</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s1">&#39;limited&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># There is an upper boundary</span>
+            <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">2</span><span class="p">][</span><span class="s1">&#39;limits&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">2</span><span class="p">]])</span>
 	
         <span class="c1"># For the intensity, pick the max of the area</span>
-        <span class="n">loc_spec</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[(</span><span class="n">lams</span> <span class="o">&gt;</span> <span class="n">elines</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">))</span><span class="o">*</span>
-                        <span class="p">(</span><span class="n">lams</span> <span class="o">&lt;</span> <span class="n">elines</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">))]</span>
-        <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">loc_spec</span><span class="p">)</span>
+        <span class="n">this_spec</span> <span class="o">=</span> <span class="n">spec</span><span class="p">[(</span><span class="n">lams</span> <span class="o">&gt;</span> <span class="n">elines</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">))</span><span class="o">*</span>
+                             <span class="p">(</span><span class="n">lams</span> <span class="o">&lt;</span> <span class="n">elines</span><span class="p">[</span><span class="n">line</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">+</span><span class="mf">300.</span><span class="o">/</span><span class="n">c</span><span class="p">))]</span>
         
+        <span class="c1"># Define the initial guess as the largest peak in the signal - account for the </span>
+        <span class="c1"># sign, to allow for both emission AND absorption lines !</span>
+        <span class="c1"># I get some warnings for all-nans slices ... damn ... For clarity in the prompt, </span>
+        <span class="c1"># let&#39;s catch them and ignore them just this once, if the user is ok with it.</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;warnings&#39;</span><span class="p">],</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">this_extrema</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">this_spec</span><span class="p">))</span>
+            
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">this_extrema</span><span class="p">):</span>
+            <span class="c1"># Bad spectra with only nans</span>
+            <span class="n">this_extrema</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">this_extrema</span> <span class="o">*</span> \
+                            <span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">this_spec</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">this_spec</span><span class="p">)</span><span class="o">==</span><span class="n">this_extrema</span><span class="p">])</span>
+        
+        <span class="c1"># Make sure the starting guess for the intensity is within the boundaries</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;limited&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># There is a lower boundary ...</span>
+            <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;limits&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;limited&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="c1"># There is an upper boundary</span>
+            <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">line</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;limits&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">1</span><span class="p">]])</span>
+        
+
         <span class="c1"># If gauss-hermite, let the h3 and h4 = 0 as starting guesses.</span>
         <span class="c1"># Make sure to fix those parameters to 0 if I only want to do a normal gauss fit !</span>
         <span class="c1"># Otherwise, do as the user pleases ...</span>
         <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="s1">&#39;herm&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;line_profile&#39;</span><span class="p">]):</span>
-             <span class="n">parinf</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;fixed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-             <span class="n">parinf</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">5</span><span class="p">][</span><span class="s1">&#39;fixed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+             <span class="n">parinfo</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">4</span><span class="p">][</span><span class="s1">&#39;fixed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+             <span class="n">parinfo</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">5</span><span class="p">][</span><span class="s1">&#39;fixed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
              <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
              <span class="n">p0</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">nplp</span><span class="o">+</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
     
@@ -467,7 +502,7 @@
                 <span class="k">if</span> <span class="n">key</span> <span class="o">==</span><span class="s1">&#39;tied&#39;</span> <span class="ow">and</span> <span class="n">constraints</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
                     <span class="n">ties</span> <span class="o">=</span> <span class="n">constraints</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;p(&#39;</span><span class="p">)</span>
                     <span class="n">tied_line</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">elines</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="n">ties</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">ties</span> <span class="o">=</span> <span class="n">ties</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;p[&#39;</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">str</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">tied_line</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;]&#39;</span>
+                    <span class="n">ties</span> <span class="o">=</span> <span class="n">ties</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;p[&#39;</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">str</span><span class="p">(</span><span class="n">nplp</span><span class="o">*</span><span class="n">tied_line</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;]&#39;</span>
                     <span class="n">parinfo</span><span class="p">[</span><span class="n">nplp</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ties</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># Assign the constraints</span>
@@ -514,7 +549,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.0',
+            VERSION:'0.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

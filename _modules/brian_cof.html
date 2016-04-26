@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_cof &mdash; brian 0.1.0 documentation</title>
+  <title>brian_cof &mdash; brian 0.1.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -161,8 +161,12 @@
 <span class="sd">    absorption features which are of course &quot;ignored&quot; by the LOWESS routine.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     
-    <span class="n">fit</span> <span class="o">=</span> <span class="n">lowess</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span><span class="n">lams</span><span class="p">,</span><span class="n">frac</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">it</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">missing</span> <span class="o">=</span> <span class="s1">&#39;drop&#39;</span><span class="p">,</span> 
-                 <span class="n">return_sorted</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c1"># Only do the fit if there is some signal. Avoid an ugly warning in the prompt.</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">spec</span><span class="p">)):</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="n">lowess</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span><span class="n">lams</span><span class="p">,</span><span class="n">frac</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">it</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">missing</span> <span class="o">=</span> <span class="s1">&#39;drop&#39;</span><span class="p">,</span> 
+                     <span class="n">return_sorted</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 	                                               
     <span class="k">return</span> <span class="n">fit</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------      </span>
@@ -201,7 +205,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.0',
+            VERSION:'0.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
