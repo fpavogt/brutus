@@ -13,6 +13,7 @@ from astropy.io import fits as pyfits
 from functools import partial
 import pickle
 import multiprocessing
+import warnings
 
 from brian_metadata import __version__
 
@@ -24,7 +25,7 @@ from brian_metadata import *
    
 # ---------------------------------------------------------------------------------------- 
   
-def run_snr_maps(params, suffix = None, do_plot = False):
+def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
     '''
     This function computes the SNR maps for the continuum and Ha (or other line) for a 
     MUSE datacube. It also creates a map of spaxels with any signal at all.
@@ -51,10 +52,14 @@ def run_snr_maps(params, suffix = None, do_plot = False):
     lams /= params['z_target']+1
     
     # Continuum: median intensity level across range vs std across range
-    # The signal
-    cont_s = np.median(data[(lams>=cont_range[0])*(lams<=cont_range[1]),:,:],axis=0) 
-    # The noise
-    cont_n = np.std(data[(lams>=cont_range[0])*(lams<=cont_range[1]),:,:],axis=0) 
+    # I get some warnings for all-nans slices ... damn ... For clarity in the prompt, 
+    # let's catch them and ignore them just this once, if the user is ok with it.
+    with warnings.catch_warnings():
+        warnings.simplefilter(params['warnings'], category=RuntimeWarning)
+        # The signal
+        cont_s = np.nanmedian(data[(lams>=cont_range[0])*(lams<=cont_range[1]),:,:],axis=0) 
+        # The noise
+        cont_n = np.nanstd(data[(lams>=cont_range[0])*(lams<=cont_range[1]),:,:],axis=0) 
     
     cont_snr = cont_s/cont_n
     # Also make sure this is always > 0
@@ -63,7 +68,11 @@ def run_snr_maps(params, suffix = None, do_plot = False):
     # I also want to compute the SNR map for the strongest emission line in there.
     # This line is defined via the 'ref_dv_line' in params (i.e. it is the same line used 
     # for initial v guess for the emission line fitting).
-    line_s = np.max(data[ (lams>=line_range[0]) * (lams<=line_range[1]), :,:], axis=0)
+    # I get some warnings for all-nans slices ... damn ... For clarity in the prompt, 
+    # let's catch them and ignore them just this once, if the user is ok with it.
+    with warnings.catch_warnings():
+        warnings.simplefilter(params['warnings'], category=RuntimeWarning)
+        line_s = np.nanmax(data[ (lams>=line_range[0]) * (lams<=line_range[1]), :,:], axis=0)
     # For the line, I measure the line "peak" above the noise. This is NOT ideal, but it
     # "only" needs to ignore" pixels with no signals to save time during the fitting. 
     line_snr = line_s/cont_n
@@ -91,6 +100,9 @@ def run_snr_maps(params, suffix = None, do_plot = False):
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1,hdu2,hdu3])
     fn_out = os.path.join(params['prod_loc'],suffix+'_'+params['target']+'_snr.fits')
     hdu.writeto(fn_out, clobber=True)
+    
+    # And add the filename to the dictionary of filenames
+    fn_list['snr_cube'] = suffix+'_'+params['target']+'_snr.fits'
                 
     if do_plot:
         # Alright, let's take out the big guns ...            
@@ -98,22 +110,28 @@ def run_snr_maps(params, suffix = None, do_plot = False):
                             os.path.join(params['plot_loc'],
                                          suffix+'_'+params['target']+'_cont_snr.pdf'),
                             contours = [3,5,10,20], vmin=0,vmax=30,
+                            cbticks=[0,3,5,10,20,30], 
+                            cblabel = r'Continuum SNR %.2f\AA\ - %.2f\AA' % (cont_range[0],cont_range[1]),
                             )  
         brian_plots.make_2Dplot(fn_out,2, 
                             os.path.join(params['plot_loc'],
                                          suffix+'_'+params['target']+'_line_snr.pdf'),
                             contours = [3,5,10,20], vmin=0,vmax=30,
+                            cbticks=[0,3,5,10,20,30],
+                            cblabel = r'%.2f\AA\ emission line SNR' % params['ref_dv_line'],
                             )    
         brian_plots.make_2Dplot(fn_out,3, 
                             os.path.join(params['plot_loc'],
                                          suffix+'_'+params['target']+'_signal.pdf'),
-                            vmin=0,vmax=1,
+                            vmin=0,vmax=1,cbticks=[0,1],
+                            cmap ='magma',
+                            cblabel = r'Spaxels with data',
                             )               
                          
-    return True
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_fit_continuum(params, suffix=None, start_row = None, end_row = None, 
+def run_fit_continuum(fn_list, params, suffix=None, start_row = None, end_row = None, 
                       method='lowess'):
     ''' 
     This function fits the continuum in the datacube, either using ppxf (if SNR is decent)
@@ -143,16 +161,15 @@ def run_fit_continuum(params, suffix=None, start_row = None, end_row = None,
     lams = np.arange(0, header1['NAXIS3'],1) * header1['CD3_3'] + header1['CRVAL3']
     
     # I also need to load the SNR cube for the spaxel selection
-    hdu = pyfits.open(os.path.join(params['prod_loc'],
-                      '00_'+params['target']+'_snr.fits'))
+    hdu = pyfits.open(os.path.join(params['prod_loc'],fn_list['snr_cube']))
     snr_cont = hdu[1].data
     hdu.close()
 
     # Get some info about the cube
     nrows = header1['NAXIS1']
-    if not(start_row):
+    if start_row is None:
         start_row = 0
-    if not(end_row):
+    if end_row is None:
 	    end_row = nrows-1
 	
 	# Ok, what do I want to do ?
@@ -207,7 +224,7 @@ def run_fit_continuum(params, suffix=None, start_row = None, end_row = None,
             # Launch the fitting ! Make sure to deal with KeyBoard Interrupt properly
 			# Only a problem for multiprocessing. For the rest of the code, whatever.
             try:   
-                els = pool.map(fit_func, specs)
+                conts = pool.map(fit_func, specs)
             except KeyboardInterrupt:
                 print ' interrupted !'
                 # Still close and join properly
@@ -236,12 +253,37 @@ def run_fit_continuum(params, suffix=None, start_row = None, end_row = None,
         file = open(fn,'w')
         pickle.dump(conts,file)
         file.close()
+        
+    # And add the generic pickle filename to the dictionary of filenames
+    fn_list[method+'_pickle'] = suffix+'_'+params['target']+'_'+method+'_row_'
    	     
     print ' done !'
     
-    # Ok, now, get all the fits together in one nice big cube
-    # TODO: move this in it sown step ?
-    cont_cube = data * 0. # That way, I conserve the possible nan's in there.
+    return fn_list
+# ----------------------------------------------------------------------------------------
+
+def run_make_continuum_cube(fn_list, params, suffix=None, method='lowess'):   
+    ''' 
+    This function is designed to construct a "usable and decent" datacube out of the
+    mess generated by the continuum fitting function, i.e. out of the many pickle 
+    files generated.
+    '''
+    
+    if params['verbose']:
+        print '-> Constructing the datacube for the continuum fitting (%s).' % method
+       
+    # First, load the original datacube. I need to know how much stuff was fitted.
+    hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close()
+    
+    nrows = header1['NAXIS1']
+    
+    cont_cube = np.zeros_like(data) * np.nan
 
     # Loop through the rows, and extract the results. 
     # Try to loop through everything - in case this step was run in chunks.
@@ -252,8 +294,7 @@ def run_fit_continuum(params, suffix=None, start_row = None, end_row = None,
         sys.stdout.flush()
 
         fn = os.path.join(params['tmp_loc'],
-                          suffix+'_'+params['target']+'_'+method+'_row_'+
-                          str(np.int(row)).zfill(4)+'.pkl')
+                          fn_list[method+'_pickle']+str(np.int(row)).zfill(4)+'.pkl')
 
         if os.path.isfile(fn):
             # Very well, I have some fit here. Let's get them back
@@ -271,18 +312,22 @@ def run_fit_continuum(params, suffix=None, start_row = None, end_row = None,
     hdu1 = tools.hdu_add_wcs(hdu1,header1)
     hdu1 = tools.hdu_add_lams(hdu1,header1)
     # Also include a brief mention about which version of BRIAN is being used
-    hdu1.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+    hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
     fn_out = os.path.join(params['prod_loc'],
                           suffix+'_'+params['target']+'_'+method+'.fits')
     hdu.writeto(fn_out, clobber=True)
     
+    # And add the filename to the dictionary of filenames
+    fn_list[method+'_cube'] = suffix+'_'+params['target']+'_'+method+'.fits'
+    
     print ' '
     
-    return True
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_fit_elines(params, suffix=None, start_row = None, end_row = None, 
+
+def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = None, 
                    ):
     ''' 
     This function fits the emission lines in the datacube, after subtracting the continuum
@@ -311,21 +356,24 @@ def run_fit_elines(params, suffix=None, start_row = None, end_row = None,
     
     # I also need to load the SNR cube for the spaxel selection
     hdu = pyfits.open(os.path.join(params['prod_loc'],
-                                   '00_'+params['target']+'_snr.fits'))
-    snr_cont = hdu[1].data
+                                   fn_list['snr_cube']))
+    snr_cont = hdu[1].data                               
+    snr_elines = hdu[2].data
     hdu.close()
     
     # I also need the continuum cubes
-    fn = os.path.join(params['prod_loc'],'01_'+params['target']+'_lowess.fits')
-    if os.path.isfile(fn):
-        hdu = pyfits.open(fn)
-        cont_lowess = hdu[1].data
-        hdu.close()
-    fn = os.path.join(params['prod_loc'],'01_'+params['target']+'_ppxf.fits')
-    if os.path.isfile(fn):
-        hdu = pyfits.open(fn)
-        cont_ppxf = hdu[1].data
-        hdu.close()
+    if fn_list['lowess_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
+        if os.path.isfile(fn):
+            hdu = pyfits.open(fn)
+            cont_lowess = hdu[1].data
+            hdu.close()
+    if fn_list['ppxf_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
+        if os.path.isfile(fn):
+            hdu = pyfits.open(fn)
+            cont_ppxf = hdu[1].data
+            hdu.close()
     
     nlines = len(params['elines'].keys())
     if params['verbose']:
@@ -334,8 +382,8 @@ def run_fit_elines(params, suffix=None, start_row = None, end_row = None,
     # Very well, now, perform the continuum subtraction.
     for key in params['which_cont_sub'].keys():
         if params['verbose']:
-            print '   Subtracting the %s continuum from the data ...' % \
-                   params['which_cont_sub'][key]
+            print '   Subtracting the %s continuum from the data [SNR:%s]' % \
+                   (params['which_cont_sub'][key],key)
             sys.stdout.flush()
             
         llim = np.int(key.split('->')[0])
@@ -348,15 +396,15 @@ def run_fit_elines(params, suffix=None, start_row = None, end_row = None,
         if params['which_cont_sub'][key] == 'lowess':
             data[:,(snr_cont>=llim)*(snr_cont<ulim)] -= \
                  cont_lowess[:,(snr_cont>=llim) * (snr_cont<ulim)] 
-        elif params['which_cont_sub'][key] == 'lowess':
+        elif params['which_cont_sub'][key] == 'ppxf':
             data[:,(snr_cont>=llim)*(snr_cont<ulim)] -= \
                  cont_ppfx[:,(snr_cont>=llim) * (snr_cont<ulim)]                                                      
     
     # Get some info about the cube
     nrows = header1['NAXIS1']
-    if not(start_row):
+    if start_row is None:
         start_row = 0
-    if not(end_row):
+    if end_row is None:
 	    end_row = nrows-1 
         
     fit_func = partial(brian_elf.els_mpfit, lams=lams, be=be, params=params)
@@ -371,15 +419,16 @@ def run_fit_elines(params, suffix=None, start_row = None, end_row = None,
 	    #TODO: fit only a subset of spaxels with Halpha detected ?
 		# Alright, now deal with the spaxels outside the user-chosen SNR range.
 		# Replace them with nan's
-        #good_spaxels = np.ones((header1['NAXIS2']))
-        # if params[method+'_snr_min']:
-        #     good_spaxels[snr_cont[:,row]<params[method+'_snr_min']] = np.nan
-        # if params[method+'_snr_max']:
-        #     good_spaxels[snr_cont[:,row]>params[method+'_snr_max']] = np.nan
+        good_spaxels = np.ones((header1['NAXIS2']))
+        if params['elines_snr_min']:
+             good_spaxels[snr_elines[:,row]<params['elines_snr_min']] = np.nan
+        if params['elines_snr_max']:
+             good_spaxels[snr_elines[:,row]>params['elines_snr_max']] = np.nan
 		
 		# Build a list of spectra to be fitted
         #specs = [data[:,i,row] * good_spaxels[i] for i in range(header1['NAXIS2'])]
-        specerrs = [[data[:,i,row],error[:,i,row]] for i in range(header1['NAXIS2'])]
+        specerrs = [[data[:,i,row] * good_spaxels[i],
+                     error[:,i,row]* good_spaxels[i]] for i in range(header1['NAXIS2'])]
         
 		# Set up the multiprocessing pool of workers
         if params['multiprocessing']:
@@ -430,13 +479,16 @@ def run_fit_elines(params, suffix=None, start_row = None, end_row = None,
         file = open(fn,'w')
         pickle.dump(els,file)
         file.close()
+   	
+   	# Add the generic filename to the dictionary of filenames
+   	fn_list['elines_pickle'] = suffix+'_'+params['target']+'_row_'
    	     
     print ' done !'
     
-    return True
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_make_elines_cube(params, suffix=None, prev_suffix=None):   
+def run_make_elines_cube(fn_list, params, suffix=None):   
     ''' 
     This function is designed to construct a "usable and decent" datacube out of the
     mess generated by the emission line fitting function, i.e. out of the many pickle 
@@ -471,9 +523,11 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
     elines_params_cube = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
     # And the associated errors !
     elines_params_err = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    # Also save the status from mpfit. Could be useful for sorting the good from the bad.
+    elines_fit_status = np.zeros((header1['NAXIS2'],header1['NAXIS1']))*np.nan
     
     if params['verbose']:
-        print '-> Constructing the datacubes for the emission line fitting parameters.'
+        print '-> Constructing the datacube for the emission line fitting parameters.'
        
     # Loop through the rows, and extract the results. 
     # Try to loop through everything - in case this step was run in chunks.
@@ -484,8 +538,7 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
         sys.stdout.flush()
 
         fn = os.path.join(params['tmp_loc'],
-                          prev_suffix+'_'+params['target']+'_row_'+
-                          str(np.int(row)).zfill(4)+'.pkl')
+                          fn_list['elines_pickle']+str(np.int(row)).zfill(4)+'.pkl')
 
         if os.path.isfile(fn):
             # Very well, I have some fit here. Let's get them back
@@ -496,15 +549,21 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
             # Get all the parameters in a big array
             ps = [item.params for item in ms]
             errs = [item.perror for item in ms]
+            stats = [item.status for item in ms]
             
-            # Here, I need to make sure the errs array has a decent shape, even when the 
-            # fit failed. Also store the variance = (STANDARD DEVIATION THAT COMES OUT OF 
-            # MPFIT)**2 !!
-            errs = [np.zeros_like(ps[0])*np.nan if item is None else item**2 for item in errs]
+            # Here, I need to make sure the ps and errs array have a decent shape, even 
+            # when the fit failed. Also store the variance = (STD that comes of mpfit**2) 
+            ps = [np.zeros_like(ps[0])*np.nan if not(item.status in [1,2,3,4]) else ps[j] 
+                                                            for (j,item) in enumerate(ms)]
+            
+            errs = [np.zeros_like(ps[0])*np.nan if not(item.status in [1,2,3,4]) else 
+                                                 errs[j]**2 for (j,item) in enumerate(ms)]
+            
             
             # Fill the corresponding datacube
             elines_params_cube[:,:,row] = np.array(ps).T
             elines_params_err[:,:,row] = np.array(errs).T
+            elines_fit_status[:,row] = np.array(stats).T
             
             # now, reconstruct the full emission line spectrum
             elines_specs = np.array([brian_elf.els_spec(lams,p,be=be, 
@@ -546,7 +605,7 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
             # Make sure the WCS coordinates are included as well
             hduk = tools.hdu_add_wcs(hduk,header1)
             # Also include a brief mention about which version of BRIAN is being used
-            hduk.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+            hduk.header['BRIAN_V'] = (__version__,'brian version that created this file.')
             # Add the line reference wavelength for future references
             hduk.header['BRIAN_L'] = (params['elines'][key][0][0], 'reference wavelength')
             hduk.header['BRIAN_C'] = ('F,I,v,sigma','Content of the cube planes')
@@ -558,6 +617,11 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
                               suffix+'_'+params['target']+'_elines_'+
                               ['params','perror'][e]+'.fits')
         hdu.writeto(fn_out, clobber=True)
+        
+        # Add the filename to the dictionary of filenames
+        fn_list['elines_'+['params','perror'][e]+'_cube'] = suffix+'_'+params['target']+\
+                                                            '_elines_'+\
+                                                            ['params','perror'][e]+'.fits'
                    
     # Very well, now let's also create a fits file to save the full emission line spectrum
     # as required.
@@ -567,16 +631,36 @@ def run_make_elines_cube(params, suffix=None, prev_suffix=None):
     hdu1 = tools.hdu_add_wcs(hdu1,header1)
     hdu1 = tools.hdu_add_lams(hdu1,header1)
     # Also include a brief mention about which version of BRIAN is being used
-    hdu1.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+    hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
     fn_out = os.path.join(params['prod_loc'],
                           suffix+'_'+params['target']+'_elines_fullspec.fits')
     hdu.writeto(fn_out, clobber=True)
     
+    # Add the filename to the dictionary of filenames
+    fn_list['elines_spec_cube'] = suffix+'_'+params['target']+'_elines_fullspec.fits'
+    
+    # And finally, the plot with the fit status for each spaxel, to know the bad from the 
+    # not-so-bad,
+    hdu0 = pyfits.PrimaryHDU(None,header0)
+    hdu1 = pyfits.ImageHDU(elines_fit_status)
+    # Make sure the WCS coordinates are included as well
+    hdu1 = tools.hdu_add_wcs(hdu1,header1)
+    # Also include a brief mention about which version of BRIAN is being used
+    hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+    fn_out = os.path.join(params['prod_loc'],
+                          suffix+'_'+params['target']+'_elines_mpfit_status.fits')
+    hdu.writeto(fn_out, clobber=True)
+    
+    # Add the filename to the dictionary of filenames
+    fn_list['elines_fit_status'] = suffix+'_'+params['target']+'_elines_mpfit_status.fits'
+    
     print ' ' 
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None, 
+def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None, 
                          sigrange=None):   
     ''' 
     This function is designed to create some plots for the emission lines, namely
@@ -585,8 +669,7 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
     if params['verbose']:
         print '-> Making some nifty plots from the emission line fitting output.'
        
-    fn = os.path.join(params['prod_loc'], prev_suffix+'_'+params['target']+
-                                          '_elines_params.fits')
+    fn = os.path.join(params['prod_loc'], fn_list['elines_params_cube'])
     
     # Open the file
     hdu = pyfits.open(fn)
@@ -606,7 +689,7 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
         this_data = hdu[k+1].data
         
         # Make single pretty plots for Flux, Intensity, velocity and velocity dispersion                                        
-        for (t,typ) in enumerate(['F','I','v','sigma',]): #'h3', 'h4']):
+        for (t,typ) in enumerate(['F','I','v','sigma','h3', 'h4']):
             # Create a dedicated HDU
             tmphdu = pyfits.PrimaryHDU(this_data[t])
             # Add the WCS information
@@ -653,7 +736,7 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
                 my_vmin = None
                 my_vmax = None
                 my_cmap = None
-                my_stretch = 'arcsinh'
+                my_stretch = 'linear'
                 my_label = ''
                 my_cbticks = None
                                                             
@@ -664,14 +747,22 @@ def run_plot_elines_cube(params, suffix=None, prev_suffix=None, vrange=None,
     
     # Delete the temporary fits file
     os.remove(fn_tmp)
-    
     # Don't forget to close the initial hdu ...
     hdu.close()
     
-    return True
+    # And also create a plot of the fit status, to see if anything weird happened
+    fn = os.path.join(params['prod_loc'], fn_list['elines_fit_status'])
+    ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+
+                                                        '_eline_mpfit_status.pdf') 
+    brian_plots.make_2Dplot(fn,ext=1, ofn=ofn, contours=False, vmin=-16, vmax = 8,
+                           cmap='magma',stretch='linear', 
+                           cbticks=[-16,0,1,2,3,4,5,6,7,8], cblabel='mpfit status',)
+    
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mode=True):   
+def run_find_structures(fn_list,params, suffix=None, interactive_mode=True, 
+                        automatic_mode=True):   
     ''' 
     This function is designed to identify structures (e.g. HII regions) in the data from
     a 2D image (i.e. an line intensity map), and save them to a pickle file. When
@@ -682,9 +773,11 @@ def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mo
     if params['verbose']:
         print '-> Starting the semi-automated procedure for structure identification.'
     
-    
     # Where am I going to save the apertures information ?
-    fn_ap = os.path.join(params['prod_loc'],suffix+'_'+params['target']+'_aplist.pkl')
+    fn_ap = os.path.join(params['prod_loc'],suffix+'_'+params['target']+'_ap_list.pkl')
+    
+    # Add the filename to the dictionary of filenames
+    fn_list['ap_list'] = suffix+'_'+params['target']+'_ap_list.pkl'
     
     # Do we want to build apertures based on multiple maps ? Loop, one after the other.
     for key in params['ap_map_lines']:
@@ -718,7 +811,8 @@ def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mo
     
         # Now, open the elines param datacube, and extract the Flux map I want to detect
         # stuctures from.
-        fn = os.path.join(params['prod_loc'],'04_'+params['target']+'_elines_params.fits')
+
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
         hdu = pyfits.open(fn)
         header0 = hdu[0].header
         plane = np.sort(params['elines'].keys()).tolist().index(key)
@@ -734,7 +828,7 @@ def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mo
                                               save_plot = os.path.join(params['plot_loc'],
                                                                        suffix+'_'+
                                                                        params['target']+
-                                                                       '_aplist_'),
+                                                                       '_ap_list_'),
                                              )    
         
         # Only if the user wants to save the apertures, do it
@@ -744,10 +838,10 @@ def run_find_structures(params, suffix=None, interactive_mode=True, automatic_mo
             pickle.dump(apertures,f)
             f.close()
         
-    return True
+    return fn_list
 # ----------------------------------------------------------------------------------------
 
-def run_make_ap_cube(params, suffix=None, do_plot=True):   
+def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):   
     ''' 
     This function is designed to make a cube from a series of apertures (x,y,rs).
     For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube
@@ -763,7 +857,7 @@ def run_make_ap_cube(params, suffix=None, do_plot=True):
               'aperture spectra.'
     
     # Very well, where is the aperture file ?
-    fn_ap = os.path.join(params['prod_loc'],'06_'+params['target']+'_aplist.pkl')
+    fn_ap = os.path.join(params['prod_loc'],fn_list['ap_list'])
     f = open(fn_ap, 'r')
     start_aps = pickle.load(f)
     f.close()
@@ -777,7 +871,7 @@ def run_make_ap_cube(params, suffix=None, do_plot=True):
             ref_key = key
     
     # Very well, now load the corresponding flux map
-    fn = os.path.join(params['prod_loc'],'04_'+params['target']+'_elines_params.fits')
+    fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
     hdu = pyfits.open(fn)
     fheader0 = hdu[0].header
     plane = np.sort(params['elines'].keys()).tolist().index(ref_key)
@@ -849,11 +943,14 @@ def run_make_ap_cube(params, suffix=None, do_plot=True):
     # Make sure the WCS coordinates are included as well
     hdu1 = tools.hdu_add_wcs(hdu1,fheader1)
     # Also include a brief mention about which version of BRIAN is being used
-    hdu1.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+    hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
     fn_out = os.path.join(params['prod_loc'],
                           suffix+'_'+params['target']+'_ap_map.fits')
     hdu.writeto(fn_out, clobber=True)    
+    
+    # Add this filename to the dictionary of filenames
+    fn_list['ap_map'] = suffix+'_'+params['target']+'_ap_map.fits'
     
     # Make a plot of the apertures ?
     if do_plot:
@@ -874,16 +971,18 @@ def run_make_ap_cube(params, suffix=None, do_plot=True):
         hdu = tools.hdu_add_wcs(hdu,header1)
         hdu = tools.hdu_add_lams(hdu,header1)
         # Also include a brief mention about which version of BRIAN is being used
-        hdu.header['BRIAN_V'] = (0.1,'brian version that created this file.')
+        hdu.header['BRIAN_V'] = (__version__,'brian version that created this file.')
         
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1,hdu2])
     fn_out = os.path.join(params['prod_loc'],
                           suffix+'_'+params['target']+'_ap_spec_cube.fits')
     hdu.writeto(fn_out, clobber=True)   
+      
+    # Add this filename to the dictionary of filenames
+    fn_list['ap_spec_cube'] = suffix+'_'+params['target']+'_ap_spec_cube.fits'
                                      
-    
     print ' '
     
-    return True
+    return fn_list
              
     

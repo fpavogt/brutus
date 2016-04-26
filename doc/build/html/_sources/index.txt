@@ -12,11 +12,11 @@ brian |release|
    frederic.vogt@alumni.anu.edu.au.
    
 
-brian is a Python module designed to post-process datacubes from Integral Field 
+brian is a Python module designed to process datacubes from Integral Field 
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. **The focus 
 of brian is primarily set on performing a detailed emission line analysis, including a 
 good quality removal of the continuum.** As such, brian 
-is suitable for post-processing both extragalactic targets (e.g. star-forming galaxies) 
+is suitable for processing both extragalactic targets (e.g. star-forming galaxies) 
 and galactic objects (PNs, SNRs, HII regions).
 
 Some of the features of brian include:
@@ -44,9 +44,12 @@ Some of the features of brian include:
 
 brian can use up to ~300 cpus at once to speed up the processing of large datasets. 
 brian also exploits existing tools with proven track-records developed by the community 
-and individuals, including `astropy <http://www.astropy.org/>`_, 
-`pyneb <http://www.iac.es/proyecto/PyNeb/>`_ and 
-`ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_. 
+and individuals, including `Astropy <http://www.astropy.org/>`_, 
+`pyneb <http://www.iac.es/proyecto/PyNeb/>`_,
+`statsmodels <http://statsmodels.sourceforge.net/>`_, 
+`APLyp <https://aplpy.github.io/>`_, 
+`ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_, and
+`Montage <http://montage.ipac.caltech.edu/>`_.
 
 .. note::
 

@@ -26,8 +26,12 @@ def lowess_fit(spec, lams, frac=0.05, it=5):
     absorption features which are of course "ignored" by the LOWESS routine.
     '''
     
-    fit = lowess(spec,lams,frac=0.05, it=5, is_sorted=True, missing = 'drop', 
-                 return_sorted=False)
+    # Only do the fit if there is some signal. Avoid an ugly warning in the prompt.
+    if np.all(np.isnan(spec)):
+        fit = np.zeros_like(spec) * np.nan
+    else:
+        fit = lowess(spec,lams,frac=0.05, it=5, is_sorted=True, missing = 'drop', 
+                     return_sorted=False)
 	                                               
     return fit
 # ----------------------------------------------------------------------------------------      

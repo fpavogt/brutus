@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Acknowledging brian &mdash; brian 0.1.0 documentation</title>
+  <title>Acknowledging brian &mdash; brian 0.1.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.0 documentation" href="index.html"/>
+    <link rel="top" title="brian 0.1.1 documentation" href="index.html"/>
         <link rel="next" title="Functions" href="modules/modules.html"/>
         <link rel="prev" title="Changelog" href="changelog.html"/> 
 
@@ -135,25 +135,30 @@
             
   <div class="section" id="acknowledging-brian">
 <h1>Acknowledging brian<a class="headerlink" href="#acknowledging-brian" title="Permalink to this headline">¶</a></h1>
-<p>Only use lower case letters when mentioning brian, and always include the version number,
-e.g. brian 0.1.0 .</p>
+<p>Only use lower case letters when mentioning brian, and always include the release number,
+e.g.:</p>
+<blockquote>
+<div>brian 0.1.1</div></blockquote>
 <p>brian will be described in detail in</p>
 <blockquote>
 <div><strong>Vogt et al.</strong>, in prep.</div></blockquote>
 <p>If you find brian useful for your research, please cite this reference accordingly.</p>
 <p>brian uses several packages that <strong>should also be acknowledged in their own right.</strong>
 The following Tex-formatted acknowledgment is one way to do so:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>This research has made use of \textsc{brian}, a Python module to post-process data
-cubes from integral field spectrographs. \textsc{brian} relies on \textsc{statsmodel}
+<div class="highlight-default"><div class="highlight"><pre><span></span>This research has made use of \textsc{brian}, a Python module to process data cubes
+from integral field spectrographs. \textsc{brian} relies on \textsc{statsmodel}
 (Seabold &amp; Perktold 2010), \textsc{ppxf} (Cappellari &amp; Emsellem 2004),
 \textsc{matplotlib} (Hunter 2007), \textsc{astropy}, a community-developed core Python
 package for Astronomy (Astropy Collaboration et al., 2013), \textsc{photutils}, an
 affiliated package of \textsc{astropy} for photometry, \textsc{aplpy}, an open-source
-plotting package for Python hosted at http://aplpy.github.com, and \textsc{montage},
-funded by the National Science Foundation under Grant Number ACI-1440620, and
+plotting package for Python hosted at \url{http://aplpy.github.com}, \textsc{montage},
+funded by the National Science Foundation under Grant Number ACI-1440620 and
 previously funded by the National Aeronautics and Space Administration’s Earth Science
 Technology Office, Computation Technologies Project, under Cooperative Agreement
-Number NCC5-626 between NASA and the California Institute of Technology.
+Number NCC5-626 between NASA and the California Institute of Technology, and
+\textsc{mpfit}, a Python script that uses the Levenberg-Marquardt technique
+(Moré 1978) to solve least-squares problems, based on an original Fortran code part of
+the \textsc{minpack}-1 package.
 </pre></div>
 </div>
 <dl class="docutils">
@@ -171,6 +176,24 @@ Number NCC5-626 between NASA and the California Institute of Technology.
     <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Seabold</span><span class="p">,</span> <span class="n">Skipper</span> <span class="ow">and</span> <span class="n">Perktold</span><span class="p">,</span> <span class="n">Josef</span><span class="p">},</span>
     <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="mi">9</span><span class="n">th</span> <span class="n">Python</span> <span class="ow">in</span> <span class="n">Science</span> <span class="n">Conference</span><span class="p">},</span>
     <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2010</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first">Moré (1978):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inbook</span><span class="p">{</span><span class="n">more1978</span><span class="p">,</span>
+    <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Mor</span><span class="p">{</span>\<span class="s1">&#39;e}, Jorge J.},</span>
+    <span class="n">editor</span><span class="o">=</span><span class="p">{</span><span class="n">Watson</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span> <span class="n">A</span><span class="o">.</span><span class="p">},</span>
+    <span class="n">chapter</span><span class="o">=</span><span class="p">{</span><span class="n">The</span> <span class="n">Levenberg</span><span class="o">-</span><span class="n">Marquardt</span> <span class="n">algorithm</span><span class="p">:</span> <span class="n">Implementation</span> <span class="ow">and</span> <span class="n">theory</span><span class="p">},</span>
+    <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Numerical</span> <span class="n">Analysis</span><span class="p">:</span> <span class="n">Proceedings</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Biennial</span> <span class="n">Conference</span>
+           <span class="n">Held</span> <span class="n">at</span> <span class="n">Dundee</span><span class="p">,</span> <span class="n">June</span> <span class="mi">28</span><span class="o">--</span><span class="n">July</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1977</span><span class="p">},</span>
+    <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">1978</span><span class="p">},</span>
+    <span class="n">publisher</span><span class="o">=</span><span class="p">{</span><span class="n">Springer</span> <span class="n">Berlin</span> <span class="n">Heidelberg</span><span class="p">},</span>
+    <span class="n">address</span><span class="o">=</span><span class="p">{</span><span class="n">Berlin</span><span class="p">,</span> <span class="n">Heidelberg</span>    <span class="p">},</span>
+    <span class="n">pages</span><span class="o">=</span><span class="p">{</span><span class="mi">105</span><span class="o">--</span><span class="mi">116</span><span class="p">},</span>
+    <span class="n">isbn</span><span class="o">=</span><span class="p">{</span><span class="mi">978</span><span class="o">-</span><span class="mi">3</span><span class="o">-</span><span class="mi">540</span><span class="o">-</span><span class="mi">35972</span><span class="o">-</span><span class="mi">2</span><span class="p">},</span>
+    <span class="n">doi</span><span class="o">=</span><span class="p">{</span><span class="mf">10.1007</span><span class="o">/</span><span class="n">BFb0067700</span><span class="p">},</span>
+    <span class="n">url</span><span class="o">=</span><span class="p">{</span><span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="n">dx</span><span class="o">.</span><span class="n">doi</span><span class="o">.</span><span class="n">org</span><span class="o">/</span><span class="mf">10.1007</span><span class="o">/</span><span class="n">BFb0067700</span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -221,7 +244,7 @@ Number NCC5-626 between NASA and the California Institute of Technology.
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.0',
+            VERSION:'0.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

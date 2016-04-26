@@ -42,7 +42,7 @@ def make_2Dplot(fn, # path to the data (complete!)
                 vmax = None,
                 cmap = None,
                 cblabel = None,
-                cbticks=None,
+                cbticks = None,
                 ):
     '''
     This function generates an image from a 2-D fits image. 
@@ -57,7 +57,6 @@ def make_2Dplot(fn, # path to the data (complete!)
     if cmap:
         ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
                             cmap=cmap)
-    
     else:
         ax1.show_grayscale(invert=True, stretch=stretch,vmax = vmax, vmin=vmin)
 

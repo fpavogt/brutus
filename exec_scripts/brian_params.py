@@ -13,8 +13,7 @@ import pickle
 import os
 from brian_metadata import * # Load some ref. emission lines
 
-
-# What do I want to name the resulting pickle file ?
+# What si the name of the resulting pickle file going to be ?
 pickle_fn = 'HCG91c_params.pkl'
 
 # Where is everything ?
@@ -29,6 +28,8 @@ brian_params = {
     'inst': None, # Which instrument took the data ?
     'multiprocessing': True,
     'verbose':True,
+    'warnings':'ignore', # 'ignore' = silence known (?) warnings about all-nan's spaxels
+                         # 'default' = default system behavior.
 
 	# ---| Location and name of the data file to process |--------------------------------
     'data_loc': os.path.join(proj_dir,'../reduc/'), # relative path from this file loc !
@@ -38,6 +39,8 @@ brian_params = {
     'plot_loc': os.path.join(proj_dir,'plots/') ,
     'prod_loc': os.path.join(proj_dir,'products/'),
     'tmp_loc': os.path.join(proj_dir,'products/tmp/'),
+    
+    'fn_list_fn': 'filenames_dictionary.pkl', # Name of the dictionary for filenames
     
     # ---| Constructing SNR maps | -------------------------------------------------------
     'cont_range':[6400.,6500.], # The range over which to get the continuum SNR.
@@ -64,7 +67,10 @@ brian_params = {
     
     # What kind of profile for emission lines ?
     # 'gauss_hist' = gaussian, accounting for bin size (the correct way).
-    'line_profile':'gauss_hist',
+    'line_profile':'gauss', # 'gauss', 'gauss-herm'
+    
+    'elines_snr_min': 0,  # What's the lowest SNR to run the line fit ?
+    'elines_snr_max': None, # What's the highest SNR to run the line fit ? None = max
     
     # What lines do I want to fit, and how ?
     # This is very close to defining the mpfit "parinfo" structure, but not quite.
@@ -79,43 +85,69 @@ brian_params = {
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, # Intensity >0
                    {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # Velocity
                    {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':''}, # Dispersion >0
+                   {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+                   {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
                   ],
               'b':[[n2h,0,20], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
                    {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(a)'}, 
+                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(a)'},
+                   {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+                   {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
                   ],
-              'c':[[n2l,0,20],
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./3.*p(b)'}, 
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(a)'}, 
-                  ],
-              'd':[[s2h,0,20], 
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(a)'}, 
-                  ],
-              'e':[[s2l,0,20], 
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(a)'}, 
-                  ],
-              'f':[[hb,0,20],
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':''},
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':''}, 
-                  ],
-              'g':[[o3h,0,20], 
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(f)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(f)'}, 
-                  ],
-              'h':[[o3l,0,20], 
-                   {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./2.98*p(g)'},
-                   {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(f)'}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[0.,100.], 'tied':'p(f)'}, 
-                  ],
+              #'c':[[n2l,0,20],
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./3.*p(b)'}, 
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':'p(a)'},
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
+              #    ],
+              #'d':[[s2h,0,20], 
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':'p(a)'}, 
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
+              #    ],
+              #'e':[[s2l,0,20], 
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(a)'}, 
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':'p(a)'}, 
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
+              #    ],
+              #'f':[[hb,0,20],
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':''},
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':''},
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
+              #    ],
+              #'g':[[o3h,0,20], 
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(f)'}, 
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':'p(f)'},
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
+              #    ],
+              #'h':[[o3l,0,20], 
+              #     {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./2.98*p(g)'},
+              #     {'fixed':0, 'limited':[0,0], 'limits':[0.,0.], 'tied':'p(f)'}, 
+              #     {'fixed':0, 'limited':[1,1], 'limits':[5.,100.], 'tied':'p(f)'},
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
+              #     {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
+              #    ],
              },
+             
+    # ---| Structure detection and aperture extraction | ---------------------------------
+    # What line flux do I want to use to extract my aperture map ? Use a list of the 
+    # elines keys for identification.
+    'ap_map_lines':['a'],
+    
+    # The default radius for the apertures in the automated peak detection routine, in pixel.
+    # Choosing a value corresponding to the seeing is a good first guess.
+    'ap_radius':3.0,             
+             
     }
     
 

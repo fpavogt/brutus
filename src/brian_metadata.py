@@ -10,19 +10,18 @@
 import numpy as np
 import os
 
-# ---| Some basic parameters |---
+# ---| Some basic parameters |------------------------------------------------------------
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 # Where are we located ?
 # Get the project directory from this file location !
 brian_dir = os.path.dirname(__file__)
 
 # And get all the different useful locations associated
-ppxf_dir = os.path.join(brian_dir,'ppxf')
 refdata_dir = os.path.join(brian_dir,'reference_data')
 
-# ---| Some constants |---
+# ---| Some constants |-------------------------------------------------------------------
 
 c = 299792.458 # speed of light in km/s
 
@@ -45,8 +44,8 @@ s2l = 6716.44
 s2h = 6730.81
 
 
-# ---| Information about the different stellar models |---
-
+# ---| Information about the different stellar models |-----------------------------------
+'''
 sl_models ={'MILES_ppxf_default':{'sl_loc':os.path.join(ppxf_dir,'miles_models'),
                                   'nAges':26, 'nMetal':6, 
                                   'metal':[-1.71, -1.31, -0.71, -0.40, 0.00, 0.22],
@@ -57,3 +56,24 @@ sl_models ={'MILES_ppxf_default':{'sl_loc':os.path.join(ppxf_dir,'miles_models')
                                 }, 
 
            }
+'''
+           
+# ---| Some other useful bits & pieces |--------------------------------------------------     
+
+# A dictionary to keep track of the filenames throughout the code. Default below will only
+# be used to initalize the list on the first pass.
+fn_list = {'snr_cube':None,
+           'lowess_pickle':None,
+           'lowess_cube':None,
+           'ppxf_pickle':None,
+           'ppxf_cube':None,
+           'elines_pickle':None,
+           'elines_spec_cube':None,
+           'elines_params_cube':None,
+           'elines_perror_cube':None,
+           'elines_fit_status':None,
+           'ap_list':None,
+           'ap_map':None,
+           'ap_spec_cube':None,
+          }
+      

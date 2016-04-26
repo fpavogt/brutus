@@ -19,7 +19,7 @@ inside ``brian_param.py``, via the dictionary ``brian_params``.
 
 .. todo::
    
-    I would really need a detailed list of what everything is/does.
+    A detailed list of what everything is/does would be nice.
 
 
 Once everything is set as it should be, run the script ::
@@ -55,8 +55,8 @@ where ``pickle_fn`` is the filename defined in ``brian_params.py`` for exporting
 various parameters. 
 
 If all goes according to plan, brian will start processing your data, one step after the 
-other. ** Some steps will take time !** Just be patient - progress indicator will help you 
-monitor the progress of each task, if you set ``'verbose': True`` inside 
+other. **Some steps will take time (up to several hours) !** Just be patient - progress 
+indicators will help you monitor each task, if you set ``'verbose': True`` inside 
 ``brian_params.py``. 
 
 

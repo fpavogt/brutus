@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian &mdash; brian 0.1.0 documentation</title>
+  <title>brian &mdash; brian 0.1.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.0 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -148,6 +148,7 @@
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
 
@@ -159,7 +160,7 @@
    
 <span class="c1"># ---------------------------------------------------------------------------------------- </span>
   
-<div class="viewcode-block" id="run_snr_maps"><a class="viewcode-back" href="../modules/brian.html#brian.run_snr_maps">[docs]</a><span class="k">def</span> <span class="nf">run_snr_maps</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+<div class="viewcode-block" id="run_snr_maps"><a class="viewcode-back" href="../modules/brian.html#brian.run_snr_maps">[docs]</a><span class="k">def</span> <span class="nf">run_snr_maps</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    This function computes the SNR maps for the continuum and Ha (or other line) for a </span>
 <span class="sd">    MUSE datacube. It also creates a map of spaxels with any signal at all.</span>
@@ -186,10 +187,14 @@
     <span class="n">lams</span> <span class="o">/=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span>
     
     <span class="c1"># Continuum: median intensity level across range vs std across range</span>
-    <span class="c1"># The signal</span>
-    <span class="n">cont_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">data</span><span class="p">[(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:,:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
-    <span class="c1"># The noise</span>
-    <span class="n">cont_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">data</span><span class="p">[(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:,:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+    <span class="c1"># I get some warnings for all-nans slices ... damn ... For clarity in the prompt, </span>
+    <span class="c1"># let&#39;s catch them and ignore them just this once, if the user is ok with it.</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;warnings&#39;</span><span class="p">],</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="c1"># The signal</span>
+        <span class="n">cont_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmedian</span><span class="p">(</span><span class="n">data</span><span class="p">[(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:,:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+        <span class="c1"># The noise</span>
+        <span class="n">cont_n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">data</span><span class="p">[(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:,:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
     
     <span class="n">cont_snr</span> <span class="o">=</span> <span class="n">cont_s</span><span class="o">/</span><span class="n">cont_n</span>
     <span class="c1"># Also make sure this is always &gt; 0</span>
@@ -198,7 +203,11 @@
     <span class="c1"># I also want to compute the SNR map for the strongest emission line in there.</span>
     <span class="c1"># This line is defined via the &#39;ref_dv_line&#39; in params (i.e. it is the same line used </span>
     <span class="c1"># for initial v guess for the emission line fitting).</span>
-    <span class="n">line_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">data</span><span class="p">[</span> <span class="p">(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">line_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">line_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">:,:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># I get some warnings for all-nans slices ... damn ... For clarity in the prompt, </span>
+    <span class="c1"># let&#39;s catch them and ignore them just this once, if the user is ok with it.</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;warnings&#39;</span><span class="p">],</span> <span class="n">category</span><span class="o">=</span><span class="ne">RuntimeWarning</span><span class="p">)</span>
+        <span class="n">line_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">data</span><span class="p">[</span> <span class="p">(</span><span class="n">lams</span><span class="o">&gt;=</span><span class="n">line_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">lams</span><span class="o">&lt;=</span><span class="n">line_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="p">:,:],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="c1"># For the line, I measure the line &quot;peak&quot; above the noise. This is NOT ideal, but it</span>
     <span class="c1"># &quot;only&quot; needs to ignore&quot; pixels with no signals to save time during the fitting. </span>
     <span class="n">line_snr</span> <span class="o">=</span> <span class="n">line_s</span><span class="o">/</span><span class="n">cont_n</span>
@@ -226,6 +235,9 @@
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">,</span><span class="n">hdu3</span><span class="p">])</span>
     <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_snr.fits&#39;</span><span class="p">)</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># And add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;snr_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_snr.fits&#39;</span>
                 
     <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
         <span class="c1"># Alright, let&#39;s take out the big guns ...            </span>
@@ -233,22 +245,28 @@
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_cont_snr.pdf&#39;</span><span class="p">),</span>
                             <span class="n">contours</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+                            <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span> 
+                            <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;Continuum SNR </span><span class="si">%.2f</span><span class="s1">\AA\ - </span><span class="si">%.2f</span><span class="s1">\AA&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
                             <span class="p">)</span>  
         <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> 
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_line_snr.pdf&#39;</span><span class="p">),</span>
                             <span class="n">contours</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+                            <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span>
+                            <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;</span><span class="si">%.2f</span><span class="s1">\AA\ emission line SNR&#39;</span> <span class="o">%</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ref_dv_line&#39;</span><span class="p">],</span>
                             <span class="p">)</span>    
         <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> 
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_signal.pdf&#39;</span><span class="p">),</span>
-                            <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                            <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
+                            <span class="n">cmap</span> <span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span>
+                            <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;Spaxels with data&#39;</span><span class="p">,</span>
                             <span class="p">)</span>               
                          
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_fit_continuum"><a class="viewcode-back" href="../modules/brian.html#brian.run_fit_continuum">[docs]</a><span class="k">def</span> <span class="nf">run_fit_continuum</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+<div class="viewcode-block" id="run_fit_continuum"><a class="viewcode-back" href="../modules/brian.html#brian.run_fit_continuum">[docs]</a><span class="k">def</span> <span class="nf">run_fit_continuum</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
                       <span class="n">method</span><span class="o">=</span><span class="s1">&#39;lowess&#39;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function fits the continuum in the datacube, either using ppxf (if SNR is decent)</span>
@@ -278,16 +296,15 @@
     <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS3&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
     
     <span class="c1"># I also need to load the SNR cube for the spaxel selection</span>
-    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
-                      <span class="s1">&#39;00_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_snr.fits&#39;</span><span class="p">))</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;snr_cube&#39;</span><span class="p">]))</span>
     <span class="n">snr_cont</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="c1"># Get some info about the cube</span>
     <span class="n">nrows</span> <span class="o">=</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">start_row</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">start_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">end_row</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">end_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 	    <span class="n">end_row</span> <span class="o">=</span> <span class="n">nrows</span><span class="o">-</span><span class="mi">1</span>
 	
 	<span class="c1"># Ok, what do I want to do ?</span>
@@ -342,7 +359,7 @@
             <span class="c1"># Launch the fitting ! Make sure to deal with KeyBoard Interrupt properly</span>
 			<span class="c1"># Only a problem for multiprocessing. For the rest of the code, whatever.</span>
             <span class="k">try</span><span class="p">:</span>   
-                <span class="n">els</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fit_func</span><span class="p">,</span> <span class="n">specs</span><span class="p">)</span>
+                <span class="n">conts</span> <span class="o">=</span> <span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">fit_func</span><span class="p">,</span> <span class="n">specs</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
                 <span class="k">print</span> <span class="s1">&#39; interrupted !&#39;</span>
                 <span class="c1"># Still close and join properly</span>
@@ -371,12 +388,37 @@
         <span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">conts</span><span class="p">,</span><span class="nb">file</span><span class="p">)</span>
         <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+    <span class="c1"># And add the generic pickle filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_pickle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span>
    	     
     <span class="k">print</span> <span class="s1">&#39; done !&#39;</span>
     
-    <span class="c1"># Ok, now, get all the fits together in one nice big cube</span>
-    <span class="c1"># TODO: move this in it sown step ?</span>
-    <span class="n">cont_cube</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mf">0.</span> <span class="c1"># That way, I conserve the possible nan&#39;s in there.</span>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_make_continuum_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_continuum_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_continuum_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;lowess&#39;</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">    This function is designed to construct a &quot;usable and decent&quot; datacube out of the</span>
+<span class="sd">    mess generated by the continuum fitting function, i.e. out of the many pickle </span>
+<span class="sd">    files generated.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the datacube for the continuum fitting (</span><span class="si">%s</span><span class="s1">).&#39;</span> <span class="o">%</span> <span class="n">method</span>
+       
+    <span class="c1"># First, load the original datacube. I need to know how much stuff was fitted.</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">nrows</span> <span class="o">=</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
+    
+    <span class="n">cont_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="c1"># Loop through the rows, and extract the results. </span>
     <span class="c1"># Try to loop through everything - in case this step was run in chunks.</span>
@@ -387,8 +429,7 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
-                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span><span class="o">+</span>
-                          <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
+                          <span class="n">fn_list</span><span class="p">[</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_pickle&#39;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
             <span class="c1"># Very well, I have some fit here. Let&#39;s get them back</span>
@@ -406,18 +447,22 @@
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
-    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
     <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
+    <span class="c1"># And add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span>
+    
     <span class="k">print</span> <span class="s1">&#39; &#39;</span>
     
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_fit_elines"><a class="viewcode-back" href="../modules/brian.html#brian.run_fit_elines">[docs]</a><span class="k">def</span> <span class="nf">run_fit_elines</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+
+<div class="viewcode-block" id="run_fit_elines"><a class="viewcode-back" href="../modules/brian.html#brian.run_fit_elines">[docs]</a><span class="k">def</span> <span class="nf">run_fit_elines</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
                    <span class="p">):</span>
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function fits the emission lines in the datacube, after subtracting the continuum</span>
@@ -446,21 +491,24 @@
     
     <span class="c1"># I also need to load the SNR cube for the spaxel selection</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
-                                   <span class="s1">&#39;00_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_snr.fits&#39;</span><span class="p">))</span>
-    <span class="n">snr_cont</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                                   <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;snr_cube&#39;</span><span class="p">]))</span>
+    <span class="n">snr_cont</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>                               
+    <span class="n">snr_elines</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     
     <span class="c1"># I also need the continuum cubes</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;01_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_lowess.fits&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
-        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-        <span class="n">cont_lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;01_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ppxf.fits&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
-        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-        <span class="n">cont_ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">cont_lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">cont_ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     
     <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
@@ -469,8 +517,8 @@
     <span class="c1"># Very well, now, perform the continuum subtraction.</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-            <span class="k">print</span> <span class="s1">&#39;   Subtracting the </span><span class="si">%s</span><span class="s1"> continuum from the data ...&#39;</span> <span class="o">%</span> \
-                   <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">print</span> <span class="s1">&#39;   Subtracting the </span><span class="si">%s</span><span class="s1"> continuum from the data [SNR:</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> \
+                   <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">],</span><span class="n">key</span><span class="p">)</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
             
         <span class="n">llim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
@@ -483,15 +531,15 @@
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;lowess&#39;</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">-=</span> \
                  <span class="n">cont_lowess</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> 
-        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;lowess&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">-=</span> \
                  <span class="n">cont_ppfx</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span>                                                      
     
     <span class="c1"># Get some info about the cube</span>
     <span class="n">nrows</span> <span class="o">=</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">start_row</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">start_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">end_row</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">end_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
 	    <span class="n">end_row</span> <span class="o">=</span> <span class="n">nrows</span><span class="o">-</span><span class="mi">1</span> 
         
     <span class="n">fit_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">brian_elf</span><span class="o">.</span><span class="n">els_mpfit</span><span class="p">,</span> <span class="n">lams</span><span class="o">=</span><span class="n">lams</span><span class="p">,</span> <span class="n">be</span><span class="o">=</span><span class="n">be</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
@@ -506,15 +554,16 @@
 	    <span class="c1">#TODO: fit only a subset of spaxels with Halpha detected ?</span>
 		<span class="c1"># Alright, now deal with the spaxels outside the user-chosen SNR range.</span>
 		<span class="c1"># Replace them with nan&#39;s</span>
-        <span class="c1">#good_spaxels = np.ones((header1[&#39;NAXIS2&#39;]))</span>
-        <span class="c1"># if params[method+&#39;_snr_min&#39;]:</span>
-        <span class="c1">#     good_spaxels[snr_cont[:,row]&lt;params[method+&#39;_snr_min&#39;]] = np.nan</span>
-        <span class="c1"># if params[method+&#39;_snr_max&#39;]:</span>
-        <span class="c1">#     good_spaxels[snr_cont[:,row]&gt;params[method+&#39;_snr_max&#39;]] = np.nan</span>
+        <span class="n">good_spaxels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines_snr_min&#39;</span><span class="p">]:</span>
+             <span class="n">good_spaxels</span><span class="p">[</span><span class="n">snr_elines</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span><span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines_snr_min&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines_snr_max&#39;</span><span class="p">]:</span>
+             <span class="n">good_spaxels</span><span class="p">[</span><span class="n">snr_elines</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span><span class="o">&gt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines_snr_max&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 		
 		<span class="c1"># Build a list of spectra to be fitted</span>
         <span class="c1">#specs = [data[:,i,row] * good_spaxels[i] for i in range(header1[&#39;NAXIS2&#39;])]</span>
-        <span class="n">specerrs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">],</span><span class="n">error</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
+        <span class="n">specerrs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span> <span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                     <span class="n">error</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span><span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
         
 		<span class="c1"># Set up the multiprocessing pool of workers</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]:</span>
@@ -565,13 +614,16 @@
         <span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">els</span><span class="p">,</span><span class="nb">file</span><span class="p">)</span>
         <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+   	
+   	<span class="c1"># Add the generic filename to the dictionary of filenames</span>
+   	<span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_pickle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span>
    	     
     <span class="k">print</span> <span class="s1">&#39; done !&#39;</span>
     
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_make_elines_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_elines_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_elines_cube</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prev_suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
+<div class="viewcode-block" id="run_make_elines_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_elines_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_elines_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function is designed to construct a &quot;usable and decent&quot; datacube out of the</span>
 <span class="sd">    mess generated by the emission line fitting function, i.e. out of the many pickle </span>
@@ -606,9 +658,11 @@
     <span class="n">elines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="c1"># And the associated errors !</span>
     <span class="n">elines_params_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1"># Also save the status from mpfit. Could be useful for sorting the good from the bad.</span>
+    <span class="n">elines_fit_status</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the datacubes for the emission line fitting parameters.&#39;</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the datacube for the emission line fitting parameters.&#39;</span>
        
     <span class="c1"># Loop through the rows, and extract the results. </span>
     <span class="c1"># Try to loop through everything - in case this step was run in chunks.</span>
@@ -619,8 +673,7 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
         <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
-                          <span class="n">prev_suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span><span class="o">+</span>
-                          <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
+                          <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_pickle&#39;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
             <span class="c1"># Very well, I have some fit here. Let&#39;s get them back</span>
@@ -631,15 +684,21 @@
             <span class="c1"># Get all the parameters in a big array</span>
             <span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">params</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">]</span>
             <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">perror</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">]</span>
+            <span class="n">stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">]</span>
             
-            <span class="c1"># Here, I need to make sure the errs array has a decent shape, even when the </span>
-            <span class="c1"># fit failed. Also store the variance = (STANDARD DEVIATION THAT COMES OUT OF </span>
-            <span class="c1"># MPFIT)**2 !!</span>
-            <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span> <span class="k">else</span> <span class="n">item</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">errs</span><span class="p">]</span>
+            <span class="c1"># Here, I need to make sure the ps and errs array have a decent shape, even </span>
+            <span class="c1"># when the fit failed. Also store the variance = (STD that comes of mpfit**2) </span>
+            <span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span> <span class="k">else</span> <span class="n">ps</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> 
+                                                            <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ms</span><span class="p">)]</span>
+            
+            <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span> <span class="k">else</span> 
+                                                 <span class="n">errs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ms</span><span class="p">)]</span>
+            
             
             <span class="c1"># Fill the corresponding datacube</span>
             <span class="n">elines_params_cube</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="n">elines_params_err</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">elines_fit_status</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             
             <span class="c1"># now, reconstruct the full emission line spectrum</span>
             <span class="n">elines_specs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">brian_elf</span><span class="o">.</span><span class="n">els_spec</span><span class="p">(</span><span class="n">lams</span><span class="p">,</span><span class="n">p</span><span class="p">,</span><span class="n">be</span><span class="o">=</span><span class="n">be</span><span class="p">,</span> 
@@ -681,7 +740,7 @@
             <span class="c1"># Make sure the WCS coordinates are included as well</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
             <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
-            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
             <span class="c1"># Add the line reference wavelength for future references</span>
             <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_L&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;reference wavelength&#39;</span><span class="p">)</span>
             <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;F,I,v,sigma&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
@@ -693,6 +752,11 @@
                               <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_&#39;</span><span class="o">+</span>
                               <span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># Add the filename to the dictionary of filenames</span>
+        <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_&#39;</span><span class="o">+</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>\
+                                                            <span class="s1">&#39;_elines_&#39;</span><span class="o">+</span>\
+                                                            <span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span>
                    
     <span class="c1"># Very well, now let&#39;s also create a fits file to save the full emission line spectrum</span>
     <span class="c1"># as required.</span>
@@ -702,16 +766,36 @@
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
-    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
     <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_fullspec.fits&#39;</span><span class="p">)</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
     
-    <span class="k">print</span> <span class="s1">&#39; &#39;</span> </div>
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_spec_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_fullspec.fits&#39;</span>
+    
+    <span class="c1"># And finally, the plot with the fit status for each spaxel, to know the bad from the </span>
+    <span class="c1"># not-so-bad,</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">elines_fit_status</span><span class="p">)</span>
+    <span class="c1"># Make sure the WCS coordinates are included as well</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_mpfit_status.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_fit_status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_mpfit_status.fits&#39;</span>
+    
+    <span class="k">print</span> <span class="s1">&#39; &#39;</span> 
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_plot_elines_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_plot_elines_cube">[docs]</a><span class="k">def</span> <span class="nf">run_plot_elines_cube</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prev_suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+<div class="viewcode-block" id="run_plot_elines_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_plot_elines_cube">[docs]</a><span class="k">def</span> <span class="nf">run_plot_elines_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                          <span class="n">sigrange</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function is designed to create some plots for the emission lines, namely</span>
@@ -720,8 +804,7 @@
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
         <span class="k">print</span> <span class="s1">&#39;-&gt; Making some nifty plots from the emission line fitting output.&#39;</span>
        
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> <span class="n">prev_suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>
-                                          <span class="s1">&#39;_elines_params.fits&#39;</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
     
     <span class="c1"># Open the file</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
@@ -741,7 +824,7 @@
         <span class="n">this_data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         
         <span class="c1"># Make single pretty plots for Flux, Intensity, velocity and velocity dispersion                                        </span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">typ</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;sigma&#39;</span><span class="p">,]):</span> <span class="c1">#&#39;h3&#39;, &#39;h4&#39;]):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">typ</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;h4&#39;</span><span class="p">]):</span>
             <span class="c1"># Create a dedicated HDU</span>
             <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">this_data</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
             <span class="c1"># Add the WCS information</span>
@@ -788,7 +871,7 @@
                 <span class="n">my_vmin</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="n">my_vmax</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="n">my_cmap</span> <span class="o">=</span> <span class="bp">None</span>
-                <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;arcsinh&#39;</span>
+                <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
                 <span class="n">my_label</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
                 <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
                                                             
@@ -799,14 +882,22 @@
     
     <span class="c1"># Delete the temporary fits file</span>
     <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
-    
     <span class="c1"># Don&#39;t forget to close the initial hdu ...</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="c1"># And also create a plot of the fit status, to see if anything weird happened</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_fit_status&#39;</span><span class="p">])</span>
+    <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>
+                                                        <span class="s1">&#39;_eline_mpfit_status.pdf&#39;</span><span class="p">)</span> 
+    <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">16</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+                           <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span><span class="n">stretch</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
+                           <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">cblabel</span><span class="o">=</span><span class="s1">&#39;mpfit status&#39;</span><span class="p">,)</span>
+    
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_find_structures"><a class="viewcode-back" href="../modules/brian.html#brian.run_find_structures">[docs]</a><span class="k">def</span> <span class="nf">run_find_structures</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interactive_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">automatic_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
+<div class="viewcode-block" id="run_find_structures"><a class="viewcode-back" href="../modules/brian.html#brian.run_find_structures">[docs]</a><span class="k">def</span> <span class="nf">run_find_structures</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">interactive_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> 
+                        <span class="n">automatic_mode</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function is designed to identify structures (e.g. HII regions) in the data from</span>
 <span class="sd">    a 2D image (i.e. an line intensity map), and save them to a pickle file. When</span>
@@ -817,9 +908,11 @@
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
         <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the semi-automated procedure for structure identification.&#39;</span>
     
-    
     <span class="c1"># Where am I going to save the apertures information ?</span>
-    <span class="n">fn_ap</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_aplist.pkl&#39;</span><span class="p">)</span>
+    <span class="n">fn_ap</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_list.pkl&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ap_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_list.pkl&#39;</span>
     
     <span class="c1"># Do we want to build apertures based on multiple maps ? Loop, one after the other.</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ap_map_lines&#39;</span><span class="p">]:</span>
@@ -853,7 +946,8 @@
     
         <span class="c1"># Now, open the elines param datacube, and extract the Flux map I want to detect</span>
         <span class="c1"># stuctures from.</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;04_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_params.fits&#39;</span><span class="p">)</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
         <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
         <span class="n">plane</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
@@ -869,7 +963,7 @@
                                               <span class="n">save_plot</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                                                                        <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span>
                                                                        <span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>
-                                                                       <span class="s1">&#39;_aplist_&#39;</span><span class="p">),</span>
+                                                                       <span class="s1">&#39;_ap_list_&#39;</span><span class="p">),</span>
                                              <span class="p">)</span>    
         
         <span class="c1"># Only if the user wants to save the apertures, do it</span>
@@ -879,10 +973,10 @@
             <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">apertures</span><span class="p">,</span><span class="n">f</span><span class="p">)</span>
             <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
-<div class="viewcode-block" id="run_make_ap_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_ap_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_ap_cube</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
+<div class="viewcode-block" id="run_make_ap_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_make_ap_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_ap_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
     <span class="sd">&#39;&#39;&#39; </span>
 <span class="sd">    This function is designed to make a cube from a series of apertures (x,y,rs).</span>
 <span class="sd">    For compativilty with spaxels-by-spaxels analysis codes (incl.brian), make the cube</span>
@@ -898,7 +992,7 @@
               <span class="s1">&#39;aperture spectra.&#39;</span>
     
     <span class="c1"># Very well, where is the aperture file ?</span>
-    <span class="n">fn_ap</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;06_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_aplist.pkl&#39;</span><span class="p">)</span>
+    <span class="n">fn_ap</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ap_list&#39;</span><span class="p">])</span>
     <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn_ap</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
     <span class="n">start_aps</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -912,7 +1006,7 @@
             <span class="n">ref_key</span> <span class="o">=</span> <span class="n">key</span>
     
     <span class="c1"># Very well, now load the corresponding flux map</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="s1">&#39;04_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_params.fits&#39;</span><span class="p">)</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
     <span class="n">fheader0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
     <span class="n">plane</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">ref_key</span><span class="p">)</span>
@@ -984,11 +1078,14 @@
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">fheader1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
-    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
     <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_map.fits&#39;</span><span class="p">)</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>    
+    
+    <span class="c1"># Add this filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ap_map&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_map.fits&#39;</span>
     
     <span class="c1"># Make a plot of the apertures ?</span>
     <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
@@ -1009,17 +1106,19 @@
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
         <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
-        <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
         
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">])</span>
     <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_spec_cube.fits&#39;</span><span class="p">)</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>   
+      
+    <span class="c1"># Add this filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ap_spec_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_spec_cube.fits&#39;</span>
                                      
-    
     <span class="k">print</span> <span class="s1">&#39; &#39;</span>
     
-    <span class="k">return</span> <span class="bp">True</span></div>
+    <span class="k">return</span> <span class="n">fn_list</span></div>
              
     
 </pre></div>
@@ -1055,7 +1154,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.0',
+            VERSION:'0.1.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

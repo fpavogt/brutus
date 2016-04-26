@@ -10,11 +10,12 @@ from __future__ import print_function
 
 import numpy as np
 import scipy as sp
+import warnings
 import math
 import sys
 import os
 import scipy.stats as stats
-import cap_mpfit as mpfit
+import brian_mpfit as mpfit
 
 from brian_metadata import *
 
@@ -61,45 +62,51 @@ def inst_resolution(inst = 'MUSE', get_ff = False, show_plot=False):
         sys.exit('Unknown instrument...')
 # ----------------------------------------------------------------------------------------      
 
-def obs_sigma(sigma, lam, inst='MUSE', z=0, in_errs = None):
+def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
     '''
     This function compute the observed sigma (in [A]) for an emission line, given a "real" 
     sigma in km/s and the line position. Set 'inst'=None to NOT account for the instrument
     dispersion.
     '''
     
+    # Do I want to propagate errors ?
     if in_errs:
         errs = in_errs
     else:
-        errs = np.zeros(3)
-    
-    # Here, also account for the redshift. I.e. redshifted lines become a bit fatter.
-    obj_sigma = sigma/c * lam * (1+z)
-    # WARNING: THIS SHOULD ALSO BE CORRECTED FOR THE LINE REDSHIFT !
-    # TODO IN THE REST OF CODE
+        errs = np.zeros(2)
+     
+    # From km/s to A    
+    obj_sigma = sigma/c * lam
+    # Note: here, lam is the redshifted wavelength. It includes the effect of
+    # the redshift in fattening the line, i.e. sigma is the "true" sigma in the object
+    # rest frame.
+        
     obj_sigma_err = obj_sigma**2 * (errs[0]/sigma**2 + 
-                                        errs[1]/lam**2 + 
-                                        errs[2]/(z+1)**2 )
-
-    if inst:
+                                    errs[1]/lam**2)    
+        
+    if inst=='MUSE':
+        
         # TODO: understand what is the TRUE spectral resolution of MUSE !
         # Measure it from the sky emission lines + arc lines ?      
-            
-        # What is the velocity dispersion we have ? Convert from km/s to Angstroem
-        # and account for the instrumental dispersion too !        
+        # For now, get it from the ref. file.    
+        
+        # What is the velocity dispersion we have in A?     
         inst_sigma = lam/(inst_resolution(inst=inst)(lam)*2*np.sqrt(2*np.log(2)))
         # Here, assume no error coming from the Resolution curve ... sigh...
+        
         inst_sigma_err = errs[1]/(inst_resolution(inst=inst)(lam)*2*np.sqrt(2*np.log(2)))**2
         
         # Then combine sigma, in A
         this_sigma = np.sqrt(obj_sigma**2 + inst_sigma**2)
+        
         this_sigma_err = inst_sigma_err * (inst_sigma/this_sigma)**2 + \
                          obj_sigma_err * (obj_sigma/this_sigma)**2
         
     else:
+    
+        # Pretend there is no instrumental dispersion
         this_sigma = obj_sigma
         this_sigma_err = obj_sigma_err
-
 
     if in_errs:        
         return [this_sigma,this_sigma_err]
@@ -205,7 +212,7 @@ def els_spec(x, p, method ='gauss', be=None, inst='MUSE'):
     
     for i in range(len(p)/nplp):
         # What is the wavelength we are at ? Convert from km/s to Angstroem
-        this_lam = (p[nplp*i+2]/c+1)*p[nplp*i]
+        this_lam = (p[nplp*i+2]/c+1.)*p[nplp*i]
         # Get the observed sigma in Angstroem, accounting for the instrumental res.
         this_sigma = obs_sigma(p[nplp*i+3],this_lam, inst=inst)
     
@@ -219,7 +226,7 @@ def els_spec(x, p, method ='gauss', be=None, inst='MUSE'):
             # gaussian, especially with crude bins !
         
             # This is for test purposes only - DON'T USE THIS UNLESS YOU KNOW WHAT THIS MEANS !
-            spec += gauss_profile(x,be,p[nplp*i+1],this_lam,this_sigma)       
+            spec += gauss_profile(x,p[nplp*i+1],this_lam,this_sigma)       
                
         elif method =='gauss-herm':
             spec += gauss_hermite_hist(x,be,p[nplp*i+1],this_lam,this_sigma,p[nplp*i+4],
@@ -288,6 +295,7 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
     ref_dv_line = params['ref_dv_line']
 
     # Extract a spectrum around that line
+    # WARNING: this could be a problem, if the velocities in the data are larger than this
     loc_spec = spec[(lams > (ref_dv_line * (params['z_target'] + 1 -300./c))) * \
                     (lams < (ref_dv_line * (params['z_target'] + 1 +300./c)))]
     loc_lams = lams[(lams > (ref_dv_line * (params['z_target'] + 1 -300./c))) * \
@@ -310,18 +318,45 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
         # Fill sigma and v inside p0
         p0[i*nplp+3] = elines[line][0][2]
         p0[i*nplp+2] = v0
+        
+        # Make sure the starting guess for the velocity is within the boundaries
+        if params['elines'][line][2]['limited'][0] ==1: # There is a lower boundary ...
+            p0[i*nplp+2] = np.max([params['elines'][line][2]['limits'][0], p0[i*nplp+2]])
+        if params['elines'][line][2]['limited'][1] ==1: # There is an upper boundary
+            p0[i*nplp+2] = np.min([params['elines'][line][2]['limits'][1], p0[i*nplp+2]])
 	
         # For the intensity, pick the max of the area
-        loc_spec = spec[(lams > elines[line][0][0] * (params['z_target'] + 1 -300./c))*
-                        (lams < elines[line][0][0] * (params['z_target'] + 1 +300./c))]
-        p0[i*nplp+1] = np.max(loc_spec)
+        this_spec = spec[(lams > elines[line][0][0] * (params['z_target'] + 1 -300./c))*
+                             (lams < elines[line][0][0] * (params['z_target'] + 1 +300./c))]
         
+        # Define the initial guess as the largest peak in the signal - account for the 
+        # sign, to allow for both emission AND absorption lines !
+        # I get some warnings for all-nans slices ... damn ... For clarity in the prompt, 
+        # let's catch them and ignore them just this once, if the user is ok with it.
+        with warnings.catch_warnings():
+            warnings.simplefilter(params['warnings'], category=RuntimeWarning)
+            this_extrema = np.nanmax(np.abs(this_spec))
+            
+        if np.isnan(this_extrema):
+            # Bad spectra with only nans
+            this_extrema= np.nan
+        else:
+            p0[i*nplp+1] = this_extrema * \
+                            np.sign(this_spec[np.abs(this_spec)==this_extrema])
+        
+        # Make sure the starting guess for the intensity is within the boundaries
+        if params['elines'][line][1]['limited'][0] ==1: # There is a lower boundary ...
+            p0[i*nplp+1] = np.max([params['elines'][line][1]['limits'][0], p0[i*nplp+1]])
+        if params['elines'][line][1]['limited'][1] ==1: # There is an upper boundary
+            p0[i*nplp+1] = np.min([params['elines'][line][1]['limits'][1], p0[i*nplp+1]])
+        
+
         # If gauss-hermite, let the h3 and h4 = 0 as starting guesses.
         # Make sure to fix those parameters to 0 if I only want to do a normal gauss fit !
         # Otherwise, do as the user pleases ...
         if not('herm' in params['line_profile']):
-             parinf[nplp*i+4]['fixed'] = 1
-             parinf[nplp*i+5]['fixed'] = 1
+             parinfo[nplp*i+4]['fixed'] = 1
+             parinfo[nplp*i+5]['fixed'] = 1
              p0[i*nplp+4] = 0.
              p0[i*nplp+5] = 0.
     
@@ -332,7 +367,7 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
                 if key =='tied' and constraints[key]:
                     ties = constraints[key].split('p(')
                     tied_line = np.where(np.sort(elines.keys()) == ties[-1][:-1])[0][0]
-                    ties = ties[0]+'p['+np.str(4*tied_line+j+1)+']'
+                    ties = ties[0]+'p['+np.str(nplp*tied_line+j+1)+']'
                     parinfo[nplp*i+j+1][key] = ties
                 else:
                     # Assign the constraints
