@@ -148,22 +148,222 @@
   <div class="section" id="module-brian_tools">
 <span id="brian-tools-module"></span><h1>brian_tools module<a class="headerlink" href="#module-brian_tools" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
+<dt id="brian_tools.delog_rebin">
+<code class="descclassname">brian_tools.</code><code class="descname">delog_rebin</code><span class="sig-paren">(</span><em>lams</em>, <em>spec</em>, <em>old_lams</em>, <em>sampling=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#delog_rebin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.delog_rebin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Undoes the log_rebin function.</p>
+<p>This function is designed to undo the brian_tools.log_rebin function. Of course, this
+is not perfect, but setting sampling &gt;1 helps avoid losses.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>lams: 1-D numpy array</dt>
+<dd><p class="first last">The log-rebined wavelength array.</p>
+</dd>
+<dt>spec: 1-D numpy array</dt>
+<dd><p class="first last">The log-rebinned spectra.</p>
+</dd>
+<dt>old_lams: 1-D numpy array</dt>
+<dd><p class="first last">The original (linear) wavelength array.</p>
+</dd>
+<dt>sampling: int [default: 1]</dt>
+<dd><p class="first last">Amount of resampling (1 = no resampling).</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>old_lams, old_spec: 1-D numpy array, 1-D numpy array</dt>
+<dd><p class="first last">The delog-rebinned wavelength and spectra.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first">This function only deals with calculating the bin edges, and then feeds this to 
+spec_rebin.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">See also:</th><td class="field-body"><p class="first last">log_rebin()</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brian_tools.hdu_add_lams">
 <code class="descclassname">brian_tools.</code><code class="descname">hdu_add_lams</code><span class="sig-paren">(</span><em>newheader</em>, <em>refheader</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#hdu_add_lams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.hdu_add_lams" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function adds the Wavelength information from a reference header to a new header.</p>
+<dd><p>Adds the wavelength information from a reference header to a new header.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>newheader: FITS header</dt>
+<dd><p class="first last">The destination header to which the wavelength keywords must be added.</p>
+</dd>
+<dt>refheader: FITS header</dt>
+<dd><p class="first last">The reference header, from which to transer the wavelength keywords.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: FITS header</dt>
+<dd><p class="first last">The newheader with wavelength info included.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">Keywords transfered are &#8216;CTYPE3&#8217;, &#8216;CUNIT3&#8217;, &#8216;CD3_3&#8217;, &#8216;CRPIX3&#8217;, &#8216;CRVAL3&#8217;, &#8216;CD1_3&#8217;, 
+&#8216;CD2_3&#8217;, &#8216;CD3_1&#8217; and &#8216;CD3_2&#8217;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="brian_tools.hdu_add_wcs">
 <code class="descclassname">brian_tools.</code><code class="descname">hdu_add_wcs</code><span class="sig-paren">(</span><em>newheader</em>, <em>refheader</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#hdu_add_wcs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.hdu_add_wcs" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function adds the WCS coordinates from a reference header to a new header.</p>
+<dd><p>Adds the WCS coordinates from a reference header to a new header.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>newheader: FITS header</dt>
+<dd><p class="first last">The destination header to which the WCS keywords must be added.</p>
+</dd>
+<dt>refheader: FITS header</dt>
+<dd><p class="first last">The reference header, from which to transer the WCS keywords.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: FITS header</dt>
+<dd><p class="first last">The newheader with WCS info included.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">Keywords transfered are  &#8216;CRPIX1&#8217;, &#8216;CD1_1&#8217;, &#8216;CTYPE1&#8217;, &#8216;CUNIT1&#8217;, &#8216;CRPIX2&#8217;, &#8216;CD2_2&#8217;,
+&#8216;CTYPE2&#8217;, &#8216;CUNIT2&#8217;, &#8216;CD1_2&#8217;, &#8216;CD2_1&#8217;, &#8216;CRVAL1&#8217; and &#8216;CRVAL2&#8217;.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="brian_tools.init_worker">
 <code class="descclassname">brian_tools.</code><code class="descname">init_worker</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#init_worker"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.init_worker" title="Permalink to this definition">¶</a></dt>
-<dd><p>THis function is designed to handle KeyboardInterrupt during multiprocessing.
-See <a class="reference external" href="https://noswap.com/blog/python-multiprocessing-keyboardinterrupt">https://noswap.com/blog/python-multiprocessing-keyboardinterrupt</a></p>
+<dd><p>Handles KeyboardInterrupt during multiprocessing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body">See <a class="reference external" href="https://noswap.com/blog/python-multiprocessing-keyboardinterrupt">https://noswap.com/blog/python-multiprocessing-keyboardinterrupt</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_tools.inst_resolution">
+<code class="descclassname">brian_tools.</code><code class="descname">inst_resolution</code><span class="sig-paren">(</span><em>inst='MUSE'</em>, <em>get_ff=False</em>, <em>show_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#inst_resolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.inst_resolution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the functional resolution of an instrument as a function of the wavelength.</p>
+<p>Returns a callable function of the wavelength (in Angstroem !).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_tools.log_rebin">
+<code class="descclassname">brian_tools.</code><code class="descname">log_rebin</code><span class="sig-paren">(</span><em>lams</em>, <em>spec</em>, <em>sampling=1</em>, <em>velscale=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#log_rebin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.log_rebin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logarithmically rebin a spectrum.</p>
+<p>This function rebins a linear spectrum in log bins. It basically redistribute light
+into the new bins, while conserving the flux density.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>lams: 1-D numpy array</dt>
+<dd><p class="first last">The input (linear) bin wavelengths, in Angstroem.</p>
+</dd>
+<dt>spec: 1-D numpy array</dt>
+<dd><p class="first last">The input spectrum.</p>
+</dd>
+<dt>sampling: int [default:1]</dt>
+<dd><p class="first last">Amount of resampling (1 = no resampling).</p>
+</dd>
+<dt>velscale: float [default: None]</dt>
+<dd><p class="first last">The logarithmic bin size in km/s (None = choose default given sampling).</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>new_lams, new_spec, velscale: 1-D array, 1-D array, float</dt>
+<dd><p class="first last">The new spectral bin centers in Angstroem, 
+the reshaped spectrum, and the associated velscale 
+(in km/s).</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">Inspired by log_rebin inside ppxf_util, but without the one magic line I don&#8217;t 
+understand (replaced by a &#8220;dumb&#8221; for-loop instead). Wraps around spec_rebin.  
+If velscale is set, sampling has no effect. The logarithmic bin centers are the 
+geometric means of the logarithmic bin edges. Unlike ppxf_util.log_rebin, return 
+the new bin centers in Angstroem.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_tools.spec_rebin">
+<code class="descclassname">brian_tools.</code><code class="descname">spec_rebin</code><span class="sig-paren">(</span><em>borders</em>, <em>new_borders</em>, <em>spec</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#spec_rebin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.spec_rebin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebin an array to new bins, while conserving the flux density.</p>
+<p>This function rebins a spectrum from one grid to another, assuming the two grids
+start and end at the same spot. Conserves the flux density in each bin.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>borders: 1-D numpy array</dt>
+<dd><p class="first last">The edges of the initial spectrum bins.</p>
+</dd>
+<dt>new_borders: 1-D numpy array</dt>
+<dd><p class="first last">The edges of the new spectrum bins.</p>
+</dd>
+<dt>spec: 1-D numpy array</dt>
+<dd><p class="first last">The spectrum to rebin, with len(spec) = len(borders)-1.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>out: 1-D numpy array</dt>
+<dd><p class="first last">The rebinned spectrum, with size = len(new_borders)-1.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

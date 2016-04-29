@@ -151,14 +151,49 @@
 <dl class="function">
 <dt id="brian_cof.lowess_fit">
 <code class="descclassname">brian_cof.</code><code class="descname">lowess_fit</code><span class="sig-paren">(</span><em>spec</em>, <em>lams</em>, <em>frac=0.05</em>, <em>it=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_cof.html#lowess_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_cof.lowess_fit" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function fits a spectrum using a LOWESS (Locally Weighted Scatterplot Smoothing)
-technique, described in: 
-Cleveland, W.S. (1979) Robust Locally Weighted Regression and Smoothing Scatterplots. 
-Journal of the American Statistical Association 74 (368): 829-836.</p>
-<p>This is robust to outliers (hot pixels, cosmics), and is also efficient to ignore 
-emission lines. frac=0.05 and it=5 seem to work very fine for spectra of any SNR, both
-lousy with no continuum, and good ones in the center of galaxies - modulo the stellar
-absorption features which are of course &#8220;ignored&#8221; by the LOWESS routine.</p>
+<dd><p>Fit a spectrum using a Locally Weighted Scatterplot Smoothing approach.</p>
+<p>Wraps around statsmodels.nonparametric.smoothers_lowess.lowess().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>spec: 1-D numpy array</dt>
+<dd><p class="first last">The input spectrum.</p>
+</dd>
+<dt>lams: 1-D numpy array</dt>
+<dd><p class="first last">The corresponding wavelength array.</p>
+</dd>
+<dt>frac: float [default:0.05]</dt>
+<dd><p class="first last">Between 0 and 1. The fraction of the data used when estimating each y-value.
+[From the statsmodel lowess function]</p>
+</dd>
+<dt>it: int [default:5]</dt>
+<dd><p class="first last">The number of residual-based reweightings to perform.
+[From the statsmodel lowess function]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: 1-D array</dt>
+<dd><p class="first last">The fitted array, with size equal to spec.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first">This function fits a spectrum using a LOWESS (Locally Weighted Scatterplot 
+Smoothing) technique, described in: 
+Cleveland, W.S. (1979) Robust Locally Weighted Regression and Smoothing 
+Scatterplots. Journal of the American Statistical Association 74 (368): 829-836.</p>
+<p class="last">This is robust to outliers (hot pixels, cosmics), and is also efficient to ignore 
+emission lines. frac=0.05 and it=5 seem to work very fine for spectra of any SNR, 
+both lousy with no continuum, and good ones in the center of galaxies - modulo the 
+stellar absorption features which are of course &#8220;ignored&#8221; by the LOWESS routine.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

@@ -176,6 +176,44 @@ can be restarted mid-course, in case of a crash.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="brian.run_inspect_fit">
+<code class="descclassname">brian.</code><code class="descname">run_inspect_fit</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, irange=[None, None], vrange=[None, None]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_inspect_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_inspect_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the interactive inspection of the fit results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brian.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>irange: list of int [default: [None,None]]</dt>
+<dd><p class="first last">The range of the colorbar for the intensity plot.</p>
+</dd>
+<dt>vrange: list of int [default: [None,None]]    </dt>
+<dd><p class="first last">The range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brian.run_make_ap_cube">
 <code class="descclassname">brian.</code><code class="descname">run_make_ap_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_make_ap_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_make_ap_cube" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function is designed to make a cube from a series of apertures (x,y,rs).
@@ -206,8 +244,77 @@ files generated.</p>
 <dl class="function">
 <dt id="brian.run_plot_elines_cube">
 <code class="descclassname">brian.</code><code class="descname">run_plot_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_plot_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_plot_elines_cube" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function is designed to create some plots for the emission lines, namely
-Flux, Intensity, velocity and sigma.</p>
+<dd><p>Creates some plots for the emission lines: F, I, v and sigma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brian.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>vrange: list of int [default: None]</dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity plot.</p>
+</dd>
+<dt>sigrangre: list of int [default: None]        </dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian.run_plot_ppxf_sol">
+<code class="descclassname">brian.</code><code class="descname">run_plot_ppxf_sol</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian.html#run_plot_ppxf_sol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian.run_plot_ppxf_sol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates some plots for the stellar kinematics parameters derived via ppxf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brian.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>vrange: list of int [default: None]</dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity plot.</p>
+</dd>
+<dt>sigrangre: list of int [default: None]        </dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">

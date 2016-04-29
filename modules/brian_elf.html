@@ -183,13 +183,82 @@ mu and sigma in Angstroem</p>
 <dl class="function">
 <dt id="brian_elf.gauss_hist">
 <code class="descclassname">brian_elf.</code><code class="descname">gauss_hist</code><span class="sig-paren">(</span><em>x</em>, <em>binedges</em>, <em>I</em>, <em>mu</em>, <em>sigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_hist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_hist" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute the proper histogram of an emission line, given certain bin sizes.</p>
+<dd><p>Computes the proper histogram of an emission line, given certain bin sizes.</p>
+<p>The profile is normalized to peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>x: float, 1-D numpy array</dt>
+<dd><p class="first last">Locations to compute the Gaussian profile, assumed to be in Angstroem.</p>
+</dd>
+<dt>binedges: 1-D numpy array</dt>
+<dd><p class="first last">Locations of the bin edges, with size of len(x)+1.</p>
+</dd>
+<dt>I: float</dt>
+<dd><p class="first last">The profile peak intensity.</p>
+</dd>
+<dt>mu: float</dt>
+<dd><p class="first last">The profile mean, in Angstroem.</p>
+</dd>
+<dt>sigma: float</dt>
+<dd><p class="first last">The standard deviation of the profile, in Angstroem.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: float, 1-D numpy array</dt>
+<dd><p class="first last">The profile evaluated at x</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">This function is taking into account the finite bin sizes when observing a line 
+with an intrinsic gaussian profile. I.e. each location shows the mean intensity 
+over the bin, rather than the intensity of the gaussian profile at the bin center. 
+This is the functional form to use when fitting an emission line in a spectra, 
+rather than a simple gaussian profile.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="brian_elf.gauss_profile">
 <code class="descclassname">brian_elf.</code><code class="descname">gauss_profile</code><span class="sig-paren">(</span><em>x</em>, <em>I</em>, <em>mu</em>, <em>sigma</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#gauss_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.gauss_profile" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a normal gaussian, normalized to peak. mu and sigma in Angstroem</p>
+<dd><p>Computes a gaussian profile at x, normalized to peak.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>x: float, 1-D numpy array</dt>
+<dd><p class="first last">Locations to compute the Gaussian profile, assumed to be in Angstroem.</p>
+</dd>
+<dt>I: float</dt>
+<dd><p class="first last">The profile peak intensity.</p>
+</dd>
+<dt>mu: float</dt>
+<dd><p class="first last">The profile mean, in Angstroem.</p>
+</dd>
+<dt>sigma: float</dt>
+<dd><p class="first last">The standard deviation of the profile, in Angstroem.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>out: float, 1-D numpy array</dt>
+<dd><p class="first last">The profile evaluated at x.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -198,14 +267,6 @@ mu and sigma in Angstroem</p>
 <dd><p>Computes the scaling factor to be applied to Hermite polynomials, when using offcenter
 &amp; broad gaussian line profiles (i.e. with mu !=0 and and sigma != 1).
 See footnote 3 on p. 555 of van der Marel (1993).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="brian_elf.inst_resolution">
-<code class="descclassname">brian_elf.</code><code class="descname">inst_resolution</code><span class="sig-paren">(</span><em>inst='MUSE'</em>, <em>get_ff=False</em>, <em>show_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_elf.html#inst_resolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_elf.inst_resolution" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the resolution as a function of the wavelength
-for different instruments.</p>
-<p>Returns a callable function of the wavelength (in Angstroem !).</p>
 </dd></dl>
 
 <dl class="function">

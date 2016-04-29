@@ -146,8 +146,63 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="brian-ppxf-module">
-<h1>brian_ppxf module<a class="headerlink" href="#brian-ppxf-module" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="module-brian_ppxf">
+<span id="brian-ppxf-module"></span><h1>brian_ppxf module<a class="headerlink" href="#module-brian_ppxf" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="brian_ppxf.ppxf_population">
+<code class="descclassname">brian_ppxf.</code><code class="descname">ppxf_population</code><span class="sig-paren">(</span><em>specerr</em>, <em>templates=None</em>, <em>velscale=None</em>, <em>start=None</em>, <em>goodpixels=None</em>, <em>plot=False</em>, <em>moments=4</em>, <em>degree=-1</em>, <em>vsyst=None</em>, <em>clean=False</em>, <em>mdegree=10</em>, <em>regul=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_ppxf.html#ppxf_population"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_ppxf.ppxf_population" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that calls ppxf, designed to be called from multiprocessing (i.e. only 
+require 1 argument). Everything else is taken care of outside of this.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_ppxf.setup_spectral_library">
+<code class="descclassname">brian_ppxf.</code><code class="descname">setup_spectral_library</code><span class="sig-paren">(</span><em>velscale</em>, <em>inst</em>, <em>sl_name</em>, <em>fit_lims</em>, <em>z</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_ppxf.html#setup_spectral_library"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_ppxf.setup_spectral_library" title="Permalink to this definition">¶</a></dt>
+<dd><p>This prepares the set of stellar templates to be fed to ppxf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">velscale - the velocity scale for the log-rebinning</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">inst - the instrument that took the data, e.g. &#8216;MUSE&#8217;</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">sl_name - the name of the stellar library to use</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">fit_lims - the spectral range for the fit (data &amp; templates overlap)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">z - redshift of target - needed for correct reshaping of fwhm_target.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">...lots of stuf...</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brian_ppxf.sl_resample">
+<code class="descclassname">brian_ppxf.</code><code class="descname">sl_resample</code><span class="sig-paren">(</span><em>fn</em>, <em>z=0</em>, <em>inst='MUSE'</em>, <em>sl_name='MILES_ppxf_default'</em>, <em>do_cap=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_ppxf.html#sl_resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_ppxf.sl_resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function resamples a given spectrum (i.e. from a stellar library)
+to match theresolution of the instrument that took the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">fn: filename of stellar template</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">z: redshift of the target observations</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">inst: which instrument are we using</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">sl_name: which templates do we use ?</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Do_cap:</th><td class="field-body">do the convolution using M.Cappellari in-built function</td>
+</tr>
+</tbody>
+</table>
+<p>Returns the convolved spectrum</p>
+</dd></dl>
+
 </div>
 
 
