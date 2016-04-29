@@ -136,7 +136,15 @@
   <div class="section" id="changelog">
 <span id="id1"></span><h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline">¶</a></h1>
 <dl class="docutils">
-<dt>v0.1.1, April 2016, F.P.A. Vogt</dt>
+<dt>TODO:</dt>
+<dd><ul class="first last simple">
+<li>allow for more stellar templates.</li>
+<li>add the reference to the LOWESS paper in the acknowledgment.</li>
+<li>add the reference to the stellar templates in the acknowledgments.</li>
+<li>in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction.</li>
+</ul>
+</dd>
+<dt>v0.1.1, April 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>replaced &#8216;0.1&#8217; with &#8216;__version__&#8217; when saving fits headers</li>
 <li>separated the continuum fitting from the construction of the continuum data cube, for
@@ -146,10 +154,16 @@ clarity and consistency with the emission lines</li>
 <li>started catching numpy warnings in known locations, triggered by all-nan&#8217;s spaxels</li>
 <li>implemented a dictionary of created filenames (in brian_metadata), to better keep track
 of what is created, with much less hard-coded filenames</li>
+<li>added home-made &#8220;alligator&#8221; colorbar for that special look (and also to show nan&#8217;s and
+spaxels that land at the edges or outside a colorbar range for a given plot)</li>
+<li>connected brian to ppxf</li>
+<li>defined structure of the docstring, to be used through brian, in brian_cof.lowess_fit</li>
+<li>added interactive plot to inspect the results of the fit - and the ability to save a
+pretty plot from it.</li>
 <li>bugfixes</li>
 </ul>
 </dd>
-<dt>v0.1.0, April 2016, F.P.A. Vogt</dt>
+<dt>v0.1.0, April 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>created overall code structure inspired by pywifes</li>
 <li>implemented continuum fitting using LOWESS approach</li>

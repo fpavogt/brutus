@@ -1,0 +1,9 @@
+.. _changelog:
+
+TODO
+=========
+
+- create plots for the ppxf output.
+- allow for more stellar templates.
+- add the reference to the LOWESS paper in the acknowledgment.
+- add the reference to the stellar templates in the acknowledgments.

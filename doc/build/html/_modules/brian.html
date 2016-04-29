@@ -149,14 +149,18 @@
 <span class="kn">import</span> <span class="nn">pickle</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">glob</span>
 
 <span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
 
-<span class="kn">import</span> <span class="nn">brian_tools</span> <span class="kn">as</span> <span class="nn">tools</span>
+<span class="kn">import</span> <span class="nn">brian_tools</span>
 <span class="kn">import</span> <span class="nn">brian_cof</span>
 <span class="kn">import</span> <span class="nn">brian_elf</span>
 <span class="kn">import</span> <span class="nn">brian_plots</span>
+<span class="kn">import</span> <span class="nn">brian_ppxf</span>
 <span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
    
 <span class="c1"># ---------------------------------------------------------------------------------------- </span>
   
@@ -225,7 +229,7 @@
     <span class="n">hdu3</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">anything</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
     <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">,</span><span class="n">hdu3</span><span class="p">]:</span>
-        <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
         <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="c1"># For reference, also include the line/region this maps are based on</span>
@@ -259,7 +263,7 @@
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_signal.pdf&#39;</span><span class="p">),</span>
                             <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
-                            <span class="n">cmap</span> <span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span>
+                            <span class="n">cmap</span> <span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                             <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;Spaxels with data&#39;</span><span class="p">,</span>
                             <span class="p">)</span>               
                          
@@ -312,16 +316,117 @@
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
             <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the continuum fitting using the LOWESS approach.&#39;</span>
             
-        <span class="n">fit_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">brian_cof</span><span class="o">.</span><span class="n">lowess_fit</span><span class="p">,</span> <span class="n">lams</span><span class="o">=</span><span class="n">lams</span><span class="p">,</span> <span class="n">frac</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">it</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">fit_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">brian_cof</span><span class="o">.</span><span class="n">lowess_fit</span><span class="p">,</span> <span class="n">lams</span><span class="o">=</span><span class="n">lams</span><span class="p">,</span> 
+                           <span class="n">frac</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;lowess_frac&#39;</span><span class="p">],</span> <span class="n">it</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;lowess_it&#39;</span><span class="p">])</span>
         <span class="c1"># Note here the clever use of the partial function, that turns the lowess_fit</span>
         <span class="c1"># function from something that takes 4 arguments into something that only takes 1</span>
         <span class="c1"># argument ... thus perfect for the upcoming &quot;map&quot; functions !</span>
         
     <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
-	    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-        	<span class="k">print</span> <span class="s1">&#39;-&gt; Starting the continuum fitting using PPXF.&#39;</span> 
-            <span class="c1">#fit_func = partial(brian_ppxf.XXX)  </span>
-	        <span class="c1"># TODO: connect to PPXF    </span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the continuum fitting using PPXF.&#39;</span> 
+        	
+        <span class="c1"># I need to do some special preparation for &#39;ppxf&#39;. Namely, log-rebin the </span>
+        <span class="c1"># templates. I could do that for each fit, bit it would cost me time. At the price </span>
+        <span class="c1"># of a larger code here, do it only once, and save &quot;tons&quot; of time (~0.5s per fit).</span>
+        <span class="c1"># The code below is based on the examples provided by M. Cappellari within ppxf </span>
+        <span class="c1"># istelf (ppxf_kinematics_example_sauron.py &amp; ppxf_population_example_sdss.py), </span>
+        <span class="c1"># but has been modified to account a wavelength dependant spectral resolution of </span>
+        <span class="c1"># the data. And avoid doing the same thing multiple times via multiprocessing. </span>
+        
+        <span class="c1"># The full spectral range</span>
+        <span class="n">lam_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lams</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">lams</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="c1"># De-redshift it using the user&#39;s best guess</span>
+        <span class="c1"># Here&#39;s the original text from M. Cappellari:</span>
+        <span class="c1">#</span>
+        <span class="c1"># &lt;&lt; If the galaxy is at a significant redshift (z &gt; 0.03), one would need to </span>
+        <span class="c1"># apply a large velocity shift in PPXF to match the template to the galaxy </span>
+        <span class="c1"># spectrum. This would require a large initial value for the velocity (V&gt;1e4 km/s)</span>
+        <span class="c1"># in the input parameter START = [V,sig]. This can cause PPXF to stop!</span>
+        <span class="c1"># The solution consists of bringing the galaxy spectrum roughly to the</span>
+        <span class="c1"># rest-frame wavelength, before calling PPXF. In practice there is no</span>
+        <span class="c1"># need to modify the spectrum before the usual LOG_REBIN, given that a</span>
+        <span class="c1"># red shift corresponds to a linear shift of the log-rebinned spectrum.</span>
+        <span class="c1"># One just needs to compute the wavelength range in the rest-frame</span>
+        <span class="c1"># and adjust the instrumental resolution of the galaxy observations. &gt;&gt;</span>
+        <span class="n">lams0</span> <span class="o">=</span> <span class="n">lams</span><span class="o">/</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">lam_range0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lams0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">lams0</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="c1"># We can only fit the spectra where they overlap with the spectral library.</span>
+        <span class="c1"># Get one of the templates, figure out its range, and derive the fit limits.</span>
+        <span class="n">sl_fns</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sl_models</span><span class="p">[</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sl_name&#39;</span><span class="p">]][</span><span class="s1">&#39;sl_loc&#39;</span><span class="p">],</span><span class="s1">&#39;*&#39;</span><span class="p">))</span>
+        <span class="n">hdu_sl</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">sl_fns</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">header_sl</span> <span class="o">=</span> <span class="n">hdu_sl</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+        <span class="n">hdu_sl</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+        <span class="n">lams_sl</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header_sl</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">header_sl</span><span class="p">[</span><span class="s1">&#39;CDELT1&#39;</span><span class="p">]</span> <span class="o">+</span> \
+                                                                       <span class="n">header_sl</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">]</span>
+        <span class="n">lam_range_sl</span> <span class="o">=</span> <span class="p">[</span><span class="n">lams_sl</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">lams_sl</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        
+        <span class="c1"># What are my fit limits, then ?</span>
+        <span class="n">fit_lims</span> <span class="o">=</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">lam_range0</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">lam_range_sl</span><span class="p">[</span><span class="mi">0</span><span class="p">]]),</span> 
+                   <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">lam_range0</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">lam_range_sl</span><span class="p">[</span><span class="mi">1</span><span class="p">]])]</span>  
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">lams0</span> <span class="o">&gt;</span> <span class="n">fit_lims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">lams0</span> <span class="o">&lt;</span> <span class="n">fit_lims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">lams0c</span> <span class="o">=</span> <span class="n">lams0</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+        <span class="n">lam_range0c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lams0c</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lams0c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        
+        <span class="c1"># Soon, I will be log-rebining the spectra. What are the new bins going to be ?</span>
+        <span class="n">log_lams0c</span><span class="p">,</span> <span class="n">emptyspec</span><span class="p">,</span> <span class="n">velscale</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">log_rebin</span><span class="p">(</span><span class="n">lams0c</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lams0c</span><span class="p">),</span> 
+                                                     <span class="n">sampling</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sampling&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># Deal with the template spectra: disperse them according to the instrument, and</span>
+        <span class="c1"># log-rebin them</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Preparing the templates ... &#39;</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+            
+        <span class="n">templates</span><span class="p">,</span> <span class="n">lam_range_temp</span><span class="p">,</span> <span class="n">logAge_grid</span><span class="p">,</span> <span class="n">metal_grid</span><span class="p">,</span> <span class="n">log_lams_temp</span> <span class="o">=</span> \
+        <span class="n">brian_ppxf</span><span class="o">.</span><span class="n">setup_spectral_library</span><span class="p">(</span><span class="n">velscale</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">],</span> 
+                                          <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sl_name&#39;</span><span class="p">],</span> <span class="n">fit_lims</span><span class="p">,</span> 
+                                          <span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>   
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;done.&#39;</span><span class="p">)</span>
+            <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>                                      
+                                          
+                                          
+        <span class="c1"># For the fit reconstruction later on, save the various wavelength ranges, etc ...</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ppxf_lams.pkl&#39;</span><span class="p">)</span>
+        <span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">([</span><span class="n">lams</span><span class="p">,</span><span class="n">lams0</span><span class="p">,</span><span class="n">lams0c</span><span class="p">,</span><span class="n">log_lams0c</span><span class="p">],</span><span class="nb">file</span><span class="p">)</span>
+        <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="c1"># And add the generic pickle filename to the dictionary of filenames</span>
+        <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_lams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ppxf_lams.pkl&#39;</span>              
+                                          
+        <span class="c1"># From M. Cappellari:</span>
+        <span class="c1"># &lt;&lt; The galaxy and the template spectra do not have the same starting wavelength.</span>
+        <span class="c1"># For this reason an extra velocity shift DV has to be applied to the template</span>
+        <span class="c1"># to fit the galaxy spectrum. We remove this artificial shift by using the</span>
+        <span class="c1"># keyword VSYST in the call to PPXF below, so that all velocities are</span>
+        <span class="c1"># measured with respect to DV.&gt;&gt;</span>
+        <span class="c1">#</span>
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lam_range_temp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">lam_range0c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> 
+        
+        <span class="c1"># Initial estimate of the galaxy velocity in km/s:        </span>
+        <span class="n">vel</span> <span class="o">=</span> <span class="mf">0.</span>   <span class="c1"># It&#39;s been de-redshifted (using user&#39;s guess)</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="p">[</span><span class="n">vel</span><span class="p">,</span> <span class="mf">100.</span><span class="p">]</span>  <span class="c1"># (km/s), starting guess for [V,sigma]</span>
+        
+        <span class="c1"># Now create a list of &quot;good pixels&quot;, i.e. mask emission lines and stuff.</span>
+        <span class="c1"># List is the default one from ppxf.</span>
+        <span class="n">goodpixels</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">determine_goodpixels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">log_lams0c</span><span class="p">),</span> <span class="n">lam_range_temp</span><span class="p">,</span> <span class="n">vel</span><span class="o">/</span><span class="n">c</span><span class="p">)</span>
+
+        <span class="c1"># See the pPXF documentation for the keyword REGUL, and an explanation of the </span>
+        <span class="c1"># following two lines</span>
+        <span class="n">templates</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">templates</span><span class="p">)</span> <span class="c1"># Normalizes templates by a scalar</span>
+        <span class="n">regul_err</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_regul_err&#39;</span><span class="p">]</span>  <span class="c1"># Desired regularization error</span>
+        
+        <span class="n">fit_func</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">brian_ppxf</span><span class="o">.</span><span class="n">ppxf_population</span><span class="p">,</span> <span class="n">templates</span><span class="o">=</span><span class="n">templates</span><span class="p">,</span> 
+                           <span class="n">velscale</span><span class="o">=</span><span class="n">velscale</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">goodpixels</span><span class="o">=</span><span class="n">goodpixels</span><span class="p">,</span> 
+                           <span class="n">plot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">moments</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_moments&#39;</span><span class="p">],</span> 
+                           <span class="n">degree</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_degree&#39;</span><span class="p">],</span> <span class="n">vsyst</span><span class="o">=</span><span class="n">dv</span><span class="p">,</span> <span class="n">clean</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                           <span class="n">mdegree</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_mdegree&#39;</span><span class="p">],</span> <span class="n">regul</span><span class="o">=</span><span class="mf">1.</span><span class="o">/</span><span class="n">regul_err</span><span class="p">)</span>    
 
     <span class="c1"># Very well, let&#39;s start the loop on rows. If the code crashes/is interrupted, you&#39;ll</span>
     <span class="c1"># loose the current row. Just live with it.</span>
@@ -337,6 +442,30 @@
 		
 		<span class="c1"># Build a list of spectra to be fitted</span>
         <span class="n">specs</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span> <span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
+        <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">error</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span> <span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
+        
+        <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Log-rebin spectra in row %2.i ...            &#39;</span><span class="o">%</span><span class="n">row</span><span class="p">)</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                
+            <span class="c1"># I need to do some special preparation for &#39;ppxf&#39;. Namely, log-rebin the </span>
+            <span class="c1"># spectra, and crop them to an appropriate wavelength after de-redshifting. </span>
+            <span class="c1"># Let&#39;s get started. </span>
+            <span class="c1"># To save time, only log-rebin spectra that are not all nans</span>
+            <span class="n">specs</span> <span class="o">=</span> <span class="p">[</span><span class="n">brian_tools</span><span class="o">.</span><span class="n">log_rebin</span><span class="p">(</span><span class="n">lam_range0c</span><span class="p">,</span> <span class="n">this_spec</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
+                                     <span class="n">sampling</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sampling&#39;</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span> 
+                                     <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">this_spec</span><span class="p">)))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> 
+                                     <span class="k">for</span> <span class="n">this_spec</span> <span class="ow">in</span> <span class="n">specs</span><span class="p">]</span>                      
+            <span class="c1"># Also take care of the error</span>
+            <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">brian_tools</span><span class="o">.</span><span class="n">log_rebin</span><span class="p">(</span><span class="n">lam_range0c</span><span class="p">,</span> <span class="n">this_err</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span> 
+                                     <span class="n">sampling</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sampling&#39;</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span>
+                                     <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">this_err</span><span class="p">)))</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>  
+                                     <span class="k">for</span> <span class="n">this_err</span> <span class="ow">in</span> <span class="n">errs</span><span class="p">]</span>                                                                 
+                                                                            
+            <span class="c1"># Combine both spectra and errors, to feed only 1 element to fit_func</span>
+            <span class="c1"># Turn the error into a std to feed ppxf</span>
+            <span class="n">specs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">specs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">errs</span><span class="p">[</span><span class="n">i</span><span class="p">])]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
         
 		<span class="c1"># Set up the multiprocessing pool of workers</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]:</span>
@@ -344,12 +473,12 @@
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">:</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]</span>
                 <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span> <span class="o">=</span> <span class="n">nproc</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
+                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
                 
             <span class="k">else</span><span class="p">:</span> <span class="c1"># Ok, just use them all ...</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
                 <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
+                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
 			
             <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Fitting spectra in row %2.i, </span><span class="si">%i</span><span class="s1"> at a time ...&#39;</span> <span class="o">%</span> 
@@ -420,6 +549,16 @@
     
     <span class="n">cont_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
+    <span class="c1"># In the case of ppxf, also extract the stellar moments.</span>
+    <span class="c1"># Not the most trustworthy, but interesting nonetheless.</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_moments&#39;</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+        <span class="n">ppxf_sol_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_moments&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span>
+                                                        <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="c1"># For ppxf, also create a spectrum with the de-logged rebin original spectra. Useful </span>
+    <span class="c1"># to characterize the error associated with log-bin-delog-bin process employed here.</span>
+    <span class="n">delog_raw_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+                                                        
     <span class="c1"># Loop through the rows, and extract the results. </span>
     <span class="c1"># Try to loop through everything - in case this step was run in chunks.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nrows</span><span class="p">):</span>
@@ -438,14 +577,65 @@
             <span class="n">myfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
         
             <span class="c1"># Mind the shape</span>
-            <span class="n">cont_cube</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conts</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> 
-                   
+            <span class="k">if</span> <span class="n">method</span><span class="o">==</span><span class="s1">&#39;lowess&#39;</span><span class="p">:</span>
+                <span class="c1"># I directly saved the continuum as an array just get it out.</span>
+                <span class="n">cont_cube</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">conts</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> 
+            <span class="k">elif</span> <span class="n">method</span> <span class="o">==</span><span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
+                <span class="c1"># Alright, in this case, the pickle file contains the output from ppxf</span>
+            
+                <span class="c1"># Extract the various wavelength ranges, etc ...</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_lams&#39;</span><span class="p">])</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                <span class="p">[</span><span class="n">lams</span><span class="p">,</span><span class="n">lams0</span><span class="p">,</span><span class="n">lams0c</span><span class="p">,</span><span class="n">log_lams0c</span><span class="p">]</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                
+                <span class="c1"># The fit outputs are all on the log_lams0c grid, and I want them back on</span>
+                <span class="c1"># lams.  </span>
+                <span class="c1"># First, extract the bestfit spectra. </span>
+                <span class="c1"># For test purposes, also extract the galaxy spectra with pp.galaxy</span>
+                <span class="n">bestfits</span> <span class="o">=</span> <span class="p">[</span><span class="n">pp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">pp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">]</span>
+                <span class="n">galaxys</span> <span class="o">=</span> <span class="p">[</span><span class="n">pp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">pp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">]</span>
+                
+                <span class="c1"># And the stellar moments</span>
+                <span class="n">ppxf_sol_map</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pp</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">pp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> 
+                                                  <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_moments&#39;</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> 
+                                                  <span class="k">for</span> <span class="n">pp</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+                                                  
+                <span class="c1"># Now, I need storage that spans the original data range</span>
+                <span class="n">full_bestfits</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lams0</span><span class="p">)</span> <span class="k">for</span> <span class="n">this_spec</span> <span class="ow">in</span> <span class="n">bestfits</span><span class="p">]</span>
+                <span class="n">full_galaxys</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">lams0</span><span class="p">)</span> <span class="k">for</span> <span class="n">this_spec</span> <span class="ow">in</span> <span class="n">galaxys</span><span class="p">]</span>
+                
+                <span class="c1"># Now, I want to delog-rebin the spectra back to the original grid</span>
+                <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">cube</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">bestfits</span><span class="p">,</span> <span class="n">galaxys</span><span class="p">]):</span>
+                    <span class="n">cube</span> <span class="o">=</span> <span class="p">[</span><span class="n">brian_tools</span><span class="o">.</span><span class="n">delog_rebin</span><span class="p">(</span><span class="n">log_lams0c</span><span class="p">,</span> <span class="n">this_spec</span><span class="p">,</span> <span class="n">lams0c</span><span class="p">,</span> 
+                                                    <span class="n">sampling</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;ppxf_sampling&#39;</span><span class="p">])[</span><span class="mi">1</span><span class="p">]</span> 
+                            <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">this_spec</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> <span class="bp">None</span> <span class="k">for</span> <span class="n">this_spec</span> <span class="ow">in</span> <span class="n">cube</span><span class="p">]</span>
+                            
+                    <span class="c1"># Now, I want to un-crop this, by adding nans elsewhere. Make a loop, </span>
+                    <span class="c1"># but there&#39;s probably a more Pythonic way of doing it. </span>
+                    <span class="c1"># TODO: try again when my brain won&#39;t be that fried ...</span>
+                    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">lams0</span> <span class="o">&gt;=</span><span class="n">lams0c</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">lams0</span><span class="o">&lt;=</span><span class="n">lams0c</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                
+                    <span class="k">for</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">fit</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cube</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fit</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+                            <span class="p">[</span><span class="n">full_bestfits</span><span class="p">,</span><span class="n">full_galaxys</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="n">f</span><span class="p">][</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">fit</span>
+                
+                    <span class="c1"># And finally, I need to de-redshift that spectra. No need to touch </span>
+                    <span class="c1"># the spectra because I did not touch it before.</span>
+                
+                    <span class="c1"># Ready to save the continuum cube</span>
+                    <span class="p">[</span><span class="n">cont_cube</span><span class="p">,</span><span class="n">delog_raw_cube</span><span class="p">][</span><span class="n">k</span><span class="p">][:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> \
+                                         <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">full_bestfits</span><span class="p">,</span> <span class="n">full_galaxys</span><span class="p">][</span><span class="n">k</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+                                         
+    <span class="c1"># For consistency with the rest of the code, add the guess redshift to the velocity. </span>
+    <span class="n">ppxf_sol_map</span><span class="p">[</span><span class="mi">0</span><span class="p">,:,:]</span> <span class="o">+=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">c</span>
+                                     
     <span class="c1"># Very well, now let&#39;s create a fits file to save this as required.</span>
     <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">cont_cube</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
     <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
@@ -456,9 +646,129 @@
     <span class="c1"># And add the filename to the dictionary of filenames</span>
     <span class="n">fn_list</span><span class="p">[</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;.fits&#39;</span>
     
+    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span><span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
+    
+        <span class="c1"># Also add the delog-rebin raw cube, and the moments maps</span>
+        <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">delog_raw_cube</span><span class="p">)</span>
+        <span class="c1"># Make sure the WCS coordinates are included as well</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+        <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+        <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                              <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_delog_raw.fits&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+        <span class="c1"># And add the filename to the dictionary of filenames</span>
+        <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_delog_raw_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span>\
+                                           <span class="s1">&#39;_delog_raw.fits&#39;</span>                     
+        <span class="c1"># ---                                   </span>
+        <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ppxf_sol_map</span><span class="p">)</span>
+        <span class="c1"># Make sure the WCS coordinates are included as well</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+        <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+        <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                              <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span><span class="s1">&#39;_sol_map.fits&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+        <span class="c1"># And add the filename to the dictionary of filenames</span>
+        <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_sol_map&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">method</span><span class="o">+</span>\
+                                           <span class="s1">&#39;_sol_map.fits&#39;</span>                                  
+                                           
     <span class="k">print</span> <span class="s1">&#39; &#39;</span>
     
     <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_plot_ppxf_sol"><a class="viewcode-back" href="../modules/brian.html#brian.run_plot_ppxf_sol">[docs]</a><span class="k">def</span> <span class="nf">run_plot_ppxf_sol</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sigrange</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; Creates some plots for the stellar kinematics parameters derived via ppxf.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brian.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        vrange: list of int [default: None]</span>
+<span class="sd">                If set, the range of the colorbar for the velocity plot.</span>
+<span class="sd">        sigrangre: list of int [default: None]        </span>
+<span class="sd">                If set, the range of the colorbar for the velocity dispersion plot.</span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames.</span>
+<span class="sd">    &#39;&#39;&#39;</span>    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Making some nifty plots to visualize the output of ppxf.&#39;</span>
+     
+    <span class="c1"># Open the file with the ppxf parameters   </span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_sol_map&#39;</span><span class="p">])</span>
+    
+    <span class="c1"># Open the file</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Create a temporary FITS file</span>
+    <span class="n">fn_tmp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_tmp.fits&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Because of the way aplpy works, I need to stored each &quot;image&quot; in its own fits</span>
+    <span class="c1"># file. I don&#39;t want to keep them, so let&#39;s just use a temporary one, get the plot</span>
+    <span class="c1"># done, and remove it. Not ideal, but who cares ?</span>
+        
+    <span class="c1"># Make single pretty plots for v, sigma, h3,h4, h5, h6 if they exist  </span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;sigma&#39;</span><span class="p">,</span> <span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;h4&#39;</span><span class="p">,</span> <span class="s1">&#39;h5&#39;</span><span class="p">,</span> <span class="s1">&#39;h6&#39;</span> <span class="p">]</span>                                     
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># Create a dedicated HDU</span>
+        <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+        <span class="c1"># Add the WCS information</span>
+        <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">tmphdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">tmphdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+        <span class="c1"># Now plot it </span>
+        <span class="n">this_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ppxf_&#39;</span><span class="o">+</span>
+                                                        <span class="nb">type</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">)</span> 
+            
+        <span class="c1"># For the velocity fields, set the vmin and vmax</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">vrange</span><span class="p">:</span>
+            <span class="n">my_vmin</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">my_vmax</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
+            <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
+            <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;$v$ [km s$^{-1}$]&#39;</span>
+            <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">sigrange</span><span class="p">:</span>
+            <span class="n">my_vmin</span> <span class="o">=</span> <span class="n">sigrange</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">my_vmax</span> <span class="o">=</span> <span class="n">sigrange</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
+            <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
+            <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;$\sigma_{tot}$ [km s$^{-1}$]&#39;</span>
+            <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">my_vmin</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">my_vmax</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">my_cmap</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
+            <span class="n">my_label</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
+                                                            
+        <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                                    <span class="n">vmin</span><span class="o">=</span><span class="n">my_vmin</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">my_vmax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">my_cmap</span><span class="p">,</span>
+                                    <span class="n">stretch</span> <span class="o">=</span> <span class="n">my_stretch</span><span class="p">,</span> <span class="n">cblabel</span><span class="o">=</span><span class="n">my_label</span><span class="p">,</span> 
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="n">my_cbticks</span><span class="p">)</span>                                   
+    
+    <span class="c1"># Delete the temporary fits file</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fn_list</span>    </div>
+    
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
 
@@ -561,7 +871,6 @@
              <span class="n">good_spaxels</span><span class="p">[</span><span class="n">snr_elines</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span><span class="o">&gt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines_snr_max&#39;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 		
 		<span class="c1"># Build a list of spectra to be fitted</span>
-        <span class="c1">#specs = [data[:,i,row] * good_spaxels[i] for i in range(header1[&#39;NAXIS2&#39;])]</span>
         <span class="n">specerrs</span> <span class="o">=</span> <span class="p">[[</span><span class="n">data</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span> <span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
                      <span class="n">error</span><span class="p">[:,</span><span class="n">i</span><span class="p">,</span><span class="n">row</span><span class="p">]</span><span class="o">*</span> <span class="n">good_spaxels</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">])]</span>
         
@@ -571,12 +880,12 @@
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">:</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]</span>
                 <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span> <span class="o">=</span> <span class="n">nproc</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
+                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
                 
             <span class="k">else</span><span class="p">:</span> <span class="c1"># Ok, just use them all ...</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
                 <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
+                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
 			
             <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Fitting spectra in row %2.i, </span><span class="si">%i</span><span class="s1"> at a time ...&#39;</span> <span class="o">%</span> 
@@ -738,7 +1047,7 @@
         <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">6</span><span class="p">,:,:])</span>
             <span class="c1"># Make sure the WCS coordinates are included as well</span>
-            <span class="n">hduk</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+            <span class="n">hduk</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
             <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
             <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
             <span class="c1"># Add the line reference wavelength for future references</span>
@@ -763,8 +1072,8 @@
     <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">elines_fullspec_cube</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
     <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
@@ -780,7 +1089,7 @@
     <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">elines_fit_status</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
     <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
@@ -797,9 +1106,22 @@
 
 <div class="viewcode-block" id="run_plot_elines_cube"><a class="viewcode-back" href="../modules/brian.html#brian.run_plot_elines_cube">[docs]</a><span class="k">def</span> <span class="nf">run_plot_elines_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">vrange</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                          <span class="n">sigrange</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
-    <span class="sd">&#39;&#39;&#39; </span>
-<span class="sd">    This function is designed to create some plots for the emission lines, namely</span>
-<span class="sd">    Flux, Intensity, velocity and sigma.</span>
+    <span class="sd">&#39;&#39;&#39;Creates some plots for the emission lines: F, I, v and sigma.</span>
+<span class="sd">        </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brian.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        vrange: list of int [default: None]</span>
+<span class="sd">                If set, the range of the colorbar for the velocity plot.</span>
+<span class="sd">        sigrangre: list of int [default: None]        </span>
+<span class="sd">                If set, the range of the colorbar for the velocity dispersion plot.</span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames.</span>
 <span class="sd">    &#39;&#39;&#39;</span>    
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
         <span class="k">print</span> <span class="s1">&#39;-&gt; Making some nifty plots from the emission line fitting output.&#39;</span>
@@ -828,7 +1150,7 @@
             <span class="c1"># Create a dedicated HDU</span>
             <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">this_data</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
             <span class="c1"># Add the WCS information</span>
-            <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">tmphdu</span><span class="p">,</span><span class="n">this_header</span><span class="p">)</span>
+            <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">tmphdu</span><span class="p">,</span><span class="n">this_header</span><span class="p">)</span>
             <span class="n">tmphdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
             
             <span class="c1"># Now plot it </span>
@@ -856,14 +1178,14 @@
             <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">vrange</span><span class="p">:</span>
                 <span class="n">my_vmin</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">my_vmax</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;magma&#39;</span>
+                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
                 <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
                 <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;$v$ [km s$^{-1}$]&#39;</span>
                 <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
             <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span><span class="mi">3</span> <span class="ow">and</span> <span class="n">sigrange</span><span class="p">:</span>
                 <span class="n">my_vmin</span> <span class="o">=</span> <span class="n">sigrange</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">my_vmax</span> <span class="o">=</span> <span class="n">sigrange</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;magma&#39;</span>
+                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
                 <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span>
                 <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;$\sigma_{tot}$ [km s$^{-1}$]&#39;</span>
                 <span class="n">my_cbticks</span> <span class="o">=</span> <span class="bp">None</span>
@@ -890,9 +1212,93 @@
     <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>
                                                         <span class="s1">&#39;_eline_mpfit_status.pdf&#39;</span><span class="p">)</span> 
     <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">16</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
-                           <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;magma&#39;</span><span class="p">,</span><span class="n">stretch</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
+                           <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span><span class="n">stretch</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
                            <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">cblabel</span><span class="o">=</span><span class="s1">&#39;mpfit status&#39;</span><span class="p">,)</span>
     
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_inspect_fit"><a class="viewcode-back" href="../modules/brian.html#brian.run_inspect_fit">[docs]</a><span class="k">def</span> <span class="nf">run_inspect_fit</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span><span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">irange</span><span class="o">=</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">],</span> <span class="n">vrange</span><span class="o">=</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]):</span>   
+    <span class="sd">&#39;&#39;&#39;Setup the interactive inspection of the fit results.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brian.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        irange: list of int [default: [None,None]]</span>
+<span class="sd">                The range of the colorbar for the intensity plot.</span>
+<span class="sd">        vrange: list of int [default: [None,None]]    </span>
+<span class="sd">                The range of the colorbar for the velocity dispersion plot.</span>
+
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the interactive inspection of the fitting.&#39;</span>
+    
+    <span class="c1"># Load the different files I need  </span>
+    <span class="c1"># Raw data:    </span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS3&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
+    
+    <span class="c1"># The Lowess continuum fit</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">lowess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        
+    <span class="c1"># The ppxf continuum fit</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  
+    <span class="k">else</span><span class="p">:</span>
+       <span class="n">ppxf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+       
+    <span class="c1"># The elines fit</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_spec_cube&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">elines</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">elines</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> 
+    
+    <span class="c1"># Also open the map and vmap to be displayed. </span>
+    <span class="c1"># TODO: give user the choice of image on the right</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="nb">map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">vmap</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">vmap</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>    
+    
+    <span class="c1"># A filename if the user decides to save anything.</span>
+    <span class="n">my_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_fit_inspection_&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Launch the interactive plot</span>
+    <span class="n">brian_plots</span><span class="o">.</span><span class="n">inspect_spaxels</span><span class="p">(</span><span class="n">lams</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">lowess</span><span class="p">,</span><span class="n">ppxf</span><span class="p">,</span><span class="n">elines</span><span class="p">,</span><span class="nb">map</span><span class="p">,</span><span class="n">vmap</span><span class="p">,</span><span class="n">irange</span><span class="p">,</span> <span class="n">vrange</span><span class="p">,</span>
+                                <span class="n">ofn</span> <span class="o">=</span> <span class="n">my_ofn</span><span class="p">)</span>    
+        
     <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
@@ -1055,9 +1461,7 @@
         <span class="c1"># Assign each spaxel (not yet assigned to another brighter feature) the </span>
         <span class="c1"># corresponding ap number.</span>
         <span class="n">ap_map</span><span class="p">[</span><span class="n">in_ap</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">ap_map</span><span class="p">)]</span> <span class="o">=</span> <span class="n">i</span>
-        <span class="c1">#if i == 431:</span>
-        <span class="c1">#    import pdb</span>
-        <span class="c1">#    pdb.set_trace()</span>
+
         <span class="c1">#For this aperture, sum all spaxels into master aperture spectra, and fill the </span>
         <span class="c1"># cube. Avoid the nans (e.g. mosaic edges, etc ...)</span>
 
@@ -1076,7 +1480,7 @@
     <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">fheader0</span><span class="p">)</span>
     <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ap_map</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
-    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">fheader1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">fheader1</span><span class="p">)</span>
     <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
     <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
@@ -1092,7 +1496,7 @@
         <span class="n">this_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ap_map.pdf&#39;</span><span class="p">)</span>
         <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
-                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;viridis&#39;</span><span class="p">,</span>
+                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
                                     <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;Aperture idendification number&#39;</span><span class="p">,</span> 
                                     <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>  
@@ -1103,8 +1507,8 @@
     <span class="n">hdu2</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ap_spec_err</span><span class="p">)</span>
     <span class="c1"># Make sure the WCS coordinates are included as well</span>
     <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">]:</span>
-        <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
-        <span class="n">hdu</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
         <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
         

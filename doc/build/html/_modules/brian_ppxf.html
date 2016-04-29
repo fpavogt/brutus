@@ -1,0 +1,470 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>brian_ppxf &mdash; brian 0.1.1 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+        <link rel="up" title="Module code" href="index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> brian
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules/modules.html">Functions</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">brian</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      
+    <li>brian_ppxf</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for brian_ppxf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#</span>
+<span class="c1"># This routine calls ppxf to fit the continuum in a given spectra.</span>
+<span class="c1"># It is based on the examples provided by M. Cappellari within ppxf istelf</span>
+<span class="c1"># (e.g. ppxf_kinematics_example_sauron.py &amp; ppxf_population_example_sdss.py), but has been</span>
+<span class="c1"># modified to account a wavelength dependant spectral resolution of the data. </span>
+<span class="c1">#</span>
+<span class="c1"># Basically, this is designed with MUSE in mind.</span>
+<span class="c1">#</span>
+<span class="c1"># Created February 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<span class="c1">#from __future__ import print_function</span>
+
+<span class="kn">from</span> <span class="nn">astropy.io</span> <span class="kn">import</span> <span class="n">fits</span> <span class="k">as</span> <span class="n">pyfits</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">ndimage</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">clock</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">scipy.signal</span> <span class="kn">as</span> <span class="nn">signal</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">ppxf</span> <span class="kn">import</span> <span class="n">ppxf</span>
+<span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
+
+<span class="kn">import</span> <span class="nn">brian_tools</span>
+<span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="o">*</span>
+        
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="sl_resample"><a class="viewcode-back" href="../modules/brian_ppxf.html#brian_ppxf.sl_resample">[docs]</a><span class="k">def</span> <span class="nf">sl_resample</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">inst</span> <span class="o">=</span> <span class="s1">&#39;MUSE&#39;</span><span class="p">,</span> <span class="n">sl_name</span><span class="o">=</span><span class="s1">&#39;MILES_ppxf_default&#39;</span><span class="p">,</span> <span class="n">do_cap</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function resamples a given spectrum (i.e. from a stellar library)</span>
+<span class="sd">    to match theresolution of the instrument that took the data.</span>
+<span class="sd">    </span>
+<span class="sd">    :param: fn: filename of stellar template</span>
+<span class="sd">    :param: z: redshift of the target observations</span>
+<span class="sd">    :param: inst: which instrument are we using</span>
+<span class="sd">    :param: sl_name: which templates do we use ?</span>
+<span class="sd">    :do_cap: do the convolution using M.Cappellari in-built function</span>
+<span class="sd">    </span>
+<span class="sd">    Returns the convolved spectrum</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+        
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">)):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot;: not a valid file.&#39;</span> <span class="o">%</span> <span class="n">fn</span><span class="p">)</span>
+    
+    <span class="c1"># Load the ssp spectra</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">ssp_raw</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">ssp_header</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">ssp_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ssp_raw</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># The wavelength step and wavelength array</span>
+    <span class="n">dlam</span> <span class="o">=</span> <span class="n">ssp_header</span><span class="p">[</span><span class="s1">&#39;CDELT1&#39;</span><span class="p">]</span>
+    <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">ssp_header</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">ssp_header</span><span class="p">[</span><span class="s1">&#39;CDELT1&#39;</span><span class="p">]</span> <span class="o">+</span> \
+                      <span class="n">ssp_header</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">]</span>
+    
+    <span class="c1"># What is the target resolution I want to achieve ?</span>
+    <span class="k">if</span> <span class="n">inst</span><span class="p">:</span>
+        <span class="n">R_target</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">,</span> <span class="n">get_ff</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">fwhm_target</span> <span class="o">=</span> <span class="n">lams</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">R_target</span><span class="p">(</span><span class="n">lams</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Assuming MUSE - probably a bad idea that I will forget about ... Issue a warning</span>
+        <span class="c1"># to be on the safe side.</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;No instrument specified. Assuming MUSE for the ppxf input spectra&#39;</span><span class="p">)</span>
+        <span class="n">R_target</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="s1">&#39;MUSE&#39;</span><span class="p">,</span> <span class="n">get_ff</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">show_plot</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">fwhm_target</span> <span class="o">=</span> <span class="n">lams</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">R_target</span><span class="p">(</span><span class="n">lams</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+
+    <span class="c1"># WARNING: what if the resolution of the models is NOT sufficient ?</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="n">fwhm_target</span> <span class="o">-</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;fwhm&#39;</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;WARNING: stellar templates have too high fwhm given the redshift &#39;</span><span class="o">+</span>
+                      <span class="s1">&#39;of the target ! Ignoring z for now ... you really should use &#39;</span><span class="o">+</span>
+                      <span class="s1">&#39;other models !&#39;</span><span class="p">)</span> 
+    
+	<span class="c1"># Use the ppxf-in-built gaussian_fliter1d home made by M. Cappellari (10%faster !)</span>
+    <span class="k">if</span> <span class="n">do_cap</span><span class="p">:</span>
+       
+       <span class="c1"># Compute the correction in FWHM to be applied.	        </span>
+       <span class="n">fwhm_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fwhm_target</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;fwhm&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> 
+       <span class="c1"># Transform this from Angstroem to resolution elements</span>
+       <span class="n">fwhm_diff</span> <span class="o">=</span> <span class="n">fwhm_diff</span><span class="o">/</span><span class="n">dlam</span> <span class="c1"># In resolution elements </span>
+       <span class="c1"># Compute the corresponding sigma for the gaussian profile                      </span>
+       <span class="n">sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span><span class="o">**-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">fwhm_diff</span>
+       
+       <span class="c1"># Feed this to M. Cappellari elegant routine. N.A.: I checked that function, and </span>
+       <span class="c1"># I can reproduce its results (see below) doing things my way.    </span>
+       <span class="n">ssp_out</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">gaussian_filter1d</span><span class="p">(</span><span class="n">ssp_raw</span><span class="p">,</span><span class="n">sigma</span><span class="p">)</span> 
+       
+    <span class="k">else</span><span class="p">:</span> <span class="c1"># do things my way - this is perfectly equivalent, but slower ...</span>
+	        
+       <span class="c1"># What is the max FWHM in resolution elements ?</span>
+       <span class="n">fwhm_pix_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">fwhm_target</span><span class="o">/</span><span class="n">dlam</span><span class="p">)</span>
+        
+       <span class="c1"># Very well, let&#39;s use this to define my box size. Make it 8 times</span>
+       <span class="c1"># the max FWHM to correctly include the wings of the gaussian kernel.</span>
+       <span class="n">window_size</span> <span class="o">=</span> <span class="mi">8</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">fwhm_pix_max</span><span class="p">)</span>
+       
+       <span class="c1"># Make sure the window size is odd (does it matter ?)</span>
+       <span class="k">if</span> <span class="n">window_size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+          <span class="n">window_size</span> <span class="o">+=</span><span class="mi">1</span>
+       
+       <span class="n">window_size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">window_size</span><span class="p">)</span>
+       
+       <span class="c1"># Ok, start the convolution. I do it semi-manually, for cases where it</span>
+       <span class="c1"># varies as a function of wavelength (i.e. MUSE)</span>
+       <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ssp_raw</span><span class="p">)):</span>     
+          <span class="n">this_lam</span> <span class="o">=</span> <span class="n">lams</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="c1"># The wavelength of the i-th element</span>
+          <span class="n">this_fwhm_target</span> <span class="o">=</span> <span class="n">fwhm_target</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+           
+          <span class="c1"># Compute the correction in FWHM to be applied. </span>
+          <span class="n">fwhm_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">this_fwhm_target</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;fwhm&#39;</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+          <span class="c1"># Transform this from Angstroem to resolution elements  </span>
+          <span class="n">fwhm_diff</span> <span class="o">=</span> <span class="n">fwhm_diff</span><span class="o">/</span><span class="n">dlam</span> 
+          <span class="c1"># Compute the corresponding sigma for the gaussian profile                   </span>
+          <span class="n">sigma</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span><span class="o">**-</span><span class="mi">1</span> <span class="o">*</span> <span class="n">fwhm_diff</span> <span class="c1"># In res. elements</span>
+          
+          <span class="c1"># Here&#39;s my gaussian kernel   </span>
+          <span class="n">w</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">gaussian</span><span class="p">(</span><span class="n">window_size</span><span class="p">,</span><span class="n">sigma</span><span class="p">,</span><span class="n">sym</span> <span class="o">=</span> <span class="bp">True</span><span class="p">)</span>
+        
+          <span class="c1"># If the window lands outside the spectrum, do nothing ...      </span>
+          <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">window_size</span><span class="o">/</span><span class="mf">2.</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">ssp_raw</span><span class="p">)</span> <span class="o">-</span> <span class="n">window_size</span><span class="o">/</span><span class="mf">2.</span><span class="p">):</span> 
+              <span class="n">ssp_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>        
+          <span class="k">else</span><span class="p">:</span>
+              <span class="c1"># Here, I am using correlate, because it is exactly what</span>
+              <span class="c1"># np.convolve does. It&#39;s a way to get the same numbers out,</span>
+              <span class="c1"># (down to the machine precision limit).</span>
+              <span class="n">ssp_out</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">w</span><span class="o">/</span><span class="n">w</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+                                    <span class="n">ssp_raw</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="p">(</span><span class="n">window_size</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">:</span>
+                                                  <span class="n">i</span><span class="o">+</span><span class="p">(</span><span class="n">window_size</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span>
+                                    <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;valid&#39;</span><span class="p">)</span>               
+              <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">              # Some comparison with similar methods, to see if I </span>
+<span class="sd">              # really understand what I do ...</span>
+<span class="sd">                 </span>
+<span class="sd">              out_spec2 = np.convolve(w/w.sum(),</span>
+<span class="sd">                                  	raw_spec[:,1][i-(window_size-1)/2:</span>
+<span class="sd">                                                  i+(window_size-1)/2+1],</span>
+<span class="sd">                                    mode=&#39;valid&#39;)</span>
+<span class="sd">              # -&gt; identical. Makes sense, since np.convolve wraps around</span>
+<span class="sd">              # np.correlate.</span>
+<span class="sd">                                        </span>
+<span class="sd">              # Next, check the &quot;official&quot; gaussian_filter1d                      </span>
+<span class="sd">              out_spec3 = ndimage.gaussian_filter1d(raw_spec[:,1][i-(window_size-1)/2:</span>
+<span class="sd">                                                                i+(window_size-1)/2+1],</span>
+<span class="sd">                                                      sigma)</span>
+<span class="sd">              # -&gt; different at 10**-6 level. Results are different </span>
+<span class="sd">              # because I have a larger window size compared to what </span>
+<span class="sd">              # gaussian_filter1d does by default.                                     </span>
+<span class="sd">                                                      </span>
+<span class="sd">              # But checking closer with the function inside</span>
+<span class="sd">              # gaussian_filter1d, the results are actually identical, </span>
+<span class="sd">              # when I use the same weights !</span>
+<span class="sd">              out_spec4 = ndimage.filters.correlate1d(raw_spec[:,1][i-(window_size-1)/2:</span>
+<span class="sd">                                                    i+(window_size-1)/2+1],</span>
+<span class="sd">                                                    w/w.sum())                                     </span>
+<span class="sd">              import pdb</span>
+<span class="sd">              pdb.set_trace()</span>
+<span class="sd">                 </span>
+<span class="sd">              # Bottom line I&#39;m doing things correctly. Slightly more </span>
+<span class="sd">              # accurately than in the example of M. Cappellari.</span>
+<span class="sd">              &#39;&#39;&#39;</span>                                                                                          
+    <span class="sd">&#39;&#39;&#39;                                    </span>
+<span class="sd">    plt.close(1)</span>
+<span class="sd">    plt.figure(1)      </span>
+<span class="sd">    plt.plot(lams,ssp_raw,&#39;k-&#39;)</span>
+<span class="sd">    plt.plot(lams,ssp_out,&#39;r-&#39;)</span>
+<span class="sd">    plt.show()</span>
+<span class="sd">    &#39;&#39;&#39;</span>   
+    <span class="k">return</span> <span class="n">ssp_out</span></div>
+
+<div class="viewcode-block" id="setup_spectral_library"><a class="viewcode-back" href="../modules/brian_ppxf.html#brian_ppxf.setup_spectral_library">[docs]</a><span class="k">def</span> <span class="nf">setup_spectral_library</span><span class="p">(</span><span class="n">velscale</span><span class="p">,</span> <span class="n">inst</span><span class="p">,</span> <span class="n">sl_name</span><span class="p">,</span> <span class="n">fit_lims</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This prepares the set of stellar templates to be fed to ppxf.</span>
+<span class="sd">    </span>
+<span class="sd">    :param: velscale - the velocity scale for the log-rebinning</span>
+<span class="sd">    :param: inst - the instrument that took the data, e.g. &#39;MUSE&#39;</span>
+<span class="sd">    :param: sl_name - the name of the stellar library to use</span>
+<span class="sd">    :param: fit_lims - the spectral range for the fit (data &amp; templates overlap)</span>
+<span class="sd">    :param: z - redshift of target - needed for correct reshaping of fwhm_target.</span>
+<span class="sd">    </span>
+<span class="sd">    :return: ...lots of stuf...</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="c1"># Fetch the stellar template files</span>
+    <span class="n">fns</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;sl_loc&#39;</span><span class="p">],</span><span class="s1">&#39;*&#39;</span><span class="p">))</span>
+    <span class="n">fns</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+    
+    <span class="c1"># Extract the wavelength range and logarithmically rebin one spectrum</span>
+    <span class="c1"># to the same velocity scale of the data spectra, to determine</span>
+    <span class="c1"># the size needed for the array which will contain the template spectra.</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fns</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ssp</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">h2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">lams_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">h2</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">h2</span><span class="p">[</span><span class="s1">&#39;CDELT1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">h2</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">]</span>
+    
+    <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">lams_temp</span> <span class="o">&gt;=</span> <span class="n">fit_lims</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">lams_temp</span> <span class="o">&lt;=</span> <span class="n">fit_lims</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">ssp</span> <span class="o">=</span> <span class="n">ssp</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">lams_temp</span> <span class="o">=</span> <span class="n">lams_temp</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+    <span class="n">lam_range_temp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">lams_temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">lams_temp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+    
+    <span class="n">log_lam</span><span class="p">,</span> <span class="n">ssp_new</span><span class="p">,</span> <span class="n">velscale</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">log_rebin</span><span class="p">(</span><span class="n">lam_range_temp</span><span class="p">,</span> <span class="n">ssp</span><span class="p">,</span> 
+                                                        <span class="n">velscale</span><span class="o">=</span><span class="n">velscale</span><span class="p">)</span>
+    
+    <span class="c1"># Create a three dimensional array to store the two dimensional grid of model spectra</span>
+    <span class="n">nAges</span> <span class="o">=</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;nAges&#39;</span><span class="p">]</span>
+    <span class="n">nMetal</span> <span class="o">=</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;nMetal&#39;</span><span class="p">]</span>
+    <span class="n">templates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">ssp_new</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">nAges</span><span class="p">,</span> <span class="n">nMetal</span><span class="p">))</span>
+
+    <span class="c1"># These are the array where we want to store the characteristics of each SSP model</span>
+    <span class="n">logAge_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nAges</span><span class="p">,</span> <span class="n">nMetal</span><span class="p">))</span>
+    <span class="n">metal_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">nAges</span><span class="p">,</span> <span class="n">nMetal</span><span class="p">))</span>
+
+    <span class="c1"># These are the characteristics of the adopted rectangular grid of SSP models</span>
+    <span class="n">logAge</span> <span class="o">=</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;logAge&#39;</span><span class="p">]</span>
+    <span class="n">metal</span> <span class="o">=</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;metal&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Here we make sure the spectra are sorted in both [M/H]</span>
+    <span class="c1"># and Age along the two axes of the rectangular grid of templates.</span>
+    <span class="n">metal_str</span> <span class="o">=</span> <span class="n">sl_models</span><span class="p">[</span><span class="n">sl_name</span><span class="p">][</span><span class="s1">&#39;metal_str&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">mh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">metal_str</span><span class="p">):</span>
+        <span class="n">files</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">fns</span> <span class="k">if</span> <span class="n">mh</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+            <span class="c1"># Resample the spectra to match the instrumental resolution</span>
+            <span class="n">ssp</span> <span class="o">=</span> <span class="n">sl_resample</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">,</span> <span class="n">sl_name</span><span class="o">=</span><span class="n">sl_name</span><span class="p">,</span> <span class="n">do_cap</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            <span class="n">ssp</span> <span class="o">=</span> <span class="n">ssp</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="c1"># Log-rebin the spectrum</span>
+            <span class="n">log_lam</span><span class="p">,</span> <span class="n">ssp_new</span><span class="p">,</span> <span class="n">velscale</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">log_rebin</span><span class="p">(</span><span class="n">lam_range_temp</span><span class="p">,</span> <span class="n">ssp</span><span class="p">,</span> 
+                                                                <span class="n">velscale</span><span class="o">=</span><span class="n">velscale</span><span class="p">)</span>
+            
+            <span class="n">templates</span><span class="p">[:,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">ssp_new</span>  <span class="c1"># Templates are *not* normalized here</span>
+            <span class="n">logAge_grid</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">logAge</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">metal_grid</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">metal</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">templates</span><span class="p">,</span> <span class="n">lam_range_temp</span><span class="p">,</span> <span class="n">logAge_grid</span><span class="p">,</span> <span class="n">metal_grid</span><span class="p">,</span> <span class="n">log_lam</span></div>
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="ppxf_population"><a class="viewcode-back" href="../modules/brian_ppxf.html#brian_ppxf.ppxf_population">[docs]</a><span class="k">def</span> <span class="nf">ppxf_population</span><span class="p">(</span><span class="n">specerr</span><span class="p">,</span> <span class="n">templates</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">velscale</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+                    <span class="n">goodpixels</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">moments</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">degree</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">vsyst</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                    <span class="n">clean</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">mdegree</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">regul</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Function that calls ppxf, designed to be called from multiprocessing (i.e. only </span>
+<span class="sd">    require 1 argument). Everything else is taken care of outside of this.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">galaxy</span> <span class="o">=</span> <span class="n">specerr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">specerr</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    
+    <span class="c1"># Only run ppxf if I have a non-nan&#39;s spectrum. Even one nan&#39;s breaks ppxf ... sigh.</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">galaxy</span><span class="p">))):</span>
+
+        <span class="n">pp</span> <span class="o">=</span> <span class="n">ppxf</span><span class="p">(</span><span class="n">templates</span><span class="p">,</span> <span class="n">galaxy</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="n">velscale</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span>
+                  <span class="n">goodpixels</span><span class="o">=</span><span class="n">goodpixels</span><span class="p">,</span> <span class="n">plot</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">moments</span><span class="o">=</span><span class="n">moments</span><span class="p">,</span> <span class="n">degree</span><span class="o">=</span><span class="n">degree</span><span class="p">,</span>
+                  <span class="n">vsyst</span><span class="o">=</span><span class="n">vsyst</span><span class="p">,</span> <span class="n">clean</span><span class="o">=</span><span class="n">clean</span><span class="p">,</span> <span class="n">mdegree</span><span class="o">=</span><span class="n">mdegree</span><span class="p">,</span> <span class="n">regul</span><span class="o">=</span><span class="n">regul</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># In a  perfect world, I would return pp. But that is a very massive variable.</span>
+        <span class="c1"># 1 row = 300 spaxels = 5GB =&gt; 1 MUSE cube = 1.5TB !!!</span>
+        <span class="c1"># Instead, just store what I need/trust. The best fit, the galaxy spectra (for </span>
+        <span class="c1"># sanity checks) and the sol array (with the kinematics information, that I </span>
+        <span class="c1"># sort-of trust.    </span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">pp</span><span class="o">.</span><span class="n">bestfit</span><span class="p">,</span> <span class="n">pp</span><span class="o">.</span><span class="n">galaxy</span><span class="p">,</span> <span class="n">pp</span><span class="o">.</span><span class="n">sol</span><span class="p">]</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span></div>
+    
+
+<span class="c1">#------------------------------------------------------------------------------</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

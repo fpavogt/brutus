@@ -14,14 +14,18 @@ from functools import partial
 import pickle
 import multiprocessing
 import warnings
+import glob
 
 from brian_metadata import __version__
 
-import brian_tools as tools
+import brian_tools
 import brian_cof
 import brian_elf
 import brian_plots
+import brian_ppxf
 from brian_metadata import *
+
+import ppxf_util as util
    
 # ---------------------------------------------------------------------------------------- 
   
@@ -90,7 +94,7 @@ def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
     hdu3 = pyfits.ImageHDU(anything)
     # Make sure the WCS coordinates are included as well
     for hdu in [hdu1,hdu2,hdu3]:
-        hdu = tools.hdu_add_wcs(hdu,header1)
+        hdu = brian_tools.hdu_add_wcs(hdu,header1)
         # Also include a brief mention about which version of BRIAN is being used
         hdu.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     # For reference, also include the line/region this maps are based on
@@ -124,7 +128,7 @@ def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
                             os.path.join(params['plot_loc'],
                                          suffix+'_'+params['target']+'_signal.pdf'),
                             vmin=0,vmax=1,cbticks=[0,1],
-                            cmap ='magma',
+                            cmap ='alligator',
                             cblabel = r'Spaxels with data',
                             )               
                          
@@ -177,16 +181,117 @@ def run_fit_continuum(fn_list, params, suffix=None, start_row = None, end_row = 
         if params['verbose']:
             print '-> Starting the continuum fitting using the LOWESS approach.'
             
-        fit_func = partial(brian_cof.lowess_fit, lams=lams, frac=0.05, it=5)
+        fit_func = partial(brian_cof.lowess_fit, lams=lams, 
+                           frac=params['lowess_frac'], it=params['lowess_it'])
         # Note here the clever use of the partial function, that turns the lowess_fit
         # function from something that takes 4 arguments into something that only takes 1
         # argument ... thus perfect for the upcoming "map" functions !
         
     elif method == 'ppxf':
-	    if params['verbose']:
-        	print '-> Starting the continuum fitting using PPXF.' 
-            #fit_func = partial(brian_ppxf.XXX)  
-	        # TODO: connect to PPXF    
+        if params['verbose']:
+            print '-> Starting the continuum fitting using PPXF.' 
+        	
+        # I need to do some special preparation for 'ppxf'. Namely, log-rebin the 
+        # templates. I could do that for each fit, bit it would cost me time. At the price 
+        # of a larger code here, do it only once, and save "tons" of time (~0.5s per fit).
+        # The code below is based on the examples provided by M. Cappellari within ppxf 
+        # istelf (ppxf_kinematics_example_sauron.py & ppxf_population_example_sdss.py), 
+        # but has been modified to account a wavelength dependant spectral resolution of 
+        # the data. And avoid doing the same thing multiple times via multiprocessing. 
+        
+        # The full spectral range
+        lam_range = np.array([lams[0],lams[-1]])
+        
+        # De-redshift it using the user's best guess
+        # Here's the original text from M. Cappellari:
+        #
+        # << If the galaxy is at a significant redshift (z > 0.03), one would need to 
+        # apply a large velocity shift in PPXF to match the template to the galaxy 
+        # spectrum. This would require a large initial value for the velocity (V>1e4 km/s)
+        # in the input parameter START = [V,sig]. This can cause PPXF to stop!
+        # The solution consists of bringing the galaxy spectrum roughly to the
+        # rest-frame wavelength, before calling PPXF. In practice there is no
+        # need to modify the spectrum before the usual LOG_REBIN, given that a
+        # red shift corresponds to a linear shift of the log-rebinned spectrum.
+        # One just needs to compute the wavelength range in the rest-frame
+        # and adjust the instrumental resolution of the galaxy observations. >>
+        lams0 = lams/(params['z_target']+1)
+        lam_range0 = np.array([lams0[0],lams0[-1]])
+        
+        # We can only fit the spectra where they overlap with the spectral library.
+        # Get one of the templates, figure out its range, and derive the fit limits.
+        sl_fns = glob.glob(os.path.join(sl_models[params['ppxf_sl_name']]['sl_loc'],'*'))
+        hdu_sl = pyfits.open(sl_fns[0])
+        header_sl = hdu_sl[0].header
+        hdu_sl.close()
+        
+        lams_sl = np.arange(0, header_sl['NAXIS1'],1)*header_sl['CDELT1'] + \
+                                                                       header_sl['CRVAL1']
+        lam_range_sl = [lams_sl[0],lams_sl[-1]]
+        
+        # What are my fit limits, then ?
+        fit_lims =[np.max([lam_range0[0],lam_range_sl[0]]), 
+                   np.min([lam_range0[1],lam_range_sl[1]])]  
+        mask = (lams0 > fit_lims[0]) * (lams0 < fit_lims[1])
+        lams0c = lams0[mask]
+        lam_range0c = np.array([lams0c[0], lams0c[-1]])
+        
+        # Soon, I will be log-rebining the spectra. What are the new bins going to be ?
+        log_lams0c, emptyspec, velscale = brian_tools.log_rebin(lams0c,np.zeros_like(lams0c), 
+                                                     sampling = params['ppxf_sampling'])
+        
+        # Deal with the template spectra: disperse them according to the instrument, and
+        # log-rebin them
+        if params['verbose']:
+            sys.stdout.write('\r   Preparing the templates ... ')
+            sys.stdout.flush()
+            
+        templates, lam_range_temp, logAge_grid, metal_grid, log_lams_temp = \
+        brian_ppxf.setup_spectral_library(velscale, params['inst'], 
+                                          params['ppxf_sl_name'], fit_lims, 
+                                          params['z_target'])
+        if params['verbose']:   
+            sys.stdout.write('done.')
+            print ' '
+            sys.stdout.flush()                                      
+                                          
+                                          
+        # For the fit reconstruction later on, save the various wavelength ranges, etc ...
+        fn = os.path.join(params['tmp_loc'],
+                          suffix+'_'+params['target']+'_ppxf_lams.pkl')
+        file = open(fn,'w')
+        pickle.dump([lams,lams0,lams0c,log_lams0c],file)
+        file.close()
+        # And add the generic pickle filename to the dictionary of filenames
+        fn_list['ppxf_lams'] = suffix+'_'+params['target']+'_ppxf_lams.pkl'              
+                                          
+        # From M. Cappellari:
+        # << The galaxy and the template spectra do not have the same starting wavelength.
+        # For this reason an extra velocity shift DV has to be applied to the template
+        # to fit the galaxy spectrum. We remove this artificial shift by using the
+        # keyword VSYST in the call to PPXF below, so that all velocities are
+        # measured with respect to DV.>>
+        #
+        dv = c*np.log(lam_range_temp[0]/lam_range0c[0]) 
+        
+        # Initial estimate of the galaxy velocity in km/s:        
+        vel = 0.   # It's been de-redshifted (using user's guess)
+        start = [vel, 100.]  # (km/s), starting guess for [V,sigma]
+        
+        # Now create a list of "good pixels", i.e. mask emission lines and stuff.
+        # List is the default one from ppxf.
+        goodpixels = util.determine_goodpixels(np.log(log_lams0c), lam_range_temp, vel/c)
+
+        # See the pPXF documentation for the keyword REGUL, and an explanation of the 
+        # following two lines
+        templates /= np.median(templates) # Normalizes templates by a scalar
+        regul_err = params['ppxf_regul_err']  # Desired regularization error
+        
+        fit_func = partial(brian_ppxf.ppxf_population, templates=templates, 
+                           velscale=velscale, start=start, goodpixels=goodpixels, 
+                           plot=False, moments=params['ppxf_moments'], 
+                           degree=params['ppxf_degree'], vsyst=dv, clean=False, 
+                           mdegree=params['ppxf_mdegree'], regul=1./regul_err)    
 
     # Very well, let's start the loop on rows. If the code crashes/is interrupted, you'll
     # loose the current row. Just live with it.
@@ -202,6 +307,30 @@ def run_fit_continuum(fn_list, params, suffix=None, start_row = None, end_row = 
 		
 		# Build a list of spectra to be fitted
         specs = [data[:,i,row] * good_spaxels[i] for i in range(header1['NAXIS2'])]
+        errs = [error[:,i,row] * good_spaxels[i] for i in range(header1['NAXIS2'])]
+        
+        if method == 'ppxf':
+            if params['verbose']:
+                sys.stdout.write('\r   Log-rebin spectra in row %2.i ...            '%row)
+                sys.stdout.flush()
+                
+            # I need to do some special preparation for 'ppxf'. Namely, log-rebin the 
+            # spectra, and crop them to an appropriate wavelength after de-redshifting. 
+            # Let's get started. 
+            # To save time, only log-rebin spectra that are not all nans
+            specs = [brian_tools.log_rebin(lam_range0c, this_spec[mask],
+                                     sampling=params['ppxf_sampling'])[1] 
+                                     if not(np.all(np.isnan(this_spec))) else np.nan 
+                                     for this_spec in specs]                      
+            # Also take care of the error
+            errs = [brian_tools.log_rebin(lam_range0c, this_err[mask], 
+                                     sampling=params['ppxf_sampling'])[1]
+                                     if not(np.all(np.isnan(this_err))) else np.nan  
+                                     for this_err in errs]                                                                 
+                                                                            
+            # Combine both spectra and errors, to feed only 1 element to fit_func
+            # Turn the error into a std to feed ppxf
+            specs = [[specs[i],np.sqrt(errs[i])] for i in range(header1['NAXIS2'])]
         
 		# Set up the multiprocessing pool of workers
         if params['multiprocessing']:
@@ -209,12 +338,12 @@ def run_fit_continuum(fn_list, params, suffix=None, start_row = None, end_row = 
             if type(params['multiprocessing']) == np.int:
                 nproc = params['multiprocessing']
                 pool = multiprocessing.Pool(processes = nproc, 
-                                            initializer = tools.init_worker())
+                                            initializer = brian_tools.init_worker())
                 
             else: # Ok, just use them all ...
                 nproc = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=None, 
-                                            initializer = tools.init_worker())
+                                            initializer = brian_tools.init_worker())
 			
             if params['verbose']:
                 sys.stdout.write('\r   Fitting spectra in row %2.i, %i at a time ...' % 
@@ -285,6 +414,16 @@ def run_make_continuum_cube(fn_list, params, suffix=None, method='lowess'):
     
     cont_cube = np.zeros_like(data) * np.nan
 
+    # In the case of ppxf, also extract the stellar moments.
+    # Not the most trustworthy, but interesting nonetheless.
+    if params['ppxf_moments']>0:
+        ppxf_sol_map = np.zeros((params['ppxf_moments'],header1['NAXIS2'],
+                                                        header1['NAXIS1'])) * np.nan
+    
+    # For ppxf, also create a spectrum with the de-logged rebin original spectra. Useful 
+    # to characterize the error associated with log-bin-delog-bin process employed here.
+    delog_raw_cube = np.zeros_like(data) * np.nan
+                                                        
     # Loop through the rows, and extract the results. 
     # Try to loop through everything - in case this step was run in chunks.
     for row in range(0,nrows):
@@ -303,14 +442,65 @@ def run_make_continuum_cube(fn_list, params, suffix=None, method='lowess'):
             myfile.close() 
         
             # Mind the shape
-            cont_cube[:,:,row] = np.array(conts).T 
-                   
+            if method=='lowess':
+                # I directly saved the continuum as an array just get it out.
+                cont_cube[:,:,row] = np.array(conts).T 
+            elif method =='ppxf':
+                # Alright, in this case, the pickle file contains the output from ppxf
+            
+                # Extract the various wavelength ranges, etc ...
+                fn = os.path.join(params['tmp_loc'],fn_list['ppxf_lams'])
+                f = open(fn,'r')
+                [lams,lams0,lams0c,log_lams0c] = pickle.load(f)
+                f.close()
+                
+                # The fit outputs are all on the log_lams0c grid, and I want them back on
+                # lams.  
+                # First, extract the bestfit spectra. 
+                # For test purposes, also extract the galaxy spectra with pp.galaxy
+                bestfits = [pp[0] if not(pp is None) else None for pp in conts]
+                galaxys = [pp[1] if not(pp is None) else None for pp in conts]
+                
+                # And the stellar moments
+                ppxf_sol_map[:,:,row] = np.array([pp[2] if not(pp is None) else 
+                                                  np.zeros(params['ppxf_moments'])*np.nan 
+                                                  for pp in conts]).T
+                                                  
+                # Now, I need storage that spans the original data range
+                full_bestfits = [np.zeros_like(lams0) for this_spec in bestfits]
+                full_galaxys = [np.zeros_like(lams0) for this_spec in galaxys]
+                
+                # Now, I want to delog-rebin the spectra back to the original grid
+                for (k,cube) in enumerate([bestfits, galaxys]):
+                    cube = [brian_tools.delog_rebin(log_lams0c, this_spec, lams0c, 
+                                                    sampling=params['ppxf_sampling'])[1] 
+                            if not(this_spec is None) else None for this_spec in cube]
+                            
+                    # Now, I want to un-crop this, by adding nans elsewhere. Make a loop, 
+                    # but there's probably a more Pythonic way of doing it. 
+                    # TODO: try again when my brain won't be that fried ...
+                    mask = (lams0 >=lams0c[0]) * (lams0<=lams0c[-1])
+                
+                    for (f,fit) in enumerate(cube):
+                        if not(fit is None):
+                            [full_bestfits,full_galaxys][k][f][mask] = fit
+                
+                    # And finally, I need to de-redshift that spectra. No need to touch 
+                    # the spectra because I did not touch it before.
+                
+                    # Ready to save the continuum cube
+                    [cont_cube,delog_raw_cube][k][:,:,row] = \
+                                         np.array([full_bestfits, full_galaxys][k]).T
+                                         
+    # For consistency with the rest of the code, add the guess redshift to the velocity. 
+    ppxf_sol_map[0,:,:] += params['z_target']*c
+                                     
     # Very well, now let's create a fits file to save this as required.
     hdu0 = pyfits.PrimaryHDU(None,header0)
     hdu1 = pyfits.ImageHDU(cont_cube)
     # Make sure the WCS coordinates are included as well
-    hdu1 = tools.hdu_add_wcs(hdu1,header1)
-    hdu1 = tools.hdu_add_lams(hdu1,header1)
+    hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
+    hdu1 = brian_tools.hdu_add_lams(hdu1,header1)
     # Also include a brief mention about which version of BRIAN is being used
     hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
@@ -321,9 +511,129 @@ def run_make_continuum_cube(fn_list, params, suffix=None, method='lowess'):
     # And add the filename to the dictionary of filenames
     fn_list[method+'_cube'] = suffix+'_'+params['target']+'_'+method+'.fits'
     
+    if method =='ppxf':
+    
+        # Also add the delog-rebin raw cube, and the moments maps
+        hdu0 = pyfits.PrimaryHDU(None,header0)
+        hdu1 = pyfits.ImageHDU(delog_raw_cube)
+        # Make sure the WCS coordinates are included as well
+        hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
+        hdu1 = brian_tools.hdu_add_lams(hdu1,header1)
+        # Also include a brief mention about which version of BRIAN is being used
+        hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
+        hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+        fn_out = os.path.join(params['prod_loc'],
+                              suffix+'_'+params['target']+'_'+method+'_delog_raw.fits')
+        hdu.writeto(fn_out, clobber=True)
+    
+        # And add the filename to the dictionary of filenames
+        fn_list['ppxf_delog_raw_cube'] = suffix+'_'+params['target']+'_'+method+\
+                                           '_delog_raw.fits'                     
+        # ---                                   
+        hdu0 = pyfits.PrimaryHDU(None,header0)
+        hdu1 = pyfits.ImageHDU(ppxf_sol_map)
+        # Make sure the WCS coordinates are included as well
+        hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
+        # Also include a brief mention about which version of BRIAN is being used
+        hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
+        hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+        fn_out = os.path.join(params['prod_loc'],
+                              suffix+'_'+params['target']+'_'+method+'_sol_map.fits')
+        hdu.writeto(fn_out, clobber=True)
+    
+        # And add the filename to the dictionary of filenames
+        fn_list['ppxf_sol_map'] = suffix+'_'+params['target']+'_'+method+\
+                                           '_sol_map.fits'                                  
+                                           
     print ' '
     
     return fn_list
+# ----------------------------------------------------------------------------------------
+
+def run_plot_ppxf_sol(fn_list, params, suffix=None, vrange=None, sigrange=None):   
+    ''' Creates some plots for the stellar kinematics parameters derived via ppxf.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brian.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        vrange: list of int [default: None]
+                If set, the range of the colorbar for the velocity plot.
+        sigrangre: list of int [default: None]        
+                If set, the range of the colorbar for the velocity dispersion plot.
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames.
+    '''    
+    if params['verbose']:
+        print '-> Making some nifty plots to visualize the output of ppxf.'
+     
+    # Open the file with the ppxf parameters   
+    fn = os.path.join(params['prod_loc'], fn_list['ppxf_sol_map'])
+    
+    # Open the file
+    hdu = pyfits.open(fn)
+    header0 = hdu[0].header
+    header1 = hdu[1].header
+    data = hdu[1].data
+    hdu.close()
+    
+    # Create a temporary FITS file
+    fn_tmp = os.path.join(params['tmp_loc'],suffix+'_tmp.fits')
+
+    # Because of the way aplpy works, I need to stored each "image" in its own fits
+    # file. I don't want to keep them, so let's just use a temporary one, get the plot
+    # done, and remove it. Not ideal, but who cares ?
+        
+    # Make single pretty plots for v, sigma, h3,h4, h5, h6 if they exist  
+    type = ['v', 'sigma', 'h3', 'h4', 'h5', 'h6' ]                                     
+    for t in range(np.shape(data)[0]):
+        # Create a dedicated HDU
+        tmphdu = pyfits.PrimaryHDU(data[t])
+        # Add the WCS information
+        tmphdu = brian_tools.hdu_add_wcs(tmphdu,header1)
+        tmphdu.writeto(fn_tmp, clobber=True)
+            
+        # Now plot it 
+        this_ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+'_ppxf_'+
+                                                        type[t]+'.pdf') 
+            
+        # For the velocity fields, set the vmin and vmax
+        if t == 0 and vrange:
+            my_vmin = vrange[0]
+            my_vmax = vrange[1]
+            my_cmap = 'alligator'
+            my_stretch = 'linear'
+            my_label = r'$v$ [km s$^{-1}$]'
+            my_cbticks = None
+        elif t ==1 and sigrange:
+            my_vmin = sigrange[0]
+            my_vmax = sigrange[1]
+            my_cmap = 'alligator'
+            my_stretch = 'linear'
+            my_label = r'$\sigma_{tot}$ [km s$^{-1}$]'
+            my_cbticks = None
+        else:
+            my_vmin = None
+            my_vmax = None
+            my_cmap = None
+            my_stretch = 'linear'
+            my_label = ''
+            my_cbticks = None
+                                                            
+        brian_plots.make_2Dplot(fn_tmp,ext=0, ofn=this_ofn, contours=False, 
+                                    vmin=my_vmin, vmax = my_vmax, cmap=my_cmap,
+                                    stretch = my_stretch, cblabel=my_label, 
+                                    cbticks = my_cbticks)                                   
+    
+    # Delete the temporary fits file
+    os.remove(fn_tmp)
+    
+    return fn_list    
+    
 # ----------------------------------------------------------------------------------------
 
 
@@ -426,7 +736,6 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
              good_spaxels[snr_elines[:,row]>params['elines_snr_max']] = np.nan
 		
 		# Build a list of spectra to be fitted
-        #specs = [data[:,i,row] * good_spaxels[i] for i in range(header1['NAXIS2'])]
         specerrs = [[data[:,i,row] * good_spaxels[i],
                      error[:,i,row]* good_spaxels[i]] for i in range(header1['NAXIS2'])]
         
@@ -436,12 +745,12 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
             if type(params['multiprocessing']) == np.int:
                 nproc = params['multiprocessing']
                 pool = multiprocessing.Pool(processes = nproc, 
-                                            initializer = tools.init_worker())
+                                            initializer = brian_tools.init_worker())
                 
             else: # Ok, just use them all ...
                 nproc = multiprocessing.cpu_count()
                 pool = multiprocessing.Pool(processes=None, 
-                                            initializer = tools.init_worker())
+                                            initializer = brian_tools.init_worker())
 			
             if params['verbose']:
                 sys.stdout.write('\r   Fitting spectra in row %2.i, %i at a time ...' % 
@@ -603,7 +912,7 @@ def run_make_elines_cube(fn_list, params, suffix=None):
         for (k,key) in enumerate(np.sort(params['elines'].keys())):
             hduk = pyfits.ImageHDU(epc[6*k:6*k+6,:,:])
             # Make sure the WCS coordinates are included as well
-            hduk = tools.hdu_add_wcs(hduk,header1)
+            hduk = brian_tools.hdu_add_wcs(hduk,header1)
             # Also include a brief mention about which version of BRIAN is being used
             hduk.header['BRIAN_V'] = (__version__,'brian version that created this file.')
             # Add the line reference wavelength for future references
@@ -628,8 +937,8 @@ def run_make_elines_cube(fn_list, params, suffix=None):
     hdu0 = pyfits.PrimaryHDU(None,header0)
     hdu1 = pyfits.ImageHDU(elines_fullspec_cube)
     # Make sure the WCS coordinates are included as well
-    hdu1 = tools.hdu_add_wcs(hdu1,header1)
-    hdu1 = tools.hdu_add_lams(hdu1,header1)
+    hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
+    hdu1 = brian_tools.hdu_add_lams(hdu1,header1)
     # Also include a brief mention about which version of BRIAN is being used
     hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
@@ -645,7 +954,7 @@ def run_make_elines_cube(fn_list, params, suffix=None):
     hdu0 = pyfits.PrimaryHDU(None,header0)
     hdu1 = pyfits.ImageHDU(elines_fit_status)
     # Make sure the WCS coordinates are included as well
-    hdu1 = tools.hdu_add_wcs(hdu1,header1)
+    hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
     # Also include a brief mention about which version of BRIAN is being used
     hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
@@ -662,9 +971,22 @@ def run_make_elines_cube(fn_list, params, suffix=None):
 
 def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None, 
                          sigrange=None):   
-    ''' 
-    This function is designed to create some plots for the emission lines, namely
-    Flux, Intensity, velocity and sigma.
+    '''Creates some plots for the emission lines: F, I, v and sigma.
+        
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brian.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        vrange: list of int [default: None]
+                If set, the range of the colorbar for the velocity plot.
+        sigrangre: list of int [default: None]        
+                If set, the range of the colorbar for the velocity dispersion plot.
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames.
     '''    
     if params['verbose']:
         print '-> Making some nifty plots from the emission line fitting output.'
@@ -693,7 +1015,7 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
             # Create a dedicated HDU
             tmphdu = pyfits.PrimaryHDU(this_data[t])
             # Add the WCS information
-            tmphdu = tools.hdu_add_wcs(tmphdu,this_header)
+            tmphdu = brian_tools.hdu_add_wcs(tmphdu,this_header)
             tmphdu.writeto(fn_tmp, clobber=True)
             
             # Now plot it 
@@ -721,14 +1043,14 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
             elif t == 2 and vrange:
                 my_vmin = vrange[0]
                 my_vmax = vrange[1]
-                my_cmap = 'magma'
+                my_cmap = 'alligator'
                 my_stretch = 'linear'
                 my_label = r'$v$ [km s$^{-1}$]'
                 my_cbticks = None
             elif t ==3 and sigrange:
                 my_vmin = sigrange[0]
                 my_vmax = sigrange[1]
-                my_cmap = 'magma'
+                my_cmap = 'alligator'
                 my_stretch = 'linear'
                 my_label = r'$\sigma_{tot}$ [km s$^{-1}$]'
                 my_cbticks = None
@@ -755,9 +1077,93 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
     ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+
                                                         '_eline_mpfit_status.pdf') 
     brian_plots.make_2Dplot(fn,ext=1, ofn=ofn, contours=False, vmin=-16, vmax = 8,
-                           cmap='magma',stretch='linear', 
+                           cmap='alligator',stretch='linear', 
                            cbticks=[-16,0,1,2,3,4,5,6,7,8], cblabel='mpfit status',)
     
+    return fn_list
+# ----------------------------------------------------------------------------------------
+
+def run_inspect_fit(fn_list,params, suffix=None, irange=[None,None], vrange=[None,None]):   
+    '''Setup the interactive inspection of the fit results.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brian.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        irange: list of int [default: [None,None]]
+                The range of the colorbar for the intensity plot.
+        vrange: list of int [default: [None,None]]    
+                The range of the colorbar for the velocity dispersion plot.
+
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames.
+    '''
+    
+    if params['verbose']:
+        print '-> Starting the interactive inspection of the fitting.'
+    
+    # Load the different files I need  
+    # Raw data:    
+    hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close()
+    
+    lams = np.arange(0, header1['NAXIS3'],1) * header1['CD3_3'] + header1['CRVAL3']
+    
+    # The Lowess continuum fit
+    fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
+    if os.path.isfile(fn):
+        hdu = pyfits.open(fn)
+        lowess = hdu[1].data
+        hdu.close()  
+    else:
+        lowess = np.zeros_like(data)*np.nan
+        
+    # The ppxf continuum fit
+    fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
+    if os.path.isfile(fn):
+        hdu = pyfits.open(fn)
+        ppxf = hdu[1].data
+        hdu.close()  
+    else:
+       ppxf = np.zeros_like(data)*np.nan
+       
+    # The elines fit
+    fn = os.path.join(params['prod_loc'],fn_list['elines_spec_cube'])
+    if os.path.isfile(fn):
+        hdu = pyfits.open(fn)
+        elines = hdu[1].data
+        hdu.close() 
+    else:
+        elines = np.zeros_like(data)*np.nan 
+    
+    # Also open the map and vmap to be displayed. 
+    # TODO: give user the choice of image on the right
+    fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+    if os.path.isfile(fn):
+        hdu = pyfits.open(fn)
+        map = hdu[1].data[0]
+        vmap = hdu[1].data[2]
+        hdu.close()
+    else:
+        map = np.zeros_like(data[0])*np.nan
+        vmap = np.zeros_like(data[0])*np.nan    
+    
+    # A filename if the user decides to save anything.
+    my_ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+'_fit_inspection_')
+
+    # Launch the interactive plot
+    brian_plots.inspect_spaxels(lams,data,lowess,ppxf,elines,map,vmap,irange, vrange,
+                                ofn = my_ofn)    
+        
     return fn_list
 # ----------------------------------------------------------------------------------------
 
@@ -920,9 +1326,7 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
         # Assign each spaxel (not yet assigned to another brighter feature) the 
         # corresponding ap number.
         ap_map[in_ap * np.isnan(ap_map)] = i
-        #if i == 431:
-        #    import pdb
-        #    pdb.set_trace()
+
         #For this aperture, sum all spaxels into master aperture spectra, and fill the 
         # cube. Avoid the nans (e.g. mosaic edges, etc ...)
 
@@ -941,7 +1345,7 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
     hdu0 = pyfits.PrimaryHDU(None,fheader0)
     hdu1 = pyfits.ImageHDU(ap_map)
     # Make sure the WCS coordinates are included as well
-    hdu1 = tools.hdu_add_wcs(hdu1,fheader1)
+    hdu1 = brian_tools.hdu_add_wcs(hdu1,fheader1)
     # Also include a brief mention about which version of BRIAN is being used
     hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
     hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
@@ -957,7 +1361,7 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
         this_ofn = os.path.join(params['plot_loc'],
                           suffix+'_'+params['target']+'_ap_map.pdf')
         brian_plots.make_2Dplot(fn_out,ext=1, ofn=this_ofn, contours=False, 
-                                    vmin=0, vmax = len(xs), cmap='viridis',
+                                    vmin=0, vmax = len(xs), cmap='alligator',
                                     stretch = 'linear', 
                                     cblabel=r'Aperture idendification number', 
                                     cbticks = None)  
@@ -968,8 +1372,8 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
     hdu2 = pyfits.ImageHDU(ap_spec_err)
     # Make sure the WCS coordinates are included as well
     for hdu in [hdu1,hdu2]:
-        hdu = tools.hdu_add_wcs(hdu,header1)
-        hdu = tools.hdu_add_lams(hdu,header1)
+        hdu = brian_tools.hdu_add_wcs(hdu,header1)
+        hdu = brian_tools.hdu_add_lams(hdu,header1)
         # Also include a brief mention about which version of BRIAN is being used
         hdu.header['BRIAN_V'] = (__version__,'brian version that created this file.')
         

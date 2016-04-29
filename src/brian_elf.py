@@ -18,48 +18,8 @@ import scipy.stats as stats
 import brian_mpfit as mpfit
 
 from brian_metadata import *
+import brian_tools
 
-
-# ----------------------------------------------------------------------------------------
-
-def inst_resolution(inst = 'MUSE', get_ff = False, show_plot=False):
-    '''
-    This function returns the resolution as a function of the wavelength
-    for different instruments.
-    
-    Returns a callable function of the wavelength (in Angstroem !).
-    '''
-     
-    if inst == 'MUSE':
-       if get_ff:
-          this_fn_path = os.path.dirname(__file__)
-          ref_fn = 'MUSE_specs/MUSE_spectral_resolution.txt'
-          R_lam = np.loadtxt(os.path.join(this_fn_path,ref_fn),
-                           skiprows = 1)
-                           
-          # Fit a polynomial to this. Deg 3 works well.
-          z = np.polyfit(R_lam[:,0]*10.,R_lam[:,1],3)
-          p = np.poly1d(z)
-          
-          if show_plot:
-             plt.close(99)
-             plt.figure(99)
-             
-             lams = np.arange(4500,10000.,1)
-             
-             plt.plot(lams,p(lams), 'b-')            
-             plt.plot(R_lam[:,0]*10.,R_lam[:,1], 'k.')
-             
-             plt.show()
-          
-       else:
-           #Fit on 02.2016:
-           p = np.poly1d([ -8.27037043e-09, 1.40175196e-04, -2.83940026e-01, 7.13549344e+02])
-           
-       return p    
-                    
-    else:
-        sys.exit('Unknown instrument...')
 # ----------------------------------------------------------------------------------------      
 
 def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
@@ -91,10 +51,12 @@ def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
         # For now, get it from the ref. file.    
         
         # What is the velocity dispersion we have in A?     
-        inst_sigma = lam/(inst_resolution(inst=inst)(lam)*2*np.sqrt(2*np.log(2)))
+        inst_sigma = lam/(brian_tools.inst_resolution(inst=inst)(lam) * 
+                                                                   2*np.sqrt(2*np.log(2)))
         # Here, assume no error coming from the Resolution curve ... sigh...
         
-        inst_sigma_err = errs[1]/(inst_resolution(inst=inst)(lam)*2*np.sqrt(2*np.log(2)))**2
+        inst_sigma_err = errs[1]/(brian_tools.inst_resolution(inst=inst)(lam) * 
+                                                               2*np.sqrt(2*np.log(2)))**2
         
         # Then combine sigma, in A
         this_sigma = np.sqrt(obj_sigma**2 + inst_sigma**2)
@@ -115,8 +77,21 @@ def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
 # ----------------------------------------------------------------------------------------
 
 def gauss_profile(x,I,mu,sigma):
-    '''
-    This is a normal gaussian, normalized to peak. mu and sigma in Angstroem
+    '''Computes a gaussian profile at x, normalized to peak.
+    
+    :Args:
+        x: float, 1-D numpy array
+           Locations to compute the Gaussian profile, assumed to be in Angstroem.
+        I: float
+           The profile peak intensity.
+        mu: float
+            The profile mean, in Angstroem.
+        sigma: float
+               The standard deviation of the profile, in Angstroem.
+           
+    :Returns:
+        out: float, 1-D numpy array
+             The profile evaluated at x.
     '''
     
     y = I * stats.norm.pdf(x,loc=mu,scale=sigma)/stats.norm.pdf(0,loc=0,scale=sigma)
@@ -127,8 +102,32 @@ def gauss_profile(x,I,mu,sigma):
 # ----------------------------------------------------------------------------------------
 
 def gauss_hist(x,binedges,I,mu,sigma):
-    '''
-    Compute the proper histogram of an emission line, given certain bin sizes. 
+    '''Computes the proper histogram of an emission line, given certain bin sizes. 
+    
+    The profile is normalized to peak.
+    
+    :Args:
+        x: float, 1-D numpy array
+           Locations to compute the Gaussian profile, assumed to be in Angstroem.
+        binedges: 1-D numpy array
+           Locations of the bin edges, with size of len(x)+1.
+        I: float
+           The profile peak intensity.
+        mu: float
+            The profile mean, in Angstroem.
+        sigma: float
+               The standard deviation of the profile, in Angstroem.
+           
+    :Returns:
+        out: float, 1-D numpy array
+             The profile evaluated at x
+             
+    :Notes:
+        This function is taking into account the finite bin sizes when observing a line 
+        with an intrinsic gaussian profile. I.e. each location shows the mean intensity 
+        over the bin, rather than the intensity of the gaussian profile at the bin center. 
+        This is the functional form to use when fitting an emission line in a spectra, 
+        rather than a simple gaussian profile.
     '''
     # First, use the fast cumulative distribution function (CDF) of the normal 
     # distribution to integrate a gaussian (normalized to peak!) between a set of bin 
@@ -257,6 +256,9 @@ def line_fit_erf(p,fjac=None, x=None,y=None,err=None, method='gauss', be=None,
     model = np.zeros_like(y)
     model = els_spec(x, p, method=method, be=be, inst=inst)    
     
+    # TODO:
+    # Can I speed things up by looking only at the area with emission lines ?
+    
     status = 0
     
     return ([status,(y-model)/err])
@@ -342,7 +344,7 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
             this_extrema= np.nan
         else:
             p0[i*nplp+1] = this_extrema * \
-                            np.sign(this_spec[np.abs(this_spec)==this_extrema])
+                            np.sign(this_spec[np.abs(this_spec)==this_extrema][0])
         
         # Make sure the starting guess for the intensity is within the boundaries
         if params['elines'][line][1]['limited'][0] ==1: # There is a lower boundary ...
@@ -372,11 +374,11 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
                 else:
                     # Assign the constraints
                     parinfo[nplp*i+j+1][key] = constraints[key]
-        
+  
     # Create the dictionary containing the spectra, error, etc ...    
     fa = {'x':lams, 'y':spec, 'err':np.sqrt(err), 'method':params['line_profile'], 
           'be':be, 'inst':params['inst']}
-
+    
     m = mpfit.mpfit(line_fit_erf, p0, functkw=fa, parinfo=parinfo, quiet=1) 
     
     return m

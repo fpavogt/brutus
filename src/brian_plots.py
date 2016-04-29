@@ -14,6 +14,8 @@ import aplpy
 import photutils
 from astropy.stats import sigma_clipped_stats
 
+from brian_metadata import alligator
+
 # ---------------------------------------------------------------------------------------- 
      
 import matplotlib as mpl
@@ -35,7 +37,7 @@ mpl.rc('contour', **{'negative_linestyle':'solid'}) # dashed | solid
 
 def make_2Dplot(fn, # path to the data (complete!)
                 ext = 1, # Which extension am I looking for ?
-                ofn = '', # Savefig filename
+                ofn = 'plot.pdf', # Savefig filename
                 contours = False, # Draw any contours 
                 stretch = 'arcsinh',
                 vmin = None, 
@@ -44,8 +46,36 @@ def make_2Dplot(fn, # path to the data (complete!)
                 cblabel = None,
                 cbticks = None,
                 ):
-    '''
-    This function generates an image from a 2-D fits image. 
+    '''Creates an image from a 2-D fits image with WCS info.
+    
+    :Args:
+        fn: string
+            The filename (+path!) fo the fits file to display.
+        ext: int (default:1)
+            The extension of the image to display. The data in this extension MUST be 2-D.
+        ofn: string [default:'plot.pdf']
+            The output filename (+path!)
+        contours: bool,list of floats [default: False]
+            If set, shows contours at said levels, e.g. [1,3,5,10.5]
+        stretch: string [default:'arcsinh']
+            The stretch of the image, fed to aplpy.FITSFigure. 'linear', 'arcsinh', ...
+        vmin: float [default: None]
+            If set, the lower bound of the colorbar
+        vmax: float [default: None]
+            If set, the upper bound of the colorbar
+        cmap: string
+            If set, the colormap to use. Use 'alligator' for the special brian cmap.
+        cblabel: string [default:None]
+            If set, the label of the colorbar.
+        cbticks: list of int [default: None]
+            If set, the colorbar ticks.
+            
+    :Returns:
+        out: True
+             Always.
+        
+    :Notes:
+        This function absolutely requires WCS coordinates, and a 2-D array.
     '''
     
     # Plot the BW image using the 2d image to indicate the projection
@@ -54,7 +84,10 @@ def make_2Dplot(fn, # path to the data (complete!)
     
     ax1 = aplpy.FITSFigure(fn, hdu=ext, figure=fig1, north=True)
     
-    if cmap:
+    if cmap == 'alligator':
+        ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
+                            cmap=alligator)
+    elif cmap:
         ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
                             cmap=cmap)
     else:
@@ -65,7 +98,7 @@ def make_2Dplot(fn, # path to the data (complete!)
     ax1.add_grid()
  
     if contours:
-        ax1.show_contour(fn, hdu=ext, levels=contours,colors=['darkorange'],smooth=3) 
+        ax1.show_contour(fn, hdu=ext, levels=contours,colors=['darkorange']) 
         #Smooth~seeing
 
     # Make it look pretty
@@ -93,12 +126,26 @@ def make_2Dplot(fn, # path to the data (complete!)
 # ----------------------------------------------------------------------------------------      
 
 class ApManager(object):
-    '''
+    ''' The class managing the interactive aperture selection plot.
+    
     This class is designed to add and remove apertures of different radii to a
     matplotlib plot interactively. It handles right-clicks, left-clicks and keyPressEvents
-    I understand half-of-it, the rest being some black magic from the web.
+    
+    :Args: 
+        fig: Figure instance from matplotlib
+             The Figure we are working with.
+        ax: Axes instance from matplotlib
+            The axes we are working with.
+        points: list instance from plt.plot
+            The points to pick.
+        rs: list of int
+            The radius of the apertures, in pixels.
+    
+    :Notes:
+        I understand 90% of this class, the rest being some black magic from the web.
     '''
     def __init__(self, fig, ax, points, rs):
+        ''' Defines the specific elements required by the class.'''
         self.axes = ax
         self.fig = fig
         self.canvas = ax.figure.canvas
@@ -116,8 +163,10 @@ class ApManager(object):
     # -------------------------------------------------------------------------------------      
 
     def onpress(self, event):
-        '''
-        Define what happens when a click happens on the matplotlib window.
+        '''Defines what happens when an 'event' happens on the matplotlib window.
+        
+        This function allows to add an aperture of a given radius, when doing a left-click
+        on a matplotlib plot window.
         '''
         #print 'Press Event received: %s' % event
         if self.pickEvent: # Are we also having a pickEvent ? Then, let it deal with it.
@@ -157,9 +206,10 @@ class ApManager(object):
     # ------------------------------------------------------------------------------------     
 
     def onKeyPress(self, event):
-        '''
-        Allows to change the aperture size by typing a number. Currently in pixels.
-        Number needs to be typed while the cursor is on the plot window.
+        '''Defines what happens when a key is pressed, while on a matplotlib window.
+        
+        This function allows to change the aperture size by typing 'u' (radius += 1 pixel)
+        or 'd' (radius -= 1 pixel). Minimum size set to 1 pixel.
         '''
         # Just to be nice, in case the user missed a pushed button on the toolbar
         # Test if everything is free, issue a warning otherwise.
@@ -184,8 +234,9 @@ class ApManager(object):
     # ------------------------------------------------------------------------------------     
 
     def onpick(self, event):
-        '''
-        Defines what happens with pickEvent. Namely, remove the near-by aperture.
+        '''Defines what happens with pickEvent occurs in a matplotlib window.
+        
+        This function removes a given aperture if the user right-clicks on it.
         '''
         #print 'Pick Event received: %s' % event
         self.pickEvent = True # Used to avoid clashes between onpick and onpress. I think.
@@ -209,14 +260,29 @@ class ApManager(object):
 # ----------------------------------------------------------------------------------------      
             
 def ap_outline(x0,y0,radius):
-    '''
-    Construct the exact aperture outline, for all pixels within "radius" of a given pixel.
-    This works well for R <5, but starts to look weird afterwards. Basically, my function
-    starts missing pixels, and the area start looking like a diamond. The alternative is
-    to define all the otuline polygons by hand - but I really do not feel like doing this.
-    Is there a way to construct them with a smarter routine than below ?
-    This function is left here for legacy purposes and remind me of what I did. But it
-    is not used by brian at the moment.
+    ''' A function to construct the aperture outline as a function of the radius.
+    
+    :Args:
+        x0: int
+            x-coordinate of the aperture center, in pixels
+        y0: int
+            y-coordinate of the aperture center, in pixels
+        radius: int
+            aperture radius, in pixels.
+    
+    :Returns:
+        out: 2-D numpy array
+            The list of [xs,ys] coordinates of the aperture outline nodes, in pixels.
+    
+    :Notes:
+       This function is in principle designed to construct the exact aperture outline for 
+       all pixels within "radius" of a given pixel. This works well for R <5, but breaks 
+       afterwards. Basically, the function starts missing pixels, and the area start 
+       looking like a diamond. The alternative is to define all the otuline polygons by 
+       hand - but I really do not feel like doing this manually. Is there a way to 
+       construct them with a smarter routine than below ? This function is left here for 
+       legacy purposes and remind me of what I did. But it is not used by brian at the 
+       moment. Apertures are all shown as perfect circles for now.
     '''
     nu = np.linspace(-radius-0.5, +radius+0.5,2*(radius+1))
     nd = np.linspace(+radius+0.5, -radius-0.5,2*(radius+1))
@@ -230,10 +296,30 @@ def ap_outline(x0,y0,radius):
 # ----------------------------------------------------------------------------------------      
     
 def my_ap_scatter(ax, xs, ys, rs, **kwargs):
-    '''
-    This function is a "pseudo-plt.scatter" function, but that instead use the plt.Circle
-    routine to show individual apertures of different radii. Importantly, the radii
-    are thus expressed in data units, and not in points !
+    ''' A pseudo-plt.scatter function for easily displaying many apertures.
+    
+    This function use the plt.Circle routine to show individual apertures of different 
+    radii. Importantly, the radii are thus expressed in data units, and not in points.
+    
+    :Args:
+        ax: Axes instance from matplotlib
+            The Figure axes to which to add the aperture.
+        xs: list of int
+            The x-coordinates of the aperture centers, in pixels.
+        ys: list of int
+            The y-coordinates of the aperture centers, in pixels.
+        rs: list of int
+            The radii of the apertures, in pixels.
+    
+    :Returns:
+        out: True
+             Always.
+        
+    :Notes:
+        In principle, each aperture could be shown "exactly" using plt.Polygon and the 
+        brian_plots.ap_outline function. But the latter is not suitable for large 
+        apertures. Until fixed, each apertuyre is shown as a perfect circle using 
+        plt.Circle. 
     '''
                             
     for (x, y, r) in zip(xs, ys, rs):
@@ -255,10 +341,36 @@ def build_ap_list(data,
                   lam = None,
                   save_plot = None,
                   ):
-    '''
-    This function finds local maxima in an image, and then offers the user the ability
-    to check/modify the found peaks manually. It associate a circular aperture to each 
-    peak, used later to to extract the integrated spectra of these areas.  
+    ''' Detects local maxima in an image, and allows the manual inspection of the result.
+    
+    This function finds local maxima in 2-D array, and then offers the user the ability
+    to check/modify the found peaks manually. It associate a fixed circular aperture to 
+    each peak (individually modifiable manually), used later to extract the integrated s
+    pectra of these areas. 
+    
+    :Args:
+        data: 2-D numpy array
+            The raw data from which to find maxima.
+        start_aps: list of list [default: None]
+            A pre-existing list of apertures.
+        radius: int [default: 3.0]
+            The default radius of the apertures associated with the local maxima detected
+            automatically.
+        automatic_mode: bool [default: True]
+                        Whether to detect peaks and assign apertures automatically or not.
+        interactive_mode: bool [default:True]
+                          Whether to inspect the apertures manually or not.
+        lam: float [default: False]
+             The wavelength of the data, to be added to the plot title if set.
+        save_plot: string [default: None]
+                   If set, the name of the file used to save the final aperture selection.
+        
+    :Returns:
+        out: 2-D numpy array
+             The array of apertures with shape (n,3), where n is the total number of
+             apertures (1 per row), defined by (x,y,r) its center and radius (in pixels). 
+    :Notes:
+        If start_aps are provided, then automatic_mode is False.     
     '''
     
     mean, median, std = sigma_clipped_stats(data, sigma=3.0, iters=5) 
@@ -362,8 +474,271 @@ def build_ap_list(data,
         plt.close()
         return zip(xs,ys,rs)
 # ----------------------------------------------------------------------------------------      
+
+class SpecManager(object):
+    '''The class managing the interactive inspection of the fitted data.
     
+    This class is designed to select spaxels, and plot the associated fit.
     
+    :Notes:
+        This class is an evolution of brian_plots.ApManager(). It will make anyone with
+        experience in events handling cry of despair. It works for now, but it could be 
+        faster, and with no doubt A LOT more elegant. Suggestions welcome.
+    '''
+    def __init__(self, fig, ax1a, ax1b, ax3a, ax3b, ax3c, ax3d,
+                       patches, spectra, lams, data, lowess, ppxf, elines):
+
+        self.fig = fig
+        self.ax1a = ax1a
+        self.ax1b = ax1b
+        self.ax3a = ax3a
+        self.ax3b = ax3b
+        self.ax3c = ax3c
+        self.ax3d = ax3d
+
+        self.canvas = ax1a.figure.canvas
+        
+        self.patch1a = patches[0]
+        self.patch1b = patches[1]
+        
+        self.spec3 = spectra[0]
+        self.lowess3 = spectra[1]
+        self.ppxf3 = spectra[2]
+        self.fit3 = spectra[3]
+        
+        self.dspec3b = spectra[4]
+        self.dspec3c = spectra[5]
+        self.dspec3d = spectra[6]
+        
+        self.lams = lams
+        self.data = data
+        self.lowess = lowess
+        self.ppxf = ppxf
+        self.elines = elines
+         
+        self.cid = self.canvas.mpl_connect('button_press_event', self.onpress)
+
+    def onpress(self, event):
+        '''
+        #Define what happens when a click happens on the matplotlib window.
+        '''
+        # Did the click happen outside the axes ?
+        if event.inaxes is None: return
+            
+        # Is anything selected in the toolbar (e.g. zoom mode ?) 
+        # Only proceed if not.
+        tb = plt.get_current_fig_manager().toolbar
+
+        # Left click on the images ? Then load a new spectrum from the chosen spaxel
+        if tb.mode == '' and event.button == 1 and event.inaxes in [self.ax1a, self.ax1b]:
+            # First, update the spaxel marker location
+                
+            self.patch1a.remove()
+            symb = plt.Rectangle([np.int(event.xdata)-0.5,np.int(event.ydata)-0.5],
+                                     1,1,angle=0,color='tomato')
+            self.patch1a = self.ax1a.add_patch(symb)
+            # ---
+            self.patch1b.remove()
+            symb = plt.Rectangle([np.int(event.xdata)-0.5,np.int(event.ydata)-0.5],
+                                     1,1,angle=0,color='tomato')
+            self.patch1b = self.ax1b.add_patch(symb)
+            
+            # Update the label
+            self.ax1a.set_title('Spaxel: %s - %s' % (str(np.int(event.xdata)).zfill(3),
+                                                    str(np.int(event.ydata)).zfill(3)),
+                                                    fontsize=20)
+                
+            # Now, update the spectrum in the master spec plot
+            self.spec3[0].remove() # Erase
+            self.spec3 = self.ax3a.plot(self.lams,
+                                       self.data[:,int(event.ydata),int(event.xdata)],
+                                       'k-',drawstyle='steps-mid') # Add new data
+            self.lowess3[0].remove() # Erase                         
+            self.ppxf3[0].remove() # Erase                         
+            self.fit3[0].remove() # Erase
+            self.dspec3b[0].remove() # Erase
+            self.dspec3c[0].remove() # Erase
+            self.dspec3d[0].remove() # Erase
+            
+            self.ppxf3 = self.ax3a.plot(self.lams,
+                                       self.ppxf[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='firebrick',drawstyle='steps-mid', lw=2)  
+            self.lowess3 = self.ax3a.plot(self.lams,
+                                       self.lowess[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='darkorange',drawstyle='steps-mid', lw=2) 
+            self.fit3 = self.ax3a.plot(self.lams,
+                                       self.lowess[:,int(event.ydata),int(event.xdata)]+
+                                       self.elines[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='royalblue',drawstyle='steps-mid', lw=1) 
+            
+            self.dspec3b = self.ax3b.plot(self.lams,
+                                       self.data[:,int(event.ydata),int(event.xdata)]-
+                                       self.lowess[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='k',drawstyle='steps-mid', lw=1)     
+            self.dspec3c = self.ax3c.plot(self.lams,
+                                       self.data[:,int(event.ydata),int(event.xdata)]-
+                                       self.ppxf[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='k',drawstyle='steps-mid', lw=1) 
+            self.dspec3d = self.ax3d.plot(self.lams,
+                                       self.data[:,int(event.ydata),int(event.xdata)]-
+                                       self.lowess[:,int(event.ydata),int(event.xdata)]-
+                                       self.elines[:,int(event.ydata),int(event.xdata)],
+                                       '-',c='k',drawstyle='steps-mid', lw=1)                                             
+            
+            # And reset the axes y-range automatically
+            self.ax3a.relim()
+            self.ax3a.autoscale_view()
+             
+            # And update the plot           
+            self.ax3a.figure.canvas.draw()
+            self.ax3b.figure.canvas.draw()
+            self.ax3c.figure.canvas.draw()
+            self.ax3d.figure.canvas.draw()
+            self.ax1a.figure.canvas.draw()
+            self.ax1b.figure.canvas.draw()
+            
+# ----------------------------------------------------------------------------------------      
+
+def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn=False):
+    ''' Interactive inspection fo the brian fit output.
     
+    This function generates an interactive plot allowing to select individual spaxels 
+    and visualize how well/bad they were fitted.
     
+    :Args:
+        lams: 1-D array
+              The wavelength array of the data.
+        data: 3-D numpy array
+            The raw data.
+        lowess: 3-D numpy array
+            The fitted lowess continuum cube.
+        ppxf: 3-D numpy array
+            The fitted ppxf continuum cube.
+        elines: 3-D numpy array
+            The pure emission line cube.
+        map: 2-D numpy array
+            The line inetnsity map.
+        vmap: 2-D numpy array
+            The gas velocity map.
+        irange: list of int
+                The range of the colorbar for the intensity plot.
+        vrange: list of int       
+                The range of the colorbar for the velocity dispersion plot.
+        ofn: string [default: None]       
+              The filename (+path!) of the plot saved.
+              
+    :Returns:
+        out: True
+             Always.  
+    '''
+    # Starting location for the plot. Middle of the cube
     
+    nx = int(np.shape(data[0])[1]/2.)
+    ny = int(np.shape(data[0])[0]/2.)
+     
+    plt.close(91)
+    fig = plt.figure(91, figsize=(16,9))
+
+    # Here, create multiple instance of gridspec, to have "total" control.
+    # First for two maps, to show the location of the spaxel.
+    gs1 = gridspec.GridSpec(2,1, height_ratios=[1,1], width_ratios=[1])
+    gs1.update(left=0.63, right=0.98, bottom=0.1, top=0.93, wspace=0, hspace=0.05)
+
+    # Then 4 spectra plots, to show the various fits.
+    gs3 = gridspec.GridSpec(4,1, height_ratios=[1,0.5,0.5,0.5], width_ratios=[1])
+    gs3.update(left=0.1, right=0.63, bottom=0.1, top=0.96, wspace=0, hspace=0.05)
+    
+    # Start with the 2-D maps
+    ax1b = plt.subplot(gs1[1,0])    
+    ax1a = plt.subplot(gs1[0,0],sharex=ax1b, sharey=ax1b) # Here, sharex/y = zoom is tied!
+    ax1a.set_adjustable('box-forced')
+    ax1b.set_adjustable('box-forced')
+     
+    # Here, I will need to allow for an automatic range set for the colorbars 
+    im1 = ax1a.imshow(map, cmap=alligator, origin='lower', norm=LogNorm(), vmin=irange[0],
+                      vmax=irange[1], 
+                      interpolation='nearest')         
+    im2 = ax1b.imshow(vmap, cmap=alligator, origin='lower', vmin=vrange[0],vmax=vrange[1], 
+                      interpolation='nearest')               
+     
+    # A red dot for showin which spaxel we're at. 
+    symb = plt.Rectangle([nx-0.5,ny-0.5],1,1,angle=0,color='r')
+    patch1a = ax1a.add_patch(symb)
+    symb = plt.Rectangle([nx-0.5,ny-0.5],1,1,angle=0,color='r')
+    patch1b = ax1b.add_patch(symb)
+    patches = [patch1a,patch1b]
+    
+    # Also write it down, for clarity
+    ax1a.set_title('Spaxel: %s - %s' % (str(np.int(nx)).zfill(3), 
+                                        str(np.int(ny)).zfill(3)),
+                                        fontsize=20) 
+    # Deal with the axis labels, etc...           
+    ax1a.set_xticklabels([])
+    for ax in [ax1a, ax1b]:
+        ax.yaxis.tick_right()
+        ax.yaxis.label_position='right'  # Put this on the right.
+        ax.set_ylabel(r'y [pixels]', labelpad=30, fontsize=20) 
+        if ax in [ax1b]:
+            ax.set_xlabel(r'x [pixels]', fontsize=20)
+            
+    # Now, deal with the various spectra
+    ax3d = plt.subplot(gs3[3,0])
+    ax3a = plt.subplot(gs3[0,0], sharex=ax3d) # Tie the zoom, here again.
+    ax3b = plt.subplot(gs3[1,0], sharex=ax3d) # Tie the zoom, here again.
+    ax3c = plt.subplot(gs3[2,0], sharex=ax3d) # Tie the zoom, here again.
+    
+    # Hide the axis ticks hen not necessary
+    for ax in [ax3a,ax3b,ax3c]:
+        plt.setp(ax.get_xticklabels(), visible=False)
+    
+    # Start the actual plotting
+    spec3 = ax3a.plot(lams,data[:,ny,nx],'k-',drawstyle='steps-mid',lw=2)
+    ppxf3 = ax3a.plot(lams,ppxf[:,ny,nx],'-',c='firebrick', drawstyle='steps-mid', lw=2)   
+    lowess3 = ax3a.plot(lams,lowess[:,ny,nx],'-',c='darkorange', drawstyle='steps-mid',
+                                                                                   lw=2)  
+    fit3 = ax3a.plot(lams,lowess[:,ny,nx]+elines[:,ny,nx],'-',c='royalblue', 
+                                                                   drawstyle='steps-mid') 
+                                                                                                                           
+    dspec3b = ax3b.plot(lams,data[:,ny,nx]-lowess[:,ny,nx],'k-',drawstyle='steps-mid')    
+    dspec3c = ax3c.plot(lams,data[:,ny,nx]-ppxf[:,ny,nx],'k-',drawstyle='steps-mid')    
+    dspec3d = ax3d.plot(lams,data[:,ny,nx]-lowess[:,ny,nx]-elines[:,ny,nx],'k-',
+                                                                   drawstyle='steps-mid')    
+    spectra = [spec3,ppxf3,lowess3,fit3,dspec3b,dspec3c,dspec3d]
+
+    # Make things look pretty
+    for ax in [ax1a,ax1b,ax3a,ax3b,ax3c,ax3d]:
+        ax.grid(True)
+        if ax in [ax3a,ax3b,ax3c,ax3d]:
+            ax.set_xlim((np.min(lams),np.max(lams)))
+        if ax in [ax3b,ax3c,ax3d]:
+            ax.set_ylim((-20,20))
+            ax.set_yticks([-10,10])
+            ax.axhline(0,c='r')
+        if ax in [ax3d]:
+            ax.set_xlabel(r'Observed wavelength [\AA]')
+    # Add labels
+    ax3a.set_ylabel(r'F$_\lambda$ [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$ \AA$^{-1}$]', fontsize=15)
+    ax3b.set_ylabel(r'F$_\lambda$ - lowess ', fontsize=15)
+    ax3c.set_ylabel(r'F$_\lambda$ - ppxf ', fontsize=15)
+    ax3d.set_ylabel(r'F$_\lambda$ - fit ', fontsize=15)
+    
+    # Launch the interactive black magic        
+    specmanager = SpecManager(fig,ax1a,ax1b,ax3a,ax3b,ax3c,ax3d,
+                              patches, spectra, lams,data, lowess, ppxf, elines)       
+    plt.show()
+    
+    # A little trick to wait for the user to be done before proceeding
+    while True:
+    
+        letter = raw_input('  [v]+[some-text] to save the current view, [z] to end.\n')
+        if letter[0] == 'v':
+            plt.savefig(ofn+letter+'.pdf',bbox_inches='tight')
+        elif letter == 'z':
+            break
+        else:
+            print '   [%s] unrecognized !' % letter
+                 
+    
+    plt.close()
+        
+    return True

@@ -10,6 +10,8 @@
 import numpy as np
 import os
 
+import matplotlib.pyplot as plt
+
 # ---| Some basic parameters |------------------------------------------------------------
 
 __version__ = '0.1.1'
@@ -19,7 +21,7 @@ __version__ = '0.1.1'
 brian_dir = os.path.dirname(__file__)
 
 # And get all the different useful locations associated
-refdata_dir = os.path.join(brian_dir,'reference_data')
+refdata_dir = os.path.join(brian_dir,'../reference_data')
 
 # ---| Some constants |-------------------------------------------------------------------
 
@@ -44,19 +46,21 @@ s2l = 6716.44
 s2h = 6730.81
 
 
-# ---| Information about the different stellar models |-----------------------------------
-'''
-sl_models ={'MILES_ppxf_default':{'sl_loc':os.path.join(ppxf_dir,'miles_models'),
+# ---| Information about the different stellar models for ppxf|---------------------------
+
+sl_models ={'MILES_ppxf_default':{'sl_loc':os.path.join(refdata_dir,
+                                                        os.path.join('stellar_templates',
+                                                                     'miles_models')),
                                   'nAges':26, 'nMetal':6, 
                                   'metal':[-1.71, -1.31, -0.71, -0.40, 0.00, 0.22],
                                   'logAge':np.linspace(np.log10(1),np.log10(17.7828),26),
-                                  'metal_str':['m1.71','m1.31','m0.71','m0.40',
-                                               'p0.00','p0.22'],
+                                  'metal_str':['m1.71','m1.31','m0.71','m0.40','p0.00',
+                                               'p0.22'],
                                   'fwhm':2.51,
                                 }, 
 
            }
-'''
+
            
 # ---| Some other useful bits & pieces |--------------------------------------------------     
 
@@ -65,8 +69,11 @@ sl_models ={'MILES_ppxf_default':{'sl_loc':os.path.join(ppxf_dir,'miles_models')
 fn_list = {'snr_cube':None,
            'lowess_pickle':None,
            'lowess_cube':None,
+           'ppxf_lams':None,
            'ppxf_pickle':None,
            'ppxf_cube':None,
+           'ppxf_delog_raw_cube':None,
+           'ppxf_sol_map':None,
            'elines_pickle':None,
            'elines_spec_cube':None,
            'elines_params_cube':None,
@@ -76,4 +83,42 @@ fn_list = {'snr_cube':None,
            'ap_map':None,
            'ap_spec_cube':None,
           }
+
+# ---| Custom colormaps for brian |--------------------------------------------------------
+
+# Here, I define the "alligator" colormap, to give brian a unique feel just because I can. 
+# More importantly, I can decide to set the lower and upper bounds to B&W, so that spaxels
+# outside the colorbar range are directly identifiable. Also make sure that nan's show up 
+# in 50% grey. 
+
+# Alligator: 6 nodes with linear evolution, suitable for B&W impression
+
+cdict_alligator = {
+'red'  :  ( (0.00, 0./255, 0./255),
+            (0.00, 0./255, 0./255),      (0.2, 20./255., 20./255.),
+            (0.40, 46./255., 46./255.),  (0.6, 108./255., 108./255.),
+            (0.8, 207./255., 207./255.), (1.00, 255./255.,255./255.),
+            (1.00, 255./255, 255./255),),
+
+'green' : ( (0.00, 0./255, 0./255),
+            (0.00, 25./255., 25./255.),  (0.2, 85./255., 85./255.),
+            (0.4, 139./255., 139./255.), (0.6, 177./255., 177./255.),  
+            (0.8, 234./255, 234./255),   (1.00, 248./255.,248./255.),
+            (1.00, 255./255, 255./255),),
+            
+'blue':   ( (0.00, 0./255, 0./255),
+            (0.00, 25./255., 25./255.),  (0.2, 81./255., 81./255.),
+            (0.4, 87./255., 87./255.),   (0.6, 86./255., 86./255.),
+            (0.8, 45./255, 45./255),     (1.00, 215./255.,215./255.),
+            (1.00, 255./255, 255./255),),   
+}
+
+# Initiate the colorbar
+alligator = plt.matplotlib.colors.LinearSegmentedColormap('alligator',cdict_alligator, 1024)
+# Set the bad colors
+alligator.set_bad(color=(0.5,0.5,0.5), alpha=1) 
+
+
+
+
       

@@ -10,12 +10,9 @@
 # Created February 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
 # ----------------------------------------------------------------------------------------
 
-from __future__ import print_function
+#from __future__ import print_function
 
-try:
-    import pyfits
-except ImportError:
-    from astropy.io import fits as pyfits
+from astropy.io import fits as pyfits
 from scipy import ndimage
 import numpy as np
 import glob
@@ -31,29 +28,23 @@ import sys
 from ppxf import ppxf
 import ppxf_util as util
 
-import elf_tools
-from elf_metadata import *
+import brian_tools
+from brian_metadata import *
         
 # ----------------------------------------------------------------------------------------
 def sl_resample(fn, z=0, inst = 'MUSE', sl_name='MILES_ppxf_default', do_cap=True):
     '''
     This function resamples a given spectrum (i.e. from a stellar library)
-    to match the MUSE resolution varying with wavelength.
+    to match theresolution of the instrument that took the data.
     
     :param: fn: filename of stellar template
-    :param: z: redshift of MUSE observations
+    :param: z: redshift of the target observations
     :param: inst: which instrument are we using
     :param: sl_name: which templates do we use ?
     :do_cap: do the convolution using M.Cappellari in-built function
     
     Returns the convolved spectrum
     '''
-    
-    if not(inst in ['MUSE']):
-        sys.exit('Instrument unsupported ...')
-    
-    if not(sl_name in sl_models.keys()):
-        sys.exit('Stellar library not supported ...')
         
     if not(os.path.isfile(fn)):
         sys.exit('"%s": not a valid file.' % fn)
@@ -69,18 +60,23 @@ def sl_resample(fn, z=0, inst = 'MUSE', sl_name='MILES_ppxf_default', do_cap=Tru
     dlam = ssp_header['CDELT1']
     lams = np.arange(0,ssp_header['NAXIS1'],1)*ssp_header['CDELT1'] + \
                       ssp_header['CRVAL1']
-	
-	# What is the target resolution I want to achieve ?
-    R_target = elf_tools.inst_resolution(inst=inst, get_ff=False, show_plot=False)
-    fwhm_target = lams/R_target(lams)/(z+1)
+    
+    # What is the target resolution I want to achieve ?
+    if inst:
+        R_target = brian_tools.inst_resolution(inst=inst, get_ff=False, show_plot=False)
+        fwhm_target = lams*(z+1)/R_target(lams*(z+1))
+    else:
+        # Assuming MUSE - probably a bad idea that I will forget about ... Issue a warning
+        # to be on the safe side.
+        warnings.warn('No instrument specified. Assuming MUSE for the ppxf input spectra')
+        R_target = brian_tools.inst_resolution(inst='MUSE', get_ff=False, show_plot=False)
+        fwhm_target = lams*(z+1)/R_target(lams*(z+1))
 
     # WARNING: what if the resolution of the models is NOT sufficient ?
     if np.any((fwhm_target - sl_models[sl_name]['fwhm']) < 0):
-        warnings.warn('WARNING: stellar templates have too high fwhm given the redshift '+
+        sys.exit('WARNING: stellar templates have too high fwhm given the redshift '+
                       'of the target ! Ignoring z for now ... you really should use '+
                       'other models !') 
-        sys.stdout.flush()                  
-        fwhm_target = lams/R_target(lams)#/(z+1) 
     
 	# Use the ppxf-in-built gaussian_fliter1d home made by M. Cappellari (10%faster !)
     if do_cap:
@@ -96,7 +92,7 @@ def sl_resample(fn, z=0, inst = 'MUSE', sl_name='MILES_ppxf_default', do_cap=Tru
        # I can reproduce its results (see below) doing things my way.    
        ssp_out = util.gaussian_filter1d(ssp_raw,sigma) 
        
-    else: # do things my way - this is perfectly equivalent, but slower ?
+    else: # do things my way - this is perfectly equivalent, but slower ...
 	        
        # What is the max FWHM in resolution elements ?
        fwhm_pix_max = np.max(fwhm_target/dlam)
@@ -168,17 +164,13 @@ def sl_resample(fn, z=0, inst = 'MUSE', sl_name='MILES_ppxf_default', do_cap=Tru
                  
               # Bottom line I'm doing things correctly. Slightly more 
               # accurately than in the example of M. Cappellari.
-              '''
-                                                                                                          
+              '''                                                                                          
     '''                                    
     plt.close(1)
     plt.figure(1)      
     plt.plot(lams,ssp_raw,'k-')
     plt.plot(lams,ssp_out,'r-')
     plt.show()
-    
-    import pdb
-    pdb.set_trace()
     '''   
     return ssp_out
 
@@ -186,215 +178,96 @@ def setup_spectral_library(velscale, inst, sl_name, fit_lims, z):
     '''
     This prepares the set of stellar templates to be fed to ppxf.
     
-    :param: velscale: the velocity scale for the log-rebinning
-    :param: fwhm_gal: the fwhm of the target galaxy spectra - a poly1d structure !
-    :param: sl_loc: the location of the stellar templates to be used.
-    :param: fit_lims: the spectral range for the fit.
-    :param: z: redshift of target - needed for correct reshaping of fwhm_target.
+    :param: velscale - the velocity scale for the log-rebinning
+    :param: inst - the instrument that took the data, e.g. 'MUSE'
+    :param: sl_name - the name of the stellar library to use
+    :param: fit_lims - the spectral range for the fit (data & templates overlap)
+    :param: z - redshift of target - needed for correct reshaping of fwhm_target.
     
     :return: ...lots of stuf...
     '''
     
-    fns = glob.glob(os.path.join(sl_models[sl_name]['sl_loc']+'*'))
+    # Fetch the stellar template files
+    fns = glob.glob(os.path.join(sl_models[sl_name]['sl_loc'],'*'))
     fns.sort()
     
     # Extract the wavelength range and logarithmically rebin one spectrum
-    # to the same velocity scale of the SDSS galaxy spectrum, to determine
+    # to the same velocity scale of the data spectra, to determine
     # the size needed for the array which will contain the template spectra.
-    #
     hdu = pyfits.open(fns[0])
     ssp = hdu[0].data
     h2 = hdu[0].header
     lams_temp = np.arange(0,h2['NAXIS1'],1)*h2['CDELT1'] + h2['CRVAL1']
     
-    mask = (lams_temp >= fit_lims[0]) & (lams_temp <= fit_lims[1])	
+    mask = (lams_temp >= fit_lims[0]) & (lams_temp <= fit_lims[1])
     ssp = ssp[mask]
     lams_temp = lams_temp[mask]
-    lamRange_temp = np.array([lams_temp[0],lams_temp[-1]])
+    lam_range_temp = np.array([lams_temp[0],lams_temp[-1]])
     
-    sspNew, logLam2, velscale = util.log_rebin(lamRange_temp, ssp, velscale=velscale)
-	
-    # Create a three dimensional array to store the
-    # two dimensional grid of model spectra
-    #
+    log_lam, ssp_new, velscale = brian_tools.log_rebin(lam_range_temp, ssp, 
+                                                        velscale=velscale)
+    
+    # Create a three dimensional array to store the two dimensional grid of model spectra
     nAges = sl_models[sl_name]['nAges']
     nMetal = sl_models[sl_name]['nMetal']
-    templates = np.empty((sspNew.size, nAges, nMetal))
+    templates = np.empty((ssp_new.size, nAges, nMetal))
 
-    # These are the array where we want to store
-    # the characteristics of each SSP model
-    #
+    # These are the array where we want to store the characteristics of each SSP model
     logAge_grid = np.empty((nAges, nMetal))
     metal_grid = np.empty((nAges, nMetal))
 
     # These are the characteristics of the adopted rectangular grid of SSP models
-    #
     logAge = sl_models[sl_name]['logAge']
     metal = sl_models[sl_name]['metal']
 
     # Here we make sure the spectra are sorted in both [M/H]
     # and Age along the two axes of the rectangular grid of templates.
-
     metal_str = sl_models[sl_name]['metal_str']
     for k, mh in enumerate(metal_str):
         files = [s for s in fns if mh in s]
         for j, filename in enumerate(files):
-            # Resample the spectra
-            #start_time = datetime.datetime.now()
-            
+            # Resample the spectra to match the instrumental resolution
             ssp = sl_resample(filename, z=z, inst=inst, sl_name=sl_name, do_cap=True)
-            
-            #dt =datetime.datetime.now() - start_time
-            #print (dt.total_seconds())
-            
             ssp = ssp[mask]
+            # Log-rebin the spectrum
+            log_lam, ssp_new, velscale = brian_tools.log_rebin(lam_range_temp, ssp, 
+                                                                velscale=velscale)
             
-            sspNew, logLam2, velscale = util.log_rebin(lamRange_temp, ssp, 
-                                                       velscale=velscale)
-                                                                 
-            templates[:, j, k] = sspNew  # Templates are *not* normalized here
+            templates[:, j, k] = ssp_new  # Templates are *not* normalized here
             logAge_grid[j, k] = logAge[j]
             metal_grid[j, k] = metal[k]
 
-    return templates, lamRange_temp, logAge_grid, metal_grid, logLam2
+    return templates, lam_range_temp, logAge_grid, metal_grid, log_lam
 
 #------------------------------------------------------------------------------
 
-def ppxf_population(lams, data, error, z=0, inst='MUSE', sl_name='MILES_ppxf_default'):
+def ppxf_population(specerr, templates=None, velscale=None, start = None, 
+                    goodpixels = None, plot=False, moments=4, degree=-1, vsyst=None, 
+                    clean=False, mdegree=10, regul=None):
     '''
-    Master function that prepares the input to feed ppxf.
-    
-    :param: lams: input wavelength array
-    :param: data: input spectrum in erg/s/cm**2/s/A
-    :param: error: input error in (erg/s/cm**2/s/A)**2
-    :param: inst: default='MUSE', what data is this ?
-    :param: sl_name: which stellar libraries to use ?
-    
-    :return: ... lots of stuff ...
+    Function that calls ppxf, designed to be called from multiprocessing (i.e. only 
+    require 1 argument). Everything else is taken care of outside of this.
     '''
     
-    lamRange = np.array([lams[0],lams[-1]])
+    galaxy = specerr[0]
+    noise = specerr[1]
     
-    # Ok, I need to redshift this all back to the reference frame, or ppxf might crash.
-    # Here's the original text from M. Cappellari:
-    #
-    # << If the galaxy is at a significant redshift (z > 0.03), one would need to apply
-    # a large velocity shift in PPXF to match the template to the galaxy spectrum.
-    # This would require a large initial value for the velocity (V > 1e4 km/s)
-    # in the input parameter START = [V,sig]. This can cause PPXF to stop!
-    # The solution consists of bringing the galaxy spectrum roughly to the
-    # rest-frame wavelength, before calling PPXF. In practice there is no
-    # need to modify the spectrum before the usual LOG_REBIN, given that a
-    # red shift corresponds to a linear shift of the log-rebinned spectrum.
-    # One just needs to compute the wavelength range in the rest-frame
-    # and adjust the instrumental resolution of the galaxy observations. >>
-    
-    lams0 = lams/(z+1)
-    lamRange0 = np.array([lams0[0],lams0[-1]])
-    
-    # Ok, now we need to make sure that we only fit the part of the spectrum that 
-    # overlaps with the stellar libraries. 
-    # We need to find the limits of these. Get one of them and figure it out.
-    sl_fns = glob.glob(os.path.join(sl_models[sl_name]['sl_loc'],'*'))
-    hdu_sl = pyfits.open(sl_fns[0])
-    header_sl = hdu_sl[0].header
-    hdu_sl.close()
-    
-    lams_sl = np.arange(0, header_sl['NAXIS1'],1)*header_sl['CDELT1'] + header_sl['CRVAL1']
-    lamRange_sl = [lams_sl[0],lams_sl[-1]]
-    
-    fit_lims =[np.max([lamRange0[0],lamRange_sl[0]]), 
-               np.min([lamRange0[1],lamRange_sl[1]])]
-    
-    # Make sure we only use the spectral region that is common to the data and the 
-    # stellar libraries
-    mask = (lams0 > fit_lims[0]) & (lams0 < fit_lims[1])
-    data0 = data[mask]
-    lams0 = lams0[mask]
-    lamRange0 = np.array([lams0[0],lams0[-1]])
-    
-    # Need to log-rebin this ...
-    galaxy, logLam0, velscale = util.log_rebin(lamRange0, data0)
-    #galaxy = galaxy/np.median(galaxy)
-    # I should probably do the same for the error eventually ...
-    
-    # The noise level is chosen to give Chi^2/DOF=1 without regularization (REGUL=0)
-    #
-    noise = galaxy*0 + 0.01528           # Assume constant noise per pixel here
+    # Only run ppxf if I have a non-nan's spectrum. Even one nan's breaks ppxf ... sigh.
+    if not(np.any(np.isnan(galaxy))):
 
-	# Very well, now, let's get those templates ready
-    templates, lamRange_temp, logAge_grid, metal_grid, logLam_temp = \
-        setup_spectral_library(velscale, inst, sl_name, fit_lims, z)
-	
-	# From M. Cappellari:
-    # << The galaxy and the template spectra do not have the same starting wavelength.
-    # For this reason an extra velocity shift DV has to be applied to the template
-    # to fit the galaxy spectrum. We remove this artificial shift by using the
-    # keyword VSYST in the call to PPXF below, so that all velocities are
-    # measured with respect to DV.>>
-    #
-    dv = c*np.log(lamRange_temp[0]/lamRange0[0])  # km/s
-    goodpixels = util.determine_goodpixels(logLam0, lamRange_temp, 0.0)
+        pp = ppxf(templates, galaxy, noise, velscale, start,
+                  goodpixels=goodpixels, plot=False, moments=moments, degree=degree,
+                  vsyst=vsyst, clean=clean, mdegree=mdegree, regul=regul, quiet=True)
+        
+        # In a  perfect world, I would return pp. But that is a very massive variable.
+        # 1 row = 300 spaxels = 5GB => 1 MUSE cube = 1.5TB !!!
+        # Instead, just store what I need/trust. The best fit, the galaxy spectra (for 
+        # sanity checks) and the sol array (with the kinematics information, that I 
+        # sort-of trust.    
+        return [pp.bestfit, pp.galaxy, pp.sol]
     
-	# From M. Cappellari:
-    # << IMPORTANT: Ideally one would like not to use any polynomial in the fit
-    # as the continuum shape contains important information on the population.
-    # Unfortunately this is often not feasible, due to small calibration
-    # uncertainties in the spectral shape. To avoid affecting the line strength of
-    # the spectral features, we exclude additive polynomials (DEGREE=-1) and only use
-    # multiplicative ones (MDEGREE=10). This is only recommended for population, not
-    # for kinematic extraction, where additive polynomials are always recommended. >>
-    #
-    # Since I do not care too much about stellar kinematics (because my SN is usually low)
-    # but worry a lot about my emission lines, I follow that advice here.
+    else:
+        return None
     
-    vel = 0.   # Initial estimate of the galaxy velocity in km/s -it's been de-redshifted.
-    start = [vel, 100.]  # (km/s), starting guess for [V,sigma]
 
-    # See the pPXF documentation for the keyword REGUL,
-    # for an explanation of the following two lines
-    #
-    templates /= np.median(templates) # Normalizes templates by a scalar
-    regul_err = 0.004  # Desired regularization error
-
-    t = clock()
-
-    plt.clf()
-    plt.subplot(211)
-
-    pp = ppxf(templates, galaxy, noise, velscale, start,
-              goodpixels=goodpixels, plot=False, moments=4, degree=-1,
-              vsyst=dv, clean=False, mdegree=10, regul=1./regul_err)
-
-
-    # When the two numbers below are the same, the solution is the smoothest
-    # consistent with the observed spectrum.
-    #
-    '''
-    print('Desired Delta Chi^2: %.4g' % np.sqrt(2*goodpixels.size))
-    print('Current Delta Chi^2: %.4g' % ((pp.chi2 - 1)*goodpixels.size))
-    print('Elapsed time in PPXF: %.2f s' % (clock() - t))
-
-    print('Mass-weighted <logAge> [Gyr]: %.3g' %
-          (np.sum(pp.weights*logAge_grid.ravel())/np.sum(pp.weights)))
-    print('Mass-weighted <[M/H]>: %.3g' %
-          (np.sum(pp.weights*metal_grid.ravel())/np.sum(pp.weights)))
-
-    plt.subplot(212)
-    s = templates.shape
-    weights = pp.weights.reshape(s[1:])/pp.weights.sum()
-    plt.imshow(np.rot90(weights), interpolation='nearest', 
-               cmap='gist_heat', aspect='auto', origin='upper',
-               extent=[np.log10(1), np.log10(17.7828), -1.9, 0.45])
-    plt.colorbar()
-    plt.title("Mass Fraction")
-    plt.xlabel("log$_{10}$ Age (Gyr)")
-    plt.ylabel("[M/H]")
-    plt.tight_layout()
-    plt.show()
-    '''
-    
-    return logLam0,galaxy,pp
-    
-    
 #------------------------------------------------------------------------------
