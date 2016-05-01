@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains tools for the BRIAN routines to fit the stellar continuum and the 
-# emission lines in an IFU data cube (i.e. MUSE).
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains general tools for the BRIAN routines to fit the stellar continuum and 
+ the emission lines in an IFU data cube.
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import numpy as np
@@ -252,7 +253,21 @@ def inst_resolution(inst = 'MUSE', get_ff = False, show_plot=False):
     Returns a callable function of the wavelength (in Angstroem !).
     
     :Args:
+        inst: string [default: 'MUSE']
+              The name tag referring to a given instrument.
+        get_ff: bool [default: False]
+                Whether to recompute the given function from a reference dataset or not.
+                Only valid with inst = 'MUSE'.
+        show_plot: bool [default: False]
+                   Whether to make a plot of the function.
     
+    :Returns:
+        R(lambda): function
+                   A function that takes a float (lambda in Angstroem, and returns the 
+                   corresponding value of the chosen instrument resolution.
+    
+    :Notes:
+        Supported instruments: 'MUSE'
     
     '''
      

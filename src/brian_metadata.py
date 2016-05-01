@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains some global metadata used throughout the
-# BRIAN code to fit MUSE data cubes. 
-# 
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains some global metadata used throughout the BRIAN code to fit IFU data 
+ cubes. Includes reference wavelengths, the speed of light, etc ...
+ 
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import numpy as np
@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 # ---| Some basic parameters |------------------------------------------------------------
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 # Where are we located ?
 # Get the project directory from this file location !
@@ -79,9 +79,12 @@ fn_list = {'snr_cube':None,
            'elines_params_cube':None,
            'elines_perror_cube':None,
            'elines_fit_status':None,
+           'dered_elines_params':None,
+           'dered_elines_perror':None,
            'ap_list':None,
            'ap_map':None,
            'ap_spec_cube':None,
+           'Av_map': None,
           }
 
 # ---| Custom colormaps for brian |--------------------------------------------------------

@@ -8,6 +8,16 @@ TODO:
  - add the reference to the LOWESS paper in the acknowledgment.
  - add the reference to the stellar templates in the acknowledgments.
  - in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction.
+ - add references to reddening laws in the acknowledgments.
+
+v0.2.0, May 2016, F.P.A. Vogt:
+ - added the ability to rescale the y-axis of the fit residual plots in the interactive 
+   fit inspection window
+ - updated brian_red, so that the Fischera & Dopita (2005) attenuation law for a turbulent 
+   dust screen can now be derived for any Rv and Rva values (use polynomials from the
+   article, unlike Appendix A of Vogt+ (2013)). Thanks to R. Sutherland for sharing his
+   reddening code, that helped me make sense of all of it.
+ - implemented a processing step to correct for the extragalactic reddening/attenuation.
 
 v0.1.1, April 2016, F.P.A. Vogt:
  - replaced '0.1' with '__version__' when saving fits headers

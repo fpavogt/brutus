@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains several function and tools used by the BRIAN routines to correct
-# emission line fluxes for galactic and extragalactic reddening.
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains several function and tools used by the BRIAN routines to correct
+ emission line fluxes for galactic and extragalactic reddening.
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import numpy as np
+import scipy as sp
 import scipy.interpolate as interpolate
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -16,15 +18,23 @@ from brian_metadata import *
 # ----------------------------------------------------------------------------------------      
 
 def D_fm90(x,gamma,x0):
-    ''' 
-    The UV points from Fitzpatrick & Massa (1990). x is in 1/microns
+    ''' The UV points from Fitzpatrick & Massa (1990). 
+    
+    :Args:
+        x: float
+           Wavelength in 1/microns
+        gamma: float
+        x0: float
     '''
     return x**2/((x**2-x0**2)**2+x**2*gamma**2)
 # ---------------------------------------------------------------------------------------- 
      
 def F_fm90(x):
-    '''
-    The UV points from Fitzpatrick & Massa (1990). x is in 1/microns
+    '''The UV points from Fitzpatrick & Massa (1990). 
+        
+    :Args:
+        x: float
+           Wavelength in 1/microns
     '''
     out = np.zeros_like(x)
     for (i,item) in enumerate(x):
@@ -36,9 +46,13 @@ def F_fm90(x):
 # ----------------------------------------------------------------------------------------  
             
 def f99_alebv(lams,rv=3.1): # lams in Angstroem
-    '''
-    The spline-interpolated Fitzpatrick, PASP (1999) Alambda/E(B-V) function.
-    lams in Ansgtroem
+    '''The spline-interpolated Fitzpatrick, PASP (1999) Alambda/E(B-V) function.
+    
+    :Args: 
+        lams: 1-D numpy array of floats
+              The wavelengths in Angstroem.
+        rv: float [default: 3.1]
+            The Rv value.
     '''
     
     my_lams = 1.0e4/lams 
@@ -97,31 +111,111 @@ def f99_alebv(lams,rv=3.1): # lams in Angstroem
     
     return out  
 # ----------------------------------------------------------------------------------------  
-# TODO
-# Get E_lambda-V/E_B-V following Fischera & Dopita05, Vogt et al. (2013)
-'''
-def fd05_elvebv(lams): # lams in Angstroem
-# Make sure this is an array (for the overall consistency)
+# Get E_lambda-V/E_B-V following Fischera & Dopita05. Unlike Vogt et al. (2013), follow 
+# the paper more closely, and allow for varying values of Rv using polynomials given in 
+# the text. In other words, use BOTH rv and rva to characterize the attenuation curve.
+def fd05_elvebv(lams, rv = 3.08, rva = 4.3): # lams in Angstroem
+    '''Compute E(lambda-V)/E(B-V) according to Fischera&Dopita (2005), given Rv and Rva.
+    
+    This function reproduces Table 1 in the article. Unlike in Appendix 1 of Vogt et al.
+    (2013), this function relies on the polynomials defined in the text to reproduce the 
+    values of E(lambda-V)/E(B-V) for any Rv and Rva.
+    
+    :Args: 
+        lams: 1-D numpy array of float
+              The wavelengths at which to evaluate the attenutation.
+        rv: float [default: 3.08]
+            The Rv value, following Fischera & Dopita.
+        rva: float [default: 4.5]
+             The Rva value, following Fischera & Dopita.
+    
+    :Returns:
+        out: 1-D numpy aarray of float
+             The value of E(lambda-V)/E(B-V), as in Table 1 and Fig.3 of the article.
+             
+    :Notes:
+        By default, Rv = 3.08 and Rva = 4.3, which gives a curve vey close to that of 
+        Calzetti (2000) below the 2000 Ansgtroem bump. Thanks to R. Sutherland at ANU/RSAA
+        for sharing his reddening code (included in MAPPINGS V), which helped me implement 
+        this function properly.
+    '''
+    
+    # Make sure this is an array (for the overall consistency)
     try :
         len(lams)
     except :
         lams = np.array([lams])
+        
+    # Rv < 3.08 is probably a bad thing ...    
+    if rv < 3.08:
+        sys.exit(" Rv <3.08 not supported !")
     
-    my_lams = 1.0e4/lams    
-    out = -4.61777 + 1.41612 * my_lams + 1.52077 * my_lams**2 \
-        - 0.63269 * my_lams**3 +0.07386 * my_lams**4    
-      # WARNING : this is ONLY valid over the range 3000<lambda<12000 !
-      # Make it return 'NaN' elsewhere    
-    out[lams>12390] = np.nan
-    out[lams<2480] = np.nan
+    # The wavelength nodes from Table 1 in microns
+    lam_nodes = np.array([0.0912, 0.1053, 0.1216, 0.1550, 0.1906, 0.2175, 0.2480, 0.3000,
+                          0.3650, 0.4400, 0.5480, 0.7200, 1.0300, 1.2390, 1.6490, 2.1920,
+                          3.5920, 4.7770])
     
-    return out
-'''
+    # Do it all for the Av=1 curves. According to the paper:
+    #  If the approximation obtained for AV= 1 is used for a turbulent medium where 
+    # AV= 10 the accuracy is better than ∼5%.
+    
+    # The curve for Rv=Rva=3.08
+    elv_ebv308a1 = np.array([12.066, 9.694, 7.328, 5.018, 5.214, 6.937, 4.573, 2.967, 
+                             1.924, 1.000, 0.000,-0.991,-1.871,-2.171,-2.498,-2.716,
+                             -2.932, -2.992])
+                              
+    # The x from Eqt. 8. Al/Av = (Elv/Ebv*1/Rv) + 1
+    xs = elv_ebv308a1/3.08 + 1.0
+    
+    # The a coefficients, as polynomial using the b coefficients from Table 2.
+    fa1 = np.poly1d([0.0, 1.64220, -3.62163, 3.42939, 0.00495676])
+    fa2 = np.poly1d([-2.199, 5.11725, -0.668874, -0.708645, 0.0393932])
+    fa3 = np.poly1d([21.5465, -19.2137, 5.17489, -0.484444, 0.0174931])
+    
+    # By definition, following Par.2 in Sec 3.1.:
+    alphav = 3.08 
+    
+    # Eqt. 11
+    m = 1 + 0.275 * (rv - alphav)
+    
+    # Eqt. 10
+    alphava = m**-1*(rva - rv) + alphav
+    
+    # Eqt. 9
+    z = (alphava-1.0)**-1
+    a1 = fa1(z)
+    a2 = fa2(z)
+    a3 = fa3(z)
+    
+    # Eqt. 8
+    alav = a1 * np.log10(xs)
+    alav += a2 * (np.log10(xs))**2
+    alav += a3 * (np.log10(xs))**3
+    alav = 10.**alav
+    
+    # Reproduce the values of table 1. These are approximated using the polynomials, and 
+    # according to the article (for the table, set rv=3.08 and rva =...):
+    # If applied to situations where the absolute attenuation AV is either 1 or 10, the 
+    # approximations are better than 1.3%.  In general the accuracy is somewhat lower.  
+    # If the approximation obtained for AV= 1 is used for a turbulent medium where AV= 10 
+    # the accuracy is better than ∼5%. The largest errors occurs at low optical depths. 
+    # For x≥1 the approximation is better than ∼2%.
+    elbebv = (alav-1.) * rva
+    
+    # Very well, now, I need to interpolate between these nodes, to get a smooth function 
+    # at "any" wavelength. Use Akima splines. Fit the curve in 1/lam space, because the
+    # points are a lot smoother then. Reverse their order, because x must be strictly 
+    # ascending. To be clear, this fits elb_ebv as a function of 1/lambda in 1/microns
+    akima_spline = sp.interpolate.Akima1DInterpolator(1./lam_nodes[::-1],elbebv[::-1]) 
+    
+    return akima_spline(1./(lams*1e-4))
 # ----------------------------------------------------------------------------------------  
 
 def cal00_ke(lams,rv):
-    '''
-    The Calzetti (2000) law. lams in Angstroem.
+    '''The Calzetti (2000) law. lams in Angstroem. 
+    
+    :Notes:
+        This does NOT include the 0.44 correction factor to apply for stellar extinction.
     '''
     
     # Make sure lams is an array (for the overall consistency)
@@ -144,7 +238,7 @@ def cal00_ke(lams,rv):
 # Following Cardelli, Clayton & Mathis (1989)
 def ccm89_alav(lams, rv): # lams in Angstroem
     '''
-    The law from Caredelli, CLayton and Mathis (1989). lams in Angstroem.
+    The law from Caredelli, Clayton and Mathis (1989). lams in Angstroem.
     '''
     
     # Make sure lams is an array 
@@ -185,124 +279,197 @@ def ccm89_alav(lams, rv): # lams in Angstroem
     return alav
 # ---------------------------------------------------------------------------------------- 
 
-def alam(lams,ab,av,curve='f99',rv=None, cal00_stellar=True):
-    '''
-    Calculate the value of A_lambda for different curves -> bring everyone together !
-    Input : lambda(angstroem), ab & av (e.g. from NED), rv and extinction curve
-            cal00_stellar (True/False), whethert o add the 0.44 correction factor for 
-            stellar extinction (vs gas)
+def alam(lams, ab, av, curve='f99', rv=None, rva=4.5):
+    '''Calculate the value of A_lambda for different extinction/attenuation laws.
+    
+    :Args:
+        lams: 1-D numpy array of float
+              The values at which to evaluate the attenuation/extinction.
+        ab: float
+            The extinction in B (e.g. according to NED)
+        av: float
+            The extinction in V (e.g. according to NED) 
+        curve: string [default: 'f99']
+               Which extinction/attenuation curve to use.
+        rv: float
+        rva: float [default: 4.5]
+            The value of Rva, if using curve='fd05'.
+        
+    :Notes: 
+        To reproduce the values given in NED, set curve='f99', and rv = 3.1. The default 
+        value of Rv will depend on the curve used (if not specified). rv=3.1 for 'f99', 
+        rv=3.08 for 'fd05', rv=4.05 for 'cal00' and 'cal00*', and rv=3.1 for 'ccm89'. 
+        'cal00*' includes a 0.44 correction factor to derive the stellar extinction.  
     '''
     if curve == 'f99':
-        if rv == None:
+        if rv is None:
             rv = 3.1
         out = f99_alebv(lams,rv) * (ab-av) 
         return out
         
-    #if curve == 'fd05':
-    #    # From Fischera& Dopita (2005), see also Vogt et al. (2013)
-    #    rv = 4.5     
-    #    red = fd05_elvebv(lams)
-    #    return (red + rv)*(ab-av)
-    elif curve == 'cal00':
-        if rv == None :
+    if curve == 'fd05':
+        # From Fischera& Dopita (2005), see also Vogt et al. (2013).
+        if rv is None:
+            rv = 3.08   
+        red = fd05_elvebv(lams, rv=rv, rva=rva)
+        return (red + rva) * (ab-av)
+        
+    elif 'cal00' in curve:
+        if rv is None :
             rv = 4.05
         corr = 1.0
-        if cal00_stellar:
+        if curve == 'cal00*':
             corr = 0.44
         return cal00_ke(lams,rv)*(ab-av)*corr
         
     elif curve =='ccm89':
-        if rv == None:
+        if rv is None:
             rv = 3.1
         return ccm89_alav(lams,rv)*av      
 # ---------------------------------------------------------------------------------------- 
 
-def galactic_red(lams,ab,av,curve='f99',rv = 3.1, cal00_stellar = False):
+def galactic_red(lams, ab, av, curve='f99', rv = 3.1, rva = 4.3):
+    '''Calculate the galactic extinction for a given sight-line, using Ab and Av.
+    
+    :Args:
+       lams: 1-D numpy array of float
+              The values at which to evaluate the attenuation/extinction.
+        ab: float
+            The extinction in B (e.g. according to NED)
+        av: float
+            The extinction in V (e.g. according to NED) 
+        curve: string [default: 'f99']
+               Which extinction/attenuation curve to use.
+        rv: float
+            Rv value.
+        rva: float [default: 4.5]
+             The value of Rva, if using curve='fd05'.
+         
+    :Returns:
+        out: 1-dNumpy array
+             The ratio of Flux_(unreddened)/ Flux_(observed).
+    :Notes:
+        To follow NED, set curve='f99', and rv = 3.1. The default 
+        value of Rv will depend on the curve used (if not specified). rv=3.1 for 'f99', 
+        rv=3.08 for 'fd05', rv=4.05 for 'cal00' and 'cal00*', and rv=3.1 for 'ccm89'. 
+        'cal00*' includes a 0.44 correction factor to derive the stellar extinction.
     '''
-    Calculate galactic reddening (flux_ratio). 
-    Input: curve (which function) and lams, the wavelength in Angstroem,
-    ab and av, the extinction from NED
-    Return F unreddened/ F observed
-    '''
-    tau = alam(lams,ab,av,curve=curve,rv=rv, cal00_stellar=cal00_stellar) * \
-          (2.5*np.log10(np.e))**-1
+    tau = alam(lams,ab,av,curve=curve,rv=rv) * (2.5*np.log10(np.e))**-1
           
     return np.exp(tau)
 # ---------------------------------------------------------------------------------------- 
 
-def extragalactic_red(lam,ha_hb,ha_hb_0, curve = 'fd05', rv = None):
+def extragalactic_red(lam, hahb, hahb_0, curve = 'fd05', rv = None, rva=4.3):
+    '''Calculate the extragalactic attenuation (based on Halpha/Hbeta).
+    
+    :Args:
+        lam: float
+              The wavelength at which to evaluate the attenuation/extinction.
+        hahb: float or numpy array
+              The observed Halpha/Hbeta flux ratio. Can be a 2-D map.
+        hahb_0: float
+                The reference theoretical unreddened Halpha/Hbeta flux ratio.
+        curve: string [default: 'fd05']
+               Which extinction/attenuation curve to use.
+        rv: float [default: None]
+            Rv value.
+        rva: float [default: 4.3]
+             The value of Rva, if using curve='fd05'. 
+    :Returns:
+        out: 1-D numpy array
+             The ratio of Flux_(unattenuated)/ Flux_(attenuated)
+    :Notes:
+        See also Vogt+ (2013), Appendix A. By default, Rv = 3.08 and Rva = 4.3, which gives a curve vey close to that of 
+        Calzetti (2000) below the 2000 Ansgtroem bump. Supported curves are 'fd05', 'f99',
+        'ccm89','cal00' and 'cal00*'.'cal00*' includes a 0.44 correction factor to derive 
+        the stellar extinction.
     '''
-    Calculate extragalactic reddening (based on Halpha/Hbeta) 
-    Input: wavelengths (angstroem), Halpha/Hbeta (observed), 
-    Halpha/Hbeta (reference), extinction curve, rv
-    Return F unreddened/ F observed
-    '''
-    #if curve == 'fd05' :
-    #    elvebv = fd05_elvebv(lam)
-    #    ehavebv = fd05_elvebv(halpha)	
-    #    ehbvebv = fd05_elvebv(hbeta) 
-    #    out = (ha_hb/ha_hb_0)**(-(elvebv+4.5)/(ehavebv-ehbvebv))  
-    #    return out
+    if curve == 'fd05' :
+        elvebv = fd05_elvebv(lam)
+        ehavebv = fd05_elvebv(ha)	
+        ehbvebv = fd05_elvebv(hb) 
+        out = (hahb/hahb_0)**(-(elvebv + rva)/(ehavebv-ehbvebv))  
+        return out
     if curve == 'ccm89':
-        if rv == None:
+        if rv is None:
             rv = 3.1
         alav = ccm89_alav(lam, rv)
         aHaav = ccm89_alav(ha, rv)
         aHbav = ccm89_alav(hb, rv)
-        return (ha_hb/ha_hb_0)**(-alav/(aHaav-aHbav))
+        return (hahb/hahb_0)**(-alav/(aHaav-aHbav))
         
-    elif curve == 'cal00':
+    elif 'cal00' in curve:
         if rv == None:
             rv=4.05
         ke = cal00_ke(lam,rv)
-        keHa = cal00_ke(halpha,rv)
-        keHb = cal00_ke(hbeta,rv)
-        return (ha_hb/ha_hb_0)**(-ke/(keHa-keHb))
+        keHa = cal00_ke(ha,rv)
+        keHb = cal00_ke(hb,rv)
+        if curve == 'cal00*':
+            ke *=0.44
+            keHa *= 0.44
+            keHb *= 0.44
+        return (hahb/hahb_0)**(-ke/(keHa-keHb))
         
     elif curve == 'f99':
         if rv == None:
             rv=3.1
         alebv = f99_alebv(lam,rv)
-        aHaebv = f99_alebv(halpha,rv)
-        aHbebv = f99_alebv(hbeta,rv)
-        return (ha_hb/ha_hb_0)**(-alebv/(aHaebv-aHbebv))
+        aHaebv = f99_alebv(ha,rv)
+        aHbebv = f99_alebv(hb,rv)
+        return (hahb/hahb_0)**(-alebv/(aHaebv-aHbebv))
 # ----------------------------------------------------------------------------------------         
 
-def hahb_to_av(ha_hb,ha_hb_0, curve = 'fd05', rv = None):
+def hahb_to_av(hahb,hahb_0, curve = 'fd05', rv = None, rva=4.3):
+    '''A function to get the reddening in Av mag, from Ha/Hb ratio.
+    
+    :Args: 
+        ha_hb: 1-D numpy array
+               The flux ratio of Halpha to Hbeta (NOT the log!)
+        ha_hb_0: float
+                 The theoretical value of Halpha/Hbeta. (2.86 for SB, more for AGNs)
+        curve: string [default: 'fd05']
+               Which reddeing law to use ?
+        rv: float [default: None]
+            The value of Rv to use. None for the default.
+    
+    :Returns: 
+        out: 1-D numpy array
+             The corrseponding values of Av.
+    :Notes:
+        See also Vogt+ (2013), Appendix A. By default, Rv = 3.08 and Rva = 4.3, which gives a curve vey close to that of 
+        Calzetti (2000) below the 2000 Ansgtroem bump.
     '''
-    A function to get the reddening in Av mag, from Ha/Hb ratio
-    '''
-    #if curve == 'fd05' :
-    #    ehavebv = fd05_elvebv(halpha)	
-    #    ehbvebv = fd05_elvebv(hbeta) 
-    #    out = -2.5*np.log10(ha_hb/ha_hb_0)*(4.5/(ehavebv-ehbvebv))  
-    #    return out
+    if curve == 'fd05' :
+        ehavebv = fd05_elvebv(ha)	
+        ehbvebv = fd05_elvebv(hb) 
+        out = -2.5*np.log10(hahb/hahb_0)*(rva/(ehavebv-ehbvebv))  
+        return out
     if curve == 'ccm89':
         if rv == None:
             rv = 3.1
         aHaav = ccm89_alav(ha, rv)
         aHbav = ccm89_alav(hb, rv)
-        return -2.5*np.log10(ha_hb/ha_hb_0)*(1./(aHaav-aHbav))
+        return -2.5*np.log10(hahb/hahb_0)*(1./(aHaav-aHbav))
         
     elif curve == 'cal00':
         if rv == None:
             rv=4.05
-        keHa = cal00_ke(halpha,rv)
-        keHb = cal00_ke(hbeta,rv)
-        return -2.5*np.log10(ha_hb/ha_hb_0)*(rv/(keHa-keHb))
+        keHa = cal00_ke(ha,rv)
+        keHb = cal00_ke(hb,rv)
+        return -2.5*np.log10(hahb/hahb_0)*(rv/(keHa-keHb))
         
     elif curve == 'f99':
         if rv == None:
             rv=3.1
         aHaebv = f99_alebv(ha,rv)
         aHbebv = f99_alebv(hb,rv)
-        return -2.5*np.log10(ha_hb/ha_hb_0)*(rv/(aHaebv-aHbebv))
+        return -2.5*np.log10(hahb/hahb_0)*(rv/(aHaebv-aHbebv))
 # ---------------------------------------------------------------------------------------- 
 
 def check():
     '''
     Make some quick plots to test the reddening functions of BRIAN, by comparing with
-    the original papers. ANd make sure I did not mess things up ...
+    the original papers. And make sure I did not mess things up ...
     '''
     
     # 1) Check Cardelli89 and Fitzpatrick99: reproduce Fig. 7 of Fitzpatrick99    
@@ -341,12 +508,12 @@ def check():
     
     # --------------------------------------------------------------------------
     # 2) Compare with Fischera & Dopita 2005  
-    '''
+    
     x = np.arange(0.0001,7.5,0.1)
     lams = 1/x*1.e4
      
-    plt.close(2)
-    plt.figure(2, figsize=(10,8))
+    plt.close(98)
+    plt.figure(98, figsize=(10,8))
     gs = gridspec.GridSpec(2,1, height_ratios=[1,0.5], width_ratios=[1])
     gs.update(left=0.15,right=0.9,bottom=0.1,top=0.95,wspace=0.05,hspace=0.05 )
     
@@ -354,19 +521,22 @@ def check():
     f99_curve = f99_alebv(lams,r) - r
     ccm89_curve = (ccm89_alav(lams,r)*r) -r
     cal00_curve = cal00_ke(lams,4.05) - 4.05   
-    fd05_curve = fd05_elvebv(lams)
+    fd05_curve = fd05_elvebv(lams,rv=3.08,rva=4.3)
     
     ax1 = plt.subplot(gs[0,0])
     ax1.plot(x,f99_curve,'r-', linewidth=1,label=r'F99, R$_V$='+np.str(r))
     ax1.plot(x,ccm89_curve,'g-',label=r'CCM89, R$_V$='+np.str(r))
     ax1.plot(x,cal00_curve,'b-',label=r'Cal00, R$_V$=4.05')
-    ax1.plot(x,fd05_curve,'k--',linewidth=2, label='FD05, R$_V$$^{A}$=4.5')
+    ax1.plot(x,fd05_curve,'k--',linewidth=2, label='FD05,R$_V$=3.08, R$_V^{A}$=4.3')
     ax1.grid(True)
     ax1.set_xticklabels([])
     ax1.set_ylabel(r'E($\lambda$-V)/E(B-V)')
     ax1.legend(loc='lower right',fontsize=15)
     ax1.set_xlim([0.5,4.5])
     ax1.set_ylim([-5,5])
+    ax1.axvline(x=1./(4750./1e4),ymax=0.65,c='k',ls='-', lw=2)
+    ax1.axvline(x=1./(9350./1e4),ymax=0.65,c='k',ls='-', lw=2)
+    ax1.text(1.7,2.5,r'MUSE range (4750\AA $\rightarrow$ 9350\AA)',ha='center')
     
     ax2 = plt.subplot(gs[1,0])
     ax2.axhline(y=0,color =(0.4,0.4,0.4), linewidth=2)
@@ -379,9 +549,11 @@ def check():
     ax2.set_xlim([0.5,4.5])
     #ax1.ylim([-5,5])
     ax2.set_xlabel(r'1/$\lambda$ [$\mu$m$^{-1}$]')
+    ax2.axvline(x=1./(4750./1e4),c='k',ls='-', lw=2)
+    ax2.axvline(x=1./(9350./1e4),c='k',ls='-', lw=2)
        
     plt.show()
-    '''
+    
     # --------------------------------------------------------------------------
     # 3) Reproduce Fig.1 of Calzetti (2001) 
     
@@ -401,7 +573,7 @@ def check():
     ccm89_5 = ccm89_alav(lams,5.0)*5.0
     #ccm89_curve = (ccm89_alav(lams,r)*r) -r
     cal00_curve = cal00_ke(lams,4.05)   
-    #fd05_curve = fd05_elvebv(lams)+4.5
+    fd05_curve = fd05_elvebv(lams,rv=3.08,rva=4.3)+4.3
     
     ax1 = plt.subplot(gs[0,0])
     ax1.plot(np.log10(lams/1.e4),f99_2,'g:', linewidth=1,label=r'F99, R$_V$=2.0')
@@ -411,7 +583,7 @@ def check():
     ax1.plot(np.log10(lams/1.e4),ccm89_31,'r-', linewidth=1,label=r'CCM89, R$_V$=3.1')
     ax1.plot(np.log10(lams/1.e4),ccm89_5,'r--', linewidth=1,label=r'CCM89, R$_V$=5.0')
     ax1.plot(np.log10(lams/1.e4),cal00_curve,'b-',label=r'Cal00, R$_V$=4.05')
-    #ax1.plot(np.log10(lams/1.e4),fd05_curve,'k--',linewidth=2, label='FD05, R$_{V}$$^{A}$=4.5')
+    ax1.plot(np.log10(lams/1.e4),fd05_curve,'k--',linewidth=2, label='FD05,R$_V$=3.08, R$_{V}^{A}$=4.3')
 
     ax1.grid(True)
     ax1.set_ylabel(r'A$_\lambda$/E(B-V)')

@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains several function and tools used by the BRIAN routines to fit
-# emission line.
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains several function and tools used by the BRIAN routines to fit
+ emission line.
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 from __future__ import print_function

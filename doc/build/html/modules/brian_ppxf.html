@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_ppxf module &mdash; brian 0.1.1 documentation</title>
+  <title>brian_ppxf module &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="../index.html"/>
         <link rel="up" title="Functions" href="modules.html"/>
         <link rel="next" title="brian_red module" href="brian_red.html"/>
         <link rel="prev" title="brian_plots module" href="brian_plots.html"/> 
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -94,6 +94,7 @@
 <li class="toctree-l2"><a class="reference internal" href="brian_cof.html">brian_cof module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_elf.html">brian_elf module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_metadata.html">brian_metadata module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brian_mpfit.html">brian_mpfit module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_plots.html">brian_plots module</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">brian_ppxf module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_red.html">brian_red module</a></li>
@@ -148,6 +149,12 @@
             
   <div class="section" id="module-brian_ppxf">
 <span id="brian-ppxf-module"></span><h1>brian_ppxf module<a class="headerlink" href="#module-brian_ppxf" title="Permalink to this headline">¶</a></h1>
+<p>This file contains functions to call ppxf to fit the continuum in a given spectra.
+It is based on the examples provided by M. Cappellari within ppxf istelf
+(e.g. ppxf_kinematics_example_sauron.py &amp; ppxf_population_example_sdss.py), but has been
+modified to account for a wavelength dependant spectral resolution of the data.</p>
+<p>Basically, this is designed with MUSE in mind.</p>
+<p>Created February 2016, F.P.A. Vogt - <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a></p>
 <dl class="function">
 <dt id="brian_ppxf.ppxf_population">
 <code class="descclassname">brian_ppxf.</code><code class="descname">ppxf_population</code><span class="sig-paren">(</span><em>specerr</em>, <em>templates=None</em>, <em>velscale=None</em>, <em>start=None</em>, <em>goodpixels=None</em>, <em>plot=False</em>, <em>moments=4</em>, <em>degree=-1</em>, <em>vsyst=None</em>, <em>clean=False</em>, <em>mdegree=10</em>, <em>regul=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_ppxf.html#ppxf_population"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_ppxf.ppxf_population" title="Permalink to this definition">¶</a></dt>
@@ -246,7 +253,7 @@ to match theresolution of the instrument that took the data.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

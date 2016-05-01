@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains functions related to the continuum fitting inside BRIAN, except for
-# anything related to PPXF. 
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains functions related to the continuum fitting inside BRIAN, except for
+ anything related to PPXF. 
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import numpy as np

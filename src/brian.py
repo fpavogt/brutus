@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains BRIAN routines to fit the stellar continuum and the emission lines
-# in an IFU data cube (i.e. MUSE).
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+
+ This file contains the master BRIAN routines to fit the stellar continuum and the 
+ emission lines in an IFU data cube (i.e. MUSE). Most of these routines call sub-routines,
+ after setting the scene/loading datasets/etc ...
+ 
+ Any processing step MUST have a dediacted routine in this file call 'run_XXX', which can
+ then refer to any existing/new BRIAN/Python module.
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import numpy as np
@@ -23,6 +29,7 @@ import brian_cof
 import brian_elf
 import brian_plots
 import brian_ppxf
+import brian_red
 from brian_metadata import *
 
 import ppxf_util as util
@@ -1387,6 +1394,161 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
                                      
     print ' '
     
-    return fn_list
-             
+    return fn_list           
+# ----------------------------------------------------------------------------------------
+
+def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):   
+    '''Corrects the line fluxes for the extragalactic reddening using Ha and Hb.
     
+    This function returns a corrected set of line fluxes, as well as the associated Av 
+    map.
+     
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brian.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        do_plot: bool [default: True]
+                 Whether to make a plot of the Av map or not.
+        
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+                 
+    :Notes:
+        Should I add some info about each curve here ? 
+    '''  
+    
+    # Open the raw data cube
+    hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close()
+    
+    lams = np.arange(0, header1['NAXIS3'],1) * header1['CD3_3'] + header1['CRVAL3']
+    nlines = len(params['elines'].keys())
+
+    # Import the Halpha and Hbeta maps 
+    fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+    hdu = pyfits.open(fn)
+    for (k,key) in enumerate(np.sort(params['elines'].keys())):
+        if params['elines'][key][0][0] == ha:
+            ha_map = hdu[k+1].data[0]
+        elif params['elines'][key][0][0] == hb:
+            hb_map = hdu[k+1].data[0]
+    hdu.close()
+
+
+    hahb = ha_map / hb_map
+    # Construct the Av map, just because I can
+    av = brian_red.hahb_to_av(hahb, params['hahb_0'], curve = params['curve'], 
+                              rv = params['rv'], rva = params['rva'])
+
+    # Now, for each emission line fitted, let's correct the flux:
+    # A storage structure for the emission lines. Keep the un-reddened flux as well.
+    drelines_params_cube = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    drelines_perror_cube = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+
+    # Load the current line parameters, loop through, and save to a new - bigger - array.
+    # Also take care of the error
+    fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+    fn_err = os.path.join(params['prod_loc'],fn_list['elines_perror_cube'])
+    hdu = pyfits.open(fn)
+    hdu_err = pyfits.open(fn_err)
+    fheader0 = hdu[0].header
+    fheader0_err = hdu_err[0].header
+    
+    # Loop through each emission line
+    for (k,key) in enumerate(np.sort(params['elines'].keys())):
+        drelines_params_cube[7*k+1:7*(k+1)] = hdu[k+1].data
+        drelines_perror_cube[7*k+1:7*(k+1)] = hdu_err[k+1].data
+        # And add the de-reddened line flux in the first layer.
+        # Note: the reddening correction is based on the de-redshifted line wavelength,
+        # because this happens in the rest-frame of the target !
+        this_lam = params['elines'][key][0][0]
+        drelines_params_cube[7*k] = hdu[k+1].data[0] * \
+                                     brian_red.extragalactic_red(this_lam, hahb, 
+                                                                 params['hahb_0'],
+                                                                 curve = params['curve'], 
+                                                                 rv = params['rv'],
+                                                                 rva = params['rva'])
+        # Assume the reddening correction is error free ... sigh...
+        drelines_perror_cube[7*k] = hdu_err[k+1].data[0] * \
+                                     (brian_red.extragalactic_red(this_lam, hahb, 
+                                                                 params['hahb_0'],
+                                                                 curve = params['curve'], 
+                                                                 rv = params['rv'],
+                                                                 rva = params['rva']))**2                                                        
+    fheader1 = hdu[1].header
+    fheader1_err = hdu_err[1].header
+    hdu.close()
+    hdu_err.close()
+    
+    
+    for (e,epc) in enumerate([drelines_params_cube, drelines_perror_cube]):
+        # Ok, now save the data 
+        hdu0 = pyfits.PrimaryHDU(None,fheader0)
+    
+        hdus = [hdu0]
+        # Use the sorted keys, to ensure the same order as the fit parameters
+        for (k,key) in enumerate(np.sort(params['elines'].keys())):
+            hduk = pyfits.ImageHDU(epc[7*k:7*(k+1),:,:])
+            # Make sure the WCS coordinates are included as well
+            hduk = brian_tools.hdu_add_wcs(hduk,header1)
+            # Also include a brief mention about which version of BRIAN is being used
+            hduk.header['BRIAN_V'] = (__version__,'brian version that created this file.')
+            # Add the line reference wavelength for future references
+            hduk.header['BRIAN_L'] = (params['elines'][key][0][0], 'reference wavelength')
+            hduk.header['BRIAN_C'] = ('dredF,F,I,v,sigma','Content of the cube planes')
+            
+            hdus.append(hduk)
+            
+        hdu = pyfits.HDUList(hdus=hdus)
+        fn_out = os.path.join(params['prod_loc'],
+                              suffix+'_'+params['target']+'_elines_'+
+                              ['params','perror'][e]+'_dered.fits')
+        hdu.writeto(fn_out, clobber=True)
+        
+        # Add the filename to the dictionary of filenames
+        fn_list['dered_elines_'+['params','perror'][e]] = suffix+'_'+\
+                                                                  params['target']+\
+                                                                  '_elines_'+\
+                                                                  ['params','perror'][e]+\
+                                                                  '_dered.fits'
+                   
+    # Very well, now let's also create a fits file to save the Av map
+    # as required.
+    hdu0 = pyfits.PrimaryHDU(None,header0)
+    hdu1 = pyfits.ImageHDU(av)
+    # Make sure the WCS coordinates are included as well
+    hdu1 = brian_tools.hdu_add_wcs(hdu1,header1)
+    # Also include a brief mention about which version of BRIAN is being used
+    hdu1.header['BRIAN_V'] = (__version__,'brian version that created this file.')
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+    fn_out = os.path.join(params['prod_loc'],
+                          suffix+'_'+params['target']+'_Av.fits')
+    hdu.writeto(fn_out, clobber=True)
+    
+    # Add the filename to the dictionary of filenames
+    fn_list['Av_map'] = suffix+'_'+params['target']+'_Av.fits'
+    
+    # If requested, save a plot for the Av map.
+    if do_plot:
+        
+        this_ofn = os.path.join(params['plot_loc'],
+                          suffix+'_'+params['target']+'_Av_map.pdf')
+        brian_plots.make_2Dplot(fn_out,ext=1, ofn=this_ofn, contours=False, 
+                                    vmin=0, vmax = 3, cmap='alligator',
+                                    stretch = 'linear', 
+                                    cblabel=r'A$_V$ [mag]', 
+                                    cbticks = None)
+                                    
+    return fn_list
+        
+    
+      

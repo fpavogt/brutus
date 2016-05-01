@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Changelog &mdash; brian 0.1.1 documentation</title>
+  <title>Changelog &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="index.html"/>
         <link rel="next" title="Acknowledging brian" href="acknowledge.html"/>
         <link rel="prev" title="FAQ" href="faq.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -142,6 +142,18 @@
 <li>add the reference to the LOWESS paper in the acknowledgment.</li>
 <li>add the reference to the stellar templates in the acknowledgments.</li>
 <li>in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction.</li>
+<li>add references to reddening laws in the acknowledgments.</li>
+</ul>
+</dd>
+<dt>v0.2.0, May 2016, F.P.A. Vogt:</dt>
+<dd><ul class="first last simple">
+<li>added the ability to rescale the y-axis of the fit residual plots in the interactive
+fit inspection window</li>
+<li>updated brian_red, so that the Fischera &amp; Dopita (2005) attenuation law for a turbulent
+dust screen can now be derived for any Rv and Rva values (use polynomials from the
+article, unlike Appendix A of Vogt+ (2013)). Thanks to R. Sutherland for sharing his
+reddening code, that helped me make sense of all of it.</li>
+<li>implemented a processing step to correct for the extragalactic reddening/attenuation.</li>
 </ul>
 </dd>
 <dt>v0.1.1, April 2016, F.P.A. Vogt:</dt>
@@ -221,7 +233,7 @@ apertures of varying radii</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

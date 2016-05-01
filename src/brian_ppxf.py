@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-#
-# This routine calls ppxf to fit the continuum in a given spectra.
-# It is based on the examples provided by M. Cappellari within ppxf istelf
-# (e.g. ppxf_kinematics_example_sauron.py & ppxf_population_example_sdss.py), but has been
-# modified to account a wavelength dependant spectral resolution of the data. 
-#
-# Basically, this is designed with MUSE in mind.
-#
-# Created February 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains functions to call ppxf to fit the continuum in a given spectra.
+ It is based on the examples provided by M. Cappellari within ppxf istelf
+ (e.g. ppxf_kinematics_example_sauron.py & ppxf_population_example_sdss.py), but has been
+ modified to account for a wavelength dependant spectral resolution of the data. 
+
+ Basically, this is designed with MUSE in mind.
+
+ Created February 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 #from __future__ import print_function

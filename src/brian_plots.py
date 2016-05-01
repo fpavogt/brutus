@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-#
-# This file contains tools for the BRIAN routines to create pretty plots seamlessly.
-#
-# Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
+ This file contains tools for the BRIAN routines to create pretty plots seamlessly.
+
+ Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
+'''
 # ----------------------------------------------------------------------------------------
 
 import sys
@@ -549,16 +550,14 @@ class SpecManager(object):
                                                     fontsize=20)
                 
             # Now, update the spectrum in the master spec plot
-            self.spec3[0].remove() # Erase
+            for dat in [self.spec3, self.lowess3, self.ppxf3, self.fit3, self.dspec3b,
+                        self.dspec3c, self.dspec3d]:
+                dat[0].remove() # Erase   
+            
             self.spec3 = self.ax3a.plot(self.lams,
                                        self.data[:,int(event.ydata),int(event.xdata)],
                                        'k-',drawstyle='steps-mid') # Add new data
-            self.lowess3[0].remove() # Erase                         
-            self.ppxf3[0].remove() # Erase                         
-            self.fit3[0].remove() # Erase
-            self.dspec3b[0].remove() # Erase
-            self.dspec3c[0].remove() # Erase
-            self.dspec3d[0].remove() # Erase
+                      
             
             self.ppxf3 = self.ax3a.plot(self.lams,
                                        self.ppxf[:,int(event.ydata),int(event.xdata)],
@@ -589,13 +588,32 @@ class SpecManager(object):
             self.ax3a.relim()
             self.ax3a.autoscale_view()
              
-            # And update the plot           
-            self.ax3a.figure.canvas.draw()
-            self.ax3b.figure.canvas.draw()
-            self.ax3c.figure.canvas.draw()
-            self.ax3d.figure.canvas.draw()
-            self.ax1a.figure.canvas.draw()
-            self.ax1b.figure.canvas.draw()
+            # And update the plot 
+            for ax in [self.ax3a,self.ax3b, self.ax3c, self.ax3d, self.ax1a, self.ax1b]:          
+                ax.figure.canvas.draw()
+            
+        # Left click on the dspec area ? Double the axis range
+        elif tb.mode == '' and event.button == 1 and event.inaxes in [self.ax3b, 
+                                                                      self.ax3c,
+                                                                      self.ax3d]:
+                                                                    
+            currlim = self.ax3b.get_ylim()   
+            for ax in [self.ax3b,self.ax3c,self.ax3d]: 
+                ax.set_ylim((currlim[0]*2,currlim[1]*2))
+                ax.set_yticks((currlim[0],currlim[1]))
+                ax.figure.canvas.draw()   
+                                                            
+        # Right click on the dspec area ? Half the axis range
+        elif tb.mode == '' and event.button == 3 and event.inaxes in [self.ax3b, 
+                                                                      self.ax3c,
+                                                                      self.ax3d]:
+                                                                    
+            currlim = self.ax3b.get_ylim()   
+            for ax in [self.ax3b,self.ax3c,self.ax3d]: 
+                ax.set_ylim((currlim[0]/2.,currlim[1]/2.))
+                ax.set_yticks((currlim[0]/4.,currlim[1]/4.))
+                ax.figure.canvas.draw()   
+                                           
             
 # ----------------------------------------------------------------------------------------      
 
@@ -738,7 +756,6 @@ def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn
         else:
             print '   [%s] unrecognized !' % letter
                  
-    
     plt.close()
         
     return True
