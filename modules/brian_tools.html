@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_tools module &mdash; brian 0.1.1 documentation</title>
+  <title>brian_tools module &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="../index.html"/>
         <link rel="up" title="Functions" href="modules.html"/>
         <link rel="prev" title="brian_red module" href="brian_red.html"/> 
 
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -93,6 +93,7 @@
 <li class="toctree-l2"><a class="reference internal" href="brian_cof.html">brian_cof module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_elf.html">brian_elf module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_metadata.html">brian_metadata module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brian_mpfit.html">brian_mpfit module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_plots.html">brian_plots module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_ppxf.html">brian_ppxf module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="brian_red.html">brian_red module</a></li>
@@ -147,6 +148,9 @@
             
   <div class="section" id="module-brian_tools">
 <span id="brian-tools-module"></span><h1>brian_tools module<a class="headerlink" href="#module-brian_tools" title="Permalink to this headline">¶</a></h1>
+<p>This file contains general tools for the BRIAN routines to fit the stellar continuum and 
+the emission lines in an IFU data cube.</p>
+<p>Created April 2016, F.P.A. Vogt - <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a></p>
 <dl class="function">
 <dt id="brian_tools.delog_rebin">
 <code class="descclassname">brian_tools.</code><code class="descname">delog_rebin</code><span class="sig-paren">(</span><em>lams</em>, <em>spec</em>, <em>old_lams</em>, <em>sampling=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brian_tools.html#delog_rebin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brian_tools.delog_rebin" title="Permalink to this definition">¶</a></dt>
@@ -280,7 +284,30 @@ spec_rebin.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"></td>
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>inst: string [default: &#8216;MUSE&#8217;]</dt>
+<dd><p class="first last">The name tag referring to a given instrument.</p>
+</dd>
+<dt>get_ff: bool [default: False]</dt>
+<dd><p class="first last">Whether to recompute the given function from a reference dataset or not.
+Only valid with inst = &#8216;MUSE&#8217;.</p>
+</dd>
+<dt>show_plot: bool [default: False]</dt>
+<dd><p class="first last">Whether to make a plot of the function.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>R(lambda): function</dt>
+<dd><p class="first last">A function that takes a float (lambda in Angstroem, and returns the 
+corresponding value of the chosen instrument resolution.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">Supported instruments: &#8216;MUSE&#8217;</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -407,7 +434,7 @@ start and end at the same spot. Conserves the flux density in each bin.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

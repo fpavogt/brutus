@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_tools &mdash; brian 0.1.1 documentation</title>
+  <title>brian_tools &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -134,11 +134,12 @@
             
   <h1>Source code for brian_tools</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="c1">#</span>
-<span class="c1"># This file contains tools for the BRIAN routines to fit the stellar continuum and the </span>
-<span class="c1"># emission lines in an IFU data cube (i.e. MUSE).</span>
-<span class="c1">#</span>
-<span class="c1"># Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd"> This file contains general tools for the BRIAN routines to fit the stellar continuum and </span>
+<span class="sd"> the emission lines in an IFU data cube.</span>
+
+<span class="sd"> Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -387,7 +388,21 @@
 <span class="sd">    Returns a callable function of the wavelength (in Angstroem !).</span>
 <span class="sd">    </span>
 <span class="sd">    :Args:</span>
+<span class="sd">        inst: string [default: &#39;MUSE&#39;]</span>
+<span class="sd">              The name tag referring to a given instrument.</span>
+<span class="sd">        get_ff: bool [default: False]</span>
+<span class="sd">                Whether to recompute the given function from a reference dataset or not.</span>
+<span class="sd">                Only valid with inst = &#39;MUSE&#39;.</span>
+<span class="sd">        show_plot: bool [default: False]</span>
+<span class="sd">                   Whether to make a plot of the function.</span>
 <span class="sd">    </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        R(lambda): function</span>
+<span class="sd">                   A function that takes a float (lambda in Angstroem, and returns the </span>
+<span class="sd">                   corresponding value of the chosen instrument resolution.</span>
+<span class="sd">    </span>
+<span class="sd">    :Notes:</span>
+<span class="sd">        Supported instruments: &#39;MUSE&#39;</span>
 <span class="sd">    </span>
 <span class="sd">    &#39;&#39;&#39;</span>
      
@@ -457,7 +472,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

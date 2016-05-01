@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian_plots &mdash; brian 0.1.1 documentation</title>
+  <title>brian_plots &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -134,10 +134,11 @@
             
   <h1>Source code for brian_plots</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="c1">#</span>
-<span class="c1"># This file contains tools for the BRIAN routines to create pretty plots seamlessly.</span>
-<span class="c1">#</span>
-<span class="c1"># Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd"> This file contains tools for the BRIAN routines to create pretty plots seamlessly.</span>
+
+<span class="sd"> Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -684,16 +685,14 @@
                                                     <span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
                 
             <span class="c1"># Now, update the spectrum in the master spec plot</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">spec3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase</span>
+            <span class="k">for</span> <span class="n">dat</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spec3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lowess3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppxf3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fit3</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dspec3b</span><span class="p">,</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">dspec3c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dspec3d</span><span class="p">]:</span>
+                <span class="n">dat</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase   </span>
+            
             <span class="bp">self</span><span class="o">.</span><span class="n">spec3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lams</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span><span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">ydata</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">xdata</span><span class="p">)],</span>
                                        <span class="s1">&#39;k-&#39;</span><span class="p">,</span><span class="n">drawstyle</span><span class="o">=</span><span class="s1">&#39;steps-mid&#39;</span><span class="p">)</span> <span class="c1"># Add new data</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lowess3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase                         </span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ppxf3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase                         </span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fit3</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dspec3b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dspec3c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dspec3d</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span> <span class="c1"># Erase</span>
+                      
             
             <span class="bp">self</span><span class="o">.</span><span class="n">ppxf3</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lams</span><span class="p">,</span>
                                        <span class="bp">self</span><span class="o">.</span><span class="n">ppxf</span><span class="p">[:,</span><span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">ydata</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">xdata</span><span class="p">)],</span>
@@ -724,13 +723,32 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="o">.</span><span class="n">relim</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="o">.</span><span class="n">autoscale_view</span><span class="p">()</span>
              
-            <span class="c1"># And update the plot           </span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax1a</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ax1b</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span></div></div>
+            <span class="c1"># And update the plot </span>
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3a</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax1a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax1b</span><span class="p">]:</span>          
+                <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>
+            
+        <span class="c1"># Left click on the dspec area ? Double the axis range</span>
+        <span class="k">elif</span> <span class="n">tb</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">inaxes</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="p">,</span> 
+                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="p">,</span>
+                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="p">]:</span>
+                                                                    
+            <span class="n">currlim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>   
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="p">]:</span> 
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="n">currlim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span><span class="n">currlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">2</span><span class="p">))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">((</span><span class="n">currlim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">currlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>   
+                                                            
+        <span class="c1"># Right click on the dspec area ? Half the axis range</span>
+        <span class="k">elif</span> <span class="n">tb</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">button</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">inaxes</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="p">,</span> 
+                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="p">,</span>
+                                                                      <span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="p">]:</span>
+                                                                    
+            <span class="n">currlim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="o">.</span><span class="n">get_ylim</span><span class="p">()</span>   
+            <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3b</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3c</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">ax3d</span><span class="p">]:</span> 
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">((</span><span class="n">currlim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span><span class="p">,</span><span class="n">currlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">2.</span><span class="p">))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">((</span><span class="n">currlim</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mf">4.</span><span class="p">,</span><span class="n">currlim</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="mf">4.</span><span class="p">))</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">figure</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">draw</span><span class="p">()</span>   </div></div>
+                                           
             
 <span class="c1"># ----------------------------------------------------------------------------------------      </span>
 
@@ -873,7 +891,6 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">print</span> <span class="s1">&#39;   [</span><span class="si">%s</span><span class="s1">] unrecognized !&#39;</span> <span class="o">%</span> <span class="n">letter</span>
                  
-    
     <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
         
     <span class="k">return</span> <span class="bp">True</span></div>
@@ -910,7 +927,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian &mdash; brian 0.1.1 documentation</title>
+  <title>brian &mdash; brian 0.2.0 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brian 0.1.1 documentation" href="../index.html"/>
+    <link rel="top" title="brian 0.2.0 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.1
+                0.2
               </div>
             
           
@@ -134,11 +134,17 @@
             
   <h1>Source code for brian</h1><div class="highlight"><pre>
 <span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="c1">#</span>
-<span class="c1"># This file contains BRIAN routines to fit the stellar continuum and the emission lines</span>
-<span class="c1"># in an IFU data cube (i.e. MUSE).</span>
-<span class="c1">#</span>
-<span class="c1"># Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="sd"> This file contains the master BRIAN routines to fit the stellar continuum and the </span>
+<span class="sd"> emission lines in an IFU data cube (i.e. MUSE). Most of these routines call sub-routines,</span>
+<span class="sd"> after setting the scene/loading datasets/etc ...</span>
+<span class="sd"> </span>
+<span class="sd"> Any processing step MUST have a dediacted routine in this file call &#39;run_XXX&#39;, which can</span>
+<span class="sd"> then refer to any existing/new BRIAN/Python module.</span>
+
+<span class="sd"> Created April 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au</span>
+<span class="sd">&#39;&#39;&#39;</span>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -158,6 +164,7 @@
 <span class="kn">import</span> <span class="nn">brian_elf</span>
 <span class="kn">import</span> <span class="nn">brian_plots</span>
 <span class="kn">import</span> <span class="nn">brian_ppxf</span>
+<span class="kn">import</span> <span class="nn">brian_red</span>
 <span class="kn">from</span> <span class="nn">brian_metadata</span> <span class="kn">import</span> <span class="o">*</span>
 
 <span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
@@ -1522,9 +1529,164 @@
                                      
     <span class="k">print</span> <span class="s1">&#39; &#39;</span>
     
-    <span class="k">return</span> <span class="n">fn_list</span></div>
-             
+    <span class="k">return</span> <span class="n">fn_list</span>           </div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_extragal_dered"><a class="viewcode-back" href="../modules/brian.html#brian.run_extragal_dered">[docs]</a><span class="k">def</span> <span class="nf">run_extragal_dered</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39;Corrects the line fluxes for the extragalactic reddening using Ha and Hb.</span>
+<span class="sd">    </span>
+<span class="sd">    This function returns a corrected set of line fluxes, as well as the associated Av </span>
+<span class="sd">    map.</span>
+<span class="sd">     </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brian.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        do_plot: bool [default: True]</span>
+<span class="sd">                 Whether to make a plot of the Av map or not.</span>
+<span class="sd">        </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">                 </span>
+<span class="sd">    :Notes:</span>
+<span class="sd">        Should I add some info about each curve here ? </span>
+<span class="sd">    &#39;&#39;&#39;</span>  
     
+    <span class="c1"># Open the raw data cube</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS3&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="c1"># Import the Halpha and Hbeta maps </span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ha</span><span class="p">:</span>
+            <span class="n">ha_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">hb</span><span class="p">:</span>
+            <span class="n">hb_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+    <span class="n">hahb</span> <span class="o">=</span> <span class="n">ha_map</span> <span class="o">/</span> <span class="n">hb_map</span>
+    <span class="c1"># Construct the Av map, just because I can</span>
+    <span class="n">av</span> <span class="o">=</span> <span class="n">brian_red</span><span class="o">.</span><span class="n">hahb_to_av</span><span class="p">(</span><span class="n">hahb</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hahb_0&#39;</span><span class="p">],</span> <span class="n">curve</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;curve&#39;</span><span class="p">],</span> 
+                              <span class="n">rv</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rv&#39;</span><span class="p">],</span> <span class="n">rva</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rva&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Now, for each emission line fitted, let&#39;s correct the flux:</span>
+    <span class="c1"># A storage structure for the emission lines. Keep the un-reddened flux as well.</span>
+    <span class="n">drelines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">drelines_perror_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Load the current line parameters, loop through, and save to a new - bigger - array.</span>
+    <span class="c1"># Also take care of the error</span>
+    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+    <span class="n">fn_err</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_perror_cube&#39;</span><span class="p">])</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">hdu_err</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn_err</span><span class="p">)</span>
+    <span class="n">fheader0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">fheader0_err</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    
+    <span class="c1"># Loop through each emission line</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="c1"># And add the de-reddened line flux in the first layer.</span>
+        <span class="c1"># Note: the reddening correction is based on the de-redshifted line wavelength,</span>
+        <span class="c1"># because this happens in the rest-frame of the target !</span>
+        <span class="n">this_lam</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
+                                     <span class="n">brian_red</span><span class="o">.</span><span class="n">extragalactic_red</span><span class="p">(</span><span class="n">this_lam</span><span class="p">,</span> <span class="n">hahb</span><span class="p">,</span> 
+                                                                 <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hahb_0&#39;</span><span class="p">],</span>
+                                                                 <span class="n">curve</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;curve&#39;</span><span class="p">],</span> 
+                                                                 <span class="n">rv</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rv&#39;</span><span class="p">],</span>
+                                                                 <span class="n">rva</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rva&#39;</span><span class="p">])</span>
+        <span class="c1"># Assume the reddening correction is error free ... sigh...</span>
+        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
+                                     <span class="p">(</span><span class="n">brian_red</span><span class="o">.</span><span class="n">extragalactic_red</span><span class="p">(</span><span class="n">this_lam</span><span class="p">,</span> <span class="n">hahb</span><span class="p">,</span> 
+                                                                 <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hahb_0&#39;</span><span class="p">],</span>
+                                                                 <span class="n">curve</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;curve&#39;</span><span class="p">],</span> 
+                                                                 <span class="n">rv</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rv&#39;</span><span class="p">],</span>
+                                                                 <span class="n">rva</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;rva&#39;</span><span class="p">]))</span><span class="o">**</span><span class="mi">2</span>                                                        
+    <span class="n">fheader1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">fheader1_err</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">hdu_err</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    
+    <span class="k">for</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">epc</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="n">drelines_params_cube</span><span class="p">,</span> <span class="n">drelines_perror_cube</span><span class="p">]):</span>
+        <span class="c1"># Ok, now save the data </span>
+        <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">fheader0</span><span class="p">)</span>
+    
+        <span class="n">hdus</span> <span class="o">=</span> <span class="p">[</span><span class="n">hdu0</span><span class="p">]</span>
+        <span class="c1"># Use the sorted keys, to ensure the same order as the fit parameters</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+            <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),:,:])</span>
+            <span class="c1"># Make sure the WCS coordinates are included as well</span>
+            <span class="n">hduk</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+            <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+            <span class="c1"># Add the line reference wavelength for future references</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_L&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;reference wavelength&#39;</span><span class="p">)</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dredF,F,I,v,sigma&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
+            
+            <span class="n">hdus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hduk</span><span class="p">)</span>
+            
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="n">hdus</span><span class="p">)</span>
+        <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                              <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_&#39;</span><span class="o">+</span>
+                              <span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_dered.fits&#39;</span><span class="p">)</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># Add the filename to the dictionary of filenames</span>
+        <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_&#39;</span><span class="o">+</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span>\
+                                                                  <span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span>\
+                                                                  <span class="s1">&#39;_elines_&#39;</span><span class="o">+</span>\
+                                                                  <span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">,</span><span class="s1">&#39;perror&#39;</span><span class="p">][</span><span class="n">e</span><span class="p">]</span><span class="o">+</span>\
+                                                                  <span class="s1">&#39;_dered.fits&#39;</span>
+                   
+    <span class="c1"># Very well, now let&#39;s also create a fits file to save the Av map</span>
+    <span class="c1"># as required.</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">av</span><span class="p">)</span>
+    <span class="c1"># Make sure the WCS coordinates are included as well</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brian_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="c1"># Also include a brief mention about which version of BRIAN is being used</span>
+    <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BRIAN_V&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">__version__</span><span class="p">,</span><span class="s1">&#39;brian version that created this file.&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_Av.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;Av_map&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_Av.fits&#39;</span>
+    
+    <span class="c1"># If requested, save a plot for the Av map.</span>
+    <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
+        
+        <span class="n">this_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_Av_map.pdf&#39;</span><span class="p">)</span>
+        <span class="n">brian_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
+                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
+                                    <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
+                                    <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;A$_V$ [mag]&#39;</span><span class="p">,</span> 
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
+                                    
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+        
+    
+      
 </pre></div>
 
            </div>
@@ -1558,7 +1720,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.1.1',
+            VERSION:'0.2.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
