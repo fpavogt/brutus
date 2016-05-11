@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installing brian &mdash; brian 0.2.0 documentation</title>
+  <title>Installing brutus &mdash; brutus 0.3.0 documentation</title>
   
 
   
@@ -30,9 +30,9 @@
   
 
   
-    <link rel="top" title="brian 0.2.0 documentation" href="index.html"/>
-        <link rel="next" title="Running brian" href="running.html"/>
-        <link rel="prev" title="brian 0.2.0" href="index.html"/> 
+    <link rel="top" title="brutus 0.3.0 documentation" href="index.html"/>
+        <link rel="next" title="Running brutus" href="running.html"/>
+        <link rel="prev" title="brutus 0.3.0" href="index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> brian
+            <a href="index.html" class="icon icon-home"> brutus
           
 
           
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -83,16 +83,16 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing brian</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing brutus</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-the-installation">Testing the installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
 </ul>
 
@@ -107,7 +107,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">brian</a>
+        <a href="index.html">brutus</a>
       </nav>
 
 
@@ -124,7 +124,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Installing brian</li>
+    <li>Installing brutus</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -138,48 +138,48 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installing-brian">
-<h1>Installing brian<a class="headerlink" href="#installing-brian" title="Permalink to this headline">¶</a></h1>
-<p>The most recent release of brian is available for download from its <a class="reference external" href="https://github.com/fpavogt/brian/releases">Github repository</a>.</p>
+  <div class="section" id="installing-brutus">
+<h1>Installing brutus<a class="headerlink" href="#installing-brutus" title="Permalink to this headline">¶</a></h1>
+<p>The most recent release of brutus is available for download from its <a class="reference external" href="https://github.com/fpavogt/brutus/releases">Github repository</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">You can also get the current (unreleased and possibly buggy) code from
-<a class="reference external" href="https://github.com/fpavogt/brian/archive/master.zip">here</a>.</p>
+<a class="reference external" href="https://github.com/fpavogt/brutus/archive/master.zip">here</a>.</p>
 </div>
-<p>Installing brian merely requires to let your Python installation know about its existence.
+<p>Installing brutus merely requires to let your Python installation know about its existence.
 Specifically:</p>
 <ol class="arabic simple">
 <li>Unzip the compressed files (downloaded from the link above),</li>
 <li>place them anywhere you like, and</li>
-<li>add <code class="docutils literal"><span class="pre">brian/src/</span></code> to your Python path.</li>
+<li>add <code class="docutils literal"><span class="pre">brutus/src/</span></code> to your Python path.</li>
 </ol>
 <p>In my case (on MAC OSX), my <code class="docutils literal"><span class="pre">.bash_profile</span></code> would look like :</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brian/src/
+<div class="highlight-default"><div class="highlight"><pre><span></span>export PYTHONPATH=$PYTHONPATH:/Users/fvogt/Tools/Python/fpav_pylib/brutus/src/
 </pre></div>
 </div>
-<p>Github users can fork the brian repository if they want to get access to the
+<p>Github users can fork the brutus repository if they want to get access to the
 latest updates not yet formally released. <em>Push requests</em> for bug fixes and new features
 are welcome and will be examined in detail.</p>
 <div class="section" id="requirements">
 <span id="id1"></span><h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
-<p>The basic packages below are required for brian to work properly:</p>
+<p>The basic packages below are required for brutus to work properly:</p>
 <ul class="simple">
-<li>numpy (1.8.1 or or above)</li>
+<li>numpy (1.9.0 or or above)</li>
 <li>scipy (0.14.0 or above)</li>
 <li>matplotlib (1.4.2 or above)</li>
-<li>aplpy</li>
-<li>montage (both the Python module and the stand-alone program)</li>
-<li>statsmodel</li>
-<li>astropy</li>
-<li>photutils</li>
+<li><a class="reference external" href="https://aplpy.github.io/">aplpy</a></li>
+<li>montage (<a class="reference external" href="http://montage.ipac.caltech.edu/docs/download.html">download</a> | <a class="reference external" href="http://montage.ipac.caltech.edu/docs/build.html">install instructions</a>)</li>
+<li><a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodel</a></li>
+<li><a class="reference external" href="http://www.astropy.org/">astropy</a></li>
+<li><a class="reference external" href="http://photutils.readthedocs.io/en/latest/">photutils</a></li>
 </ul>
 </div>
 <div class="section" id="testing-the-installation">
 <h2>Testing the installation<a class="headerlink" href="#testing-the-installation" title="Permalink to this headline">¶</a></h2>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">Create an elegant little thing to test that brian is working fine. For now, just try to
-<code class="docutils literal"><span class="pre">import</span> <span class="pre">brian</span></code>.</p>
+<p class="last">Create an elegant little thing to test that brutus is working fine. For now, just try to
+<code class="docutils literal"><span class="pre">import</span> <span class="pre">brutus</span></code>.</p>
 </div>
 </div>
 <div class="section" id="troubleshooting">
@@ -190,9 +190,9 @@ are welcome and will be examined in detail.</p>
 </li>
 <li><p class="first">Still no luck ? Check the <a class="reference internal" href="faq.html#faq"><span class="std std-ref">FAQ</span></a>.</p>
 </li>
-<li><p class="first">Still no luck ? Check if the issue has been <a class="reference external" href="https://github.com/fpavogt/brian/issues">reported before</a>.</p>
+<li><p class="first">Still no luck ? Check if the issue has been <a class="reference external" href="https://github.com/fpavogt/brutus/issues">reported before</a>.</p>
 </li>
-<li><p class="first">Still no luck ? Please <a class="reference external" href="https://github.com/fpavogt/brian/issues">submit a new issue</a>
+<li><p class="first">Still no luck ? Please <a class="reference external" href="https://github.com/fpavogt/brutus/issues">submit a new issue</a>
 on the Github repository of the project.</p>
 <p>Provide as much detail as possible (error message, minimal example able to reproduce
 the error, operating system, Python version, multiprocessing state, etc ...).</p>
@@ -217,10 +217,10 @@ but if you are really against doing it (why would you ?), you can always email
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="running.html" class="btn btn-neutral float-right" title="Running brian" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="running.html" class="btn btn-neutral float-right" title="Running brutus" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="brian 0.2.0" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="brutus 0.3.0" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -251,7 +251,7 @@ but if you are really against doing it (why would you ?), you can always email
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.0',
+            VERSION:'0.3.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

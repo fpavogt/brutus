@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Changelog &mdash; brian 0.2.0 documentation</title>
+  <title>Changelog &mdash; brutus 0.3.0 documentation</title>
   
 
   
@@ -30,8 +30,8 @@
   
 
   
-    <link rel="top" title="brian 0.2.0 documentation" href="index.html"/>
-        <link rel="next" title="Acknowledging brian" href="acknowledge.html"/>
+    <link rel="top" title="brutus 0.3.0 documentation" href="index.html"/>
+        <link rel="next" title="Acknowledging brutus" href="acknowledge.html"/>
         <link rel="prev" title="FAQ" href="faq.html"/> 
 
   
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> brian
+            <a href="index.html" class="icon icon-home"> brutus
           
 
           
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -83,11 +83,11 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brian</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
 </ul>
 
@@ -102,7 +102,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">brian</a>
+        <a href="index.html">brutus</a>
       </nav>
 
 
@@ -138,13 +138,21 @@
 <dl class="docutils">
 <dt>TODO:</dt>
 <dd><ul class="first last simple">
-<li>allow for more stellar templates.</li>
-<li>add the reference to the LOWESS paper in the acknowledgment.</li>
-<li>add the reference to the stellar templates in the acknowledgments.</li>
-<li>in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction.</li>
-<li>add references to reddening laws in the acknowledgments.</li>
+<li>allow for more stellar templates</li>
+<li>add the reference to the LOWESS paper in the acknowledgment</li>
+<li>add the reference to the stellar templates in the acknowledgments</li>
+<li>in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction</li>
+<li>add references to reddening laws in the acknowledgments</li>
 </ul>
 </dd>
+<dt>v0.3.0, May 2016, F.P.A. Vogt:</dt>
+<dd><ul class="first last simple">
+<li>renamed brian to brutus - to avoid conflict with existing brian module on pypi</li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
 <dt>v0.2.0, May 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>added the ability to rescale the y-axis of the fit residual plots in the interactive
@@ -152,10 +160,14 @@ fit inspection window</li>
 <li>updated brian_red, so that the Fischera &amp; Dopita (2005) attenuation law for a turbulent
 dust screen can now be derived for any Rv and Rva values (use polynomials from the
 article, unlike Appendix A of Vogt+ (2013)). Thanks to R. Sutherland for sharing his
-reddening code, that helped me make sense of all of it.</li>
-<li>implemented a processing step to correct for the extragalactic reddening/attenuation.</li>
+reddening code that helped me make sense of these polynomials !</li>
+<li>implemented a processing step to correct for the extragalactic reddening/attenuation</li>
+<li>added step to correct for galactic extinction, using the NED value for Av and Ab</li>
 </ul>
 </dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
 <dt>v0.1.1, April 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>replaced &#8216;0.1&#8217; with &#8216;__version__&#8217; when saving fits headers</li>
@@ -171,16 +183,19 @@ spaxels that land at the edges or outside a colorbar range for a given plot)</li
 <li>connected brian to ppxf</li>
 <li>defined structure of the docstring, to be used through brian, in brian_cof.lowess_fit</li>
 <li>added interactive plot to inspect the results of the fit - and the ability to save a
-pretty plot from it.</li>
+pretty plot from it</li>
 <li>bugfixes</li>
 </ul>
 </dd>
+</dl>
+<hr class="docutils" />
+<dl class="docutils">
 <dt>v0.1.0, April 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>created overall code structure inspired by pywifes</li>
 <li>implemented continuum fitting using LOWESS approach</li>
 <li>implemented modular emission line fitting via mpfit</li>
-<li>added safety measures to catch KeyboardInterrupt during multiprocessing tasks.</li>
+<li>added safety measures to catch KeyboardInterrupt during multiprocessing tasks</li>
 <li>created preliminary documentation structure</li>
 <li>initial upload to Github</li>
 <li>added license info</li>
@@ -199,7 +214,7 @@ apertures of varying radii</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="acknowledge.html" class="btn btn-neutral float-right" title="Acknowledging brian" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="acknowledge.html" class="btn btn-neutral float-right" title="Acknowledging brutus" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="faq.html" class="btn btn-neutral" title="FAQ" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
@@ -233,7 +248,7 @@ apertures of varying radii</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.0',
+            VERSION:'0.3.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

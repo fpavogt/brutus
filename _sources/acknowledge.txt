@@ -1,23 +1,23 @@
 
-Acknowledging brian
+Acknowledging brutus
 ====================
 
-Only use lower case letters when mentioning brian, and always include the release number, 
+Only use lower case letters when mentioning brutus, and always include the release number, 
 e.g.:
 
-    brian |release|  
+    brutus |release|  
 
-brian will be described in detail in 
+brutus will be described in detail in 
 
     **Vogt et al.**, in prep.
 
-If you find brian useful for your research, please cite this reference accordingly. 
+If you find brutus useful for your research, please cite this reference accordingly. 
 
-brian uses several packages that **should also be acknowledged in their own right.** 
+brutus uses several packages that **should also be acknowledged in their own right.** 
 The following Tex-formatted acknowledgment is one way to do so::
 
-    This research has made use of \textsc{brian}, a Python module to process data cubes 
-    from integral field spectrographs. \textsc{brian} relies on \textsc{statsmodel} 
+    This research has made use of \textsc{brutus}, a Python module to process data cubes 
+    from integral field spectrographs. \textsc{brutus} relies on \textsc{statsmodel} 
     (Seabold & Perktold 2010), \textsc{ppxf} (Cappellari & Emsellem 2004), 
     \textsc{matplotlib} (Hunter 2007), \textsc{astropy}, a community-developed core Python 
     package for Astronomy (Astropy Collaboration et al., 2013), \textsc{photutils}, an 

@@ -1,15 +1,15 @@
 Functions
-=========
+==========
 
 .. toctree::
    :maxdepth: 4
 
-   brian
-   brian_cof
-   brian_elf
-   brian_metadata
-   brian_mpfit
-   brian_plots
-   brian_ppxf
-   brian_red
-   brian_tools
+   brutus
+   brutus_cof
+   brutus_elf
+   brutus_metadata
+   brutus_mpfit
+   brutus_plots
+   brutus_ppxf
+   brutus_red
+   brutus_tools

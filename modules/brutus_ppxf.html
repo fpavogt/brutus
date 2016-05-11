@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>brutus_ppxf module &mdash; brutus 0.3.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brutus 0.3.0 documentation" href="../index.html"/>
+        <link rel="up" title="Functions" href="modules.html"/>
+        <link rel="next" title="brutus_red module" href="brutus_red.html"/>
+        <link rel="prev" title="brutus_plots module" href="brutus_plots.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> brutus
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">Running brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledge.html">Acknowledging brutus</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Functions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="brutus.html">brutus module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_cof.html">brutus_cof module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_elf.html">brutus_elf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_metadata.html">brutus_metadata module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_mpfit.html">brutus_mpfit module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_plots.html">brutus_plots module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">brutus_ppxf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_red.html">brutus_red module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_tools.html">brutus_tools module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">brutus</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Functions</a> &raquo;</li>
+      
+    <li>brutus_ppxf module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/brutus_ppxf.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-brutus_ppxf">
+<span id="brutus-ppxf-module"></span><h1>brutus_ppxf module<a class="headerlink" href="#module-brutus_ppxf" title="Permalink to this headline">¶</a></h1>
+<p>brutus: a set of Python modules to process datacubes from integral field spectrographs.</p>
+<p>Copyright (C) 2016,  F.P.A. Vogt</p>
+<hr class="docutils" />
+<p>This file contains functions to call ppxf to fit the continuum in a given spectra.
+It is based on the examples provided by M. Cappellari within ppxf istelf
+(e.g. ppxf_kinematics_example_sauron.py &amp; ppxf_population_example_sdss.py), but has been
+modified to account for a wavelength dependant spectral resolution of the data.</p>
+<p>Basically, this is designed with MUSE in mind.</p>
+<p>Created February 2016, F.P.A. Vogt - <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a></p>
+<dl class="function">
+<dt id="brutus_ppxf.ppxf_population">
+<code class="descclassname">brutus_ppxf.</code><code class="descname">ppxf_population</code><span class="sig-paren">(</span><em>specerr</em>, <em>templates=None</em>, <em>velscale=None</em>, <em>start=None</em>, <em>goodpixels=None</em>, <em>plot=False</em>, <em>moments=4</em>, <em>degree=-1</em>, <em>vsyst=None</em>, <em>clean=False</em>, <em>mdegree=10</em>, <em>regul=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_ppxf.html#ppxf_population"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_ppxf.ppxf_population" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function that calls ppxf, designed to be called from multiprocessing (i.e. only 
+require 1 argument). Everything else is taken care of outside of this.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus_ppxf.setup_spectral_library">
+<code class="descclassname">brutus_ppxf.</code><code class="descname">setup_spectral_library</code><span class="sig-paren">(</span><em>velscale</em>, <em>inst</em>, <em>sl_name</em>, <em>fit_lims</em>, <em>z</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_ppxf.html#setup_spectral_library"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_ppxf.setup_spectral_library" title="Permalink to this definition">¶</a></dt>
+<dd><p>This prepares the set of stellar templates to be fed to ppxf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">velscale - the velocity scale for the log-rebinning</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">inst - the instrument that took the data, e.g. &#8216;MUSE&#8217;</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">sl_name - the name of the stellar library to use</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">fit_lims - the spectral range for the fit (data &amp; templates overlap)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">z - redshift of target - needed for correct reshaping of fwhm_target.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">...lots of stuf...</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus_ppxf.sl_resample">
+<code class="descclassname">brutus_ppxf.</code><code class="descname">sl_resample</code><span class="sig-paren">(</span><em>fn</em>, <em>z=0</em>, <em>inst='MUSE'</em>, <em>sl_name='MILES_ppxf_default'</em>, <em>do_cap=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_ppxf.html#sl_resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_ppxf.sl_resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function resamples a given spectrum (i.e. from a stellar library)
+to match theresolution of the instrument that took the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">fn: filename of stellar template</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">z: redshift of the target observations</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Param:</th><td class="field-body">inst: which instrument are we using</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Param:</th><td class="field-body">sl_name: which templates do we use ?</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Do_cap:</th><td class="field-body">do the convolution using M.Cappellari in-built function</td>
+</tr>
+</tbody>
+</table>
+<p>Returns the convolved spectrum</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="brutus_red.html" class="btn btn-neutral float-right" title="brutus_red module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="brutus_plots.html" class="btn btn-neutral" title="brutus_plots module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

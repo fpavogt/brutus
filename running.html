@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Running brian &mdash; brian 0.2.0 documentation</title>
+  <title>Running brutus &mdash; brutus 0.3.0 documentation</title>
   
 
   
@@ -30,9 +30,9 @@
   
 
   
-    <link rel="top" title="brian 0.2.0 documentation" href="index.html"/>
+    <link rel="top" title="brutus 0.3.0 documentation" href="index.html"/>
         <link rel="next" title="FAQ" href="faq.html"/>
-        <link rel="prev" title="Installing brian" href="installation.html"/> 
+        <link rel="prev" title="Installing brutus" href="installation.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -50,7 +50,7 @@
           
 
           
-            <a href="index.html" class="icon icon-home"> brian
+            <a href="index.html" class="icon icon-home"> brutus
           
 
           
@@ -60,7 +60,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -83,15 +83,15 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brian</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Running brian</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#setting-parameters-with-brian-params-py">Setting parameters with <code class="docutils literal"><span class="pre">brian_params.py</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#launching-the-post-processing-with-brian-execute-py">Launching the post-processing with <code class="docutils literal"><span class="pre">brian_execute.py</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Running brutus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setting-parameters-with-brutus-params-py">Setting parameters with <code class="docutils literal"><span class="pre">brutus_params.py</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#launching-the-post-processing-with-brutus-execute-py">Launching the post-processing with <code class="docutils literal"><span class="pre">brutus_execute.py</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
 </ul>
 
@@ -106,7 +106,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">brian</a>
+        <a href="index.html">brutus</a>
       </nav>
 
 
@@ -123,7 +123,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Running brian</li>
+    <li>Running brutus</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -137,51 +137,51 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="running-brian">
-<h1>Running brian<a class="headerlink" href="#running-brian" title="Permalink to this headline">¶</a></h1>
-<p>The spirit of brian is that each user can choose, depending on the object at hand &amp; the
+  <div class="section" id="running-brutus">
+<h1>Running brutus<a class="headerlink" href="#running-brutus" title="Permalink to this headline">¶</a></h1>
+<p>The spirit of brutus is that each user can choose, depending on the object at hand &amp; the
 quality of the data, what processing steps are warranted. These are governed by the
-<code class="docutils literal"><span class="pre">brian_execute.py</span></code> file. In parallel, the user can define all relevant parameters using
-the <code class="docutils literal"><span class="pre">brian_params.py</span></code> file.</p>
+<code class="docutils literal"><span class="pre">brutus_execute.py</span></code> file. In parallel, the user can define all relevant parameters using
+the <code class="docutils literal"><span class="pre">brutus_params.py</span></code> file.</p>
 <p>For each project, I suggest making a local copy of both files, while leaving an original
-copy at <code class="docutils literal"><span class="pre">brian/exec_scripts/</span></code> for safekeeping.</p>
-<div class="section" id="setting-parameters-with-brian-params-py">
-<h2>Setting parameters with <code class="docutils literal"><span class="pre">brian_params.py</span></code><a class="headerlink" href="#setting-parameters-with-brian-params-py" title="Permalink to this headline">¶</a></h2>
-<p>All parameters (with a scientific role) relevant to the brian functions can be specified
-inside <code class="docutils literal"><span class="pre">brian_param.py</span></code>, via the dictionary <code class="docutils literal"><span class="pre">brian_params</span></code>.</p>
+copy at <code class="docutils literal"><span class="pre">brutus/exec_scripts/</span></code> for safekeeping.</p>
+<div class="section" id="setting-parameters-with-brutus-params-py">
+<h2>Setting parameters with <code class="docutils literal"><span class="pre">brutus_params.py</span></code><a class="headerlink" href="#setting-parameters-with-brutus-params-py" title="Permalink to this headline">¶</a></h2>
+<p>All parameters (with a scientific role) relevant to the brutus functions can be specified
+inside <code class="docutils literal"><span class="pre">brutus_param.py</span></code>, via the dictionary <code class="docutils literal"><span class="pre">brutus_params</span></code>.</p>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
 <p class="last">A detailed list of what everything is/does would be nice.</p>
 </div>
 <p>Once everything is set as it should be, run the script</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="n">brian_params</span><span class="o">.</span><span class="n">py</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="n">brutus_params</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
 <p>This exports all the parameters to the pickle file <code class="docutils literal"><span class="pre">pickle_fn</span></code>, defined in
-<code class="docutils literal"><span class="pre">brian_params.py</span></code>.</p>
+<code class="docutils literal"><span class="pre">brutus_params.py</span></code>.</p>
 </div>
-<div class="section" id="launching-the-post-processing-with-brian-execute-py">
-<h2>Launching the post-processing with <code class="docutils literal"><span class="pre">brian_execute.py</span></code><a class="headerlink" href="#launching-the-post-processing-with-brian-execute-py" title="Permalink to this headline">¶</a></h2>
-<p>brian is designed to batch process all the individual spectra inside a given IFU
+<div class="section" id="launching-the-post-processing-with-brutus-execute-py">
+<h2>Launching the post-processing with <code class="docutils literal"><span class="pre">brutus_execute.py</span></code><a class="headerlink" href="#launching-the-post-processing-with-brutus-execute-py" title="Permalink to this headline">¶</a></h2>
+<p>brutus is designed to batch process all the individual spectra inside a given IFU
 individually, exploiting multiple cpus (when available) to gain speed.</p>
-<p>The different steps to be executed in sequence by brian are defined in
-<code class="docutils literal"><span class="pre">brian_execute.py</span></code>, via the <code class="docutils literal"><span class="pre">proc_steps</span></code> list of dictionaries.</p>
+<p>The different steps to be executed in sequence by brutus are defined in
+<code class="docutils literal"><span class="pre">brutus_execute.py</span></code>, via the <code class="docutils literal"><span class="pre">proc_steps</span></code> list of dictionaries.</p>
 <p>Steps can be toogle on/off via the <code class="docutils literal"><span class="pre">run</span></code> keyword, which can be set to <code class="docutils literal"><span class="pre">True</span></code> or
 <code class="docutils literal"><span class="pre">False</span></code>. Some steps also accept specific parameters, such as whether to save plots or
-not. One should note that unlike the parameters defined in <code class="docutils literal"><span class="pre">brian_params.py</span></code>, the
-parameters present in <code class="docutils literal"><span class="pre">brian_execute.py</span></code> will NOT influence the final scientific output
+not. One should note that unlike the parameters defined in <code class="docutils literal"><span class="pre">brutus_params.py</span></code>, the
+parameters present in <code class="docutils literal"><span class="pre">brutus_execute.py</span></code> will NOT influence the final scientific output
 itself, only the processing speed and/or the type of output, etc ...</p>
 <p>Once all the steps are setup and enabled as required, you are ready to start crunching
 numbers:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="n">brian_execute</span> <span class="n">pickle_fn</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">run</span> <span class="n">brutus_execute</span> <span class="n">pickle_fn</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal"><span class="pre">pickle_fn</span></code> is the filename defined in <code class="docutils literal"><span class="pre">brian_params.py</span></code> for exporting the
+<p>where <code class="docutils literal"><span class="pre">pickle_fn</span></code> is the filename defined in <code class="docutils literal"><span class="pre">brutus_params.py</span></code> for exporting the
 various parameters.</p>
-<p>If all goes according to plan, brian will start processing your data, one step after the
+<p>If all goes according to plan, brutus will start processing your data, one step after the
 other. <strong>Some steps will take time (up to several hours) !</strong> Just be patient - progress
 indicators will help you monitor each task, if you set <code class="docutils literal"><span class="pre">'verbose':</span> <span class="pre">True</span></code> inside
-<code class="docutils literal"><span class="pre">brian_params.py</span></code>.</p>
+<code class="docutils literal"><span class="pre">brutus_params.py</span></code>.</p>
 </div>
 </div>
 
@@ -195,7 +195,7 @@ indicators will help you monitor each task, if you set <code class="docutils lit
         <a href="faq.html" class="btn btn-neutral float-right" title="FAQ" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installing brian" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installing brutus" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -226,7 +226,7 @@ indicators will help you monitor each task, if you set <code class="docutils lit
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.0',
+            VERSION:'0.3.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
