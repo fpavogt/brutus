@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brian 0.2.0 &mdash; brian 0.2.0 documentation</title>
+  <title>brutus 0.3.0 &mdash; brutus 0.3.0 documentation</title>
   
 
   
@@ -30,8 +30,8 @@
   
 
   
-    <link rel="top" title="brian 0.2.0 documentation" href="#"/>
-        <link rel="next" title="Installing brian" href="installation.html"/> 
+    <link rel="top" title="brutus 0.3.0 documentation" href="#"/>
+        <link rel="next" title="Installing brutus" href="installation.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -49,7 +49,7 @@
           
 
           
-            <a href="#" class="icon icon-home"> brian
+            <a href="#" class="icon icon-home"> brutus
           
 
           
@@ -59,7 +59,7 @@
             
             
               <div class="version">
-                0.2
+                0.3
               </div>
             
           
@@ -82,11 +82,11 @@
             
                 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brian</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
 </ul>
 
@@ -101,7 +101,7 @@
       
       <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
         <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="#">brian</a>
+        <a href="#">brutus</a>
       </nav>
 
 
@@ -118,7 +118,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>brian 0.2.0</li>
+    <li>brutus 0.3.0</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -132,21 +132,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="brian-release">
-<h1>brian 0.2.0<a class="headerlink" href="#brian-release" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="brutus-release">
+<h1>brutus 0.3.0<a class="headerlink" href="#brutus-release" title="Permalink to this headline">¶</a></h1>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">These pages describe brian 0.2.0. The module is currently under construction, and
+<p class="last">These pages describe brutus 0.3.0. The module is currently under construction, and
 NOT yet ready for deployment. For more information, send an email to
 <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a>.</p>
 </div>
-<p>brian is a Python module designed to process datacubes from Integral Field
+<p>brutus is a Python module designed to process datacubes from Integral Field
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. <strong>The focus
-of brian is primarily set on performing a detailed emission line analysis, including a
-good quality removal of the continuum.</strong> As such, brian
+of brutus is primarily set on performing a detailed emission line analysis, including a
+good quality removal of the continuum.</strong> As such, brutus
 is suitable for processing both extragalactic targets (e.g. star-forming galaxies)
 and galactic objects (PNs, SNRs, HII regions).</p>
-<p>Some of the features of brian include:</p>
+<p>Some of the features of brutus include:</p>
 <blockquote>
 <div><ul class="simple">
 <li><strong>the direct use of reduced datacubes</strong> (e.g. produced from the official MUSE data reduction
@@ -169,8 +169,9 @@ abundance and the ionization parameters for HII regions</strong>, based on their
 emission line spectra.</li>
 </ul>
 </div></blockquote>
-<p>brian can use up to ~300 cpus at once to speed up the processing of large datasets.
-brian also exploits existing tools with proven track-records developed by the community
+<p>brutus can use up to <code class="docutils literal"><span class="pre">ny</span></code> cpus at once (where <code class="docutils literal"><span class="pre">nx*ny</span></code> is the number of spaxels in the
+datacube; <code class="docutils literal"><span class="pre">ny~300</span></code> for one MUSE cube) to speed up the processing of large datasets.
+brutus also exploits existing tools with proven track-records developed by the community
 and individuals, including <a class="reference external" href="http://www.astropy.org/">Astropy</a>,
 <a class="reference external" href="http://www.iac.es/proyecto/PyNeb/">pyneb</a>,
 <a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodels</a>,
@@ -179,42 +180,44 @@ and individuals, including <a class="reference external" href="http://www.astrop
 <a class="reference external" href="http://montage.ipac.caltech.edu/">Montage</a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p>You can track the latest changes in the code via the <a class="reference external" href="https://github.com/fpavogt/brian">associated Github repository</a>.</p>
+<p>You can track the latest changes in the code via the <a class="reference external" href="https://github.com/fpavogt/brutus">associated Github repository</a>.</p>
 <p class="last">See also the <a class="reference internal" href="changelog.html#changelog"><span class="std std-ref">Changelog</span></a> for a global overview.</p>
 </div>
 <div class="section" id="contents">
-<h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brian</a></li>
-<li class="toctree-l1"><a class="reference internal" href="running.html">Running brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brian</a></li>
+<li class="toctree-l1"><a class="reference internal" href="acknowledge.html">Acknowledging brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="modules/modules.html">Functions</a></li>
 </ul>
 </div>
 </div>
-</div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 <hr class="docutils" />
-<p>Copyright notice:</p>
-<p>This file is part of the brian Python module.
-The brian Python module is free software: you can redistribute it and/or modify it under
+<div class="section" id="copyright-notice">
+<h3>Copyright notice<a class="headerlink" href="#copyright-notice" title="Permalink to this headline">¶</a></h3>
+<p>This file is part of the brutus Python module.
+The brutus Python module is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software Foundation,
 version 3 of the License.</p>
-<p>The brian Python module is distributed in the hope that it will be useful, but without any
+<p>The brutus Python module is distributed in the hope that it will be useful, but without any
 warranty; without even the implied warranty of merchantability or fitness for a particular
 purpose.  See the GNU General Public License for more details.</p>
-<p>You should have received a copy of the GNU General Public License along with the brian
+<p>You should have received a copy of the GNU General Public License along with the brutus
 Python module.  If not, see <a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a> .</p>
+</div>
+</div>
 </div>
 
 
@@ -224,7 +227,7 @@ Python module.  If not, see <a class="reference external" href="http://www.gnu.o
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installing brian" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installing brutus" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -256,7 +259,7 @@ Python module.  If not, see <a class="reference external" href="http://www.gnu.o
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.2.0',
+            VERSION:'0.3.0',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

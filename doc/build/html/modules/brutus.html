@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>brutus module &mdash; brutus 0.3.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="brutus 0.3.0 documentation" href="../index.html"/>
+        <link rel="up" title="Functions" href="modules.html"/>
+        <link rel="next" title="brutus_cof module" href="brutus_cof.html"/>
+        <link rel="prev" title="Functions" href="modules.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> brutus
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.3
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+                <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running.html">Running brutus</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../acknowledge.html">Acknowledging brutus</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Functions</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">brutus module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_cof.html">brutus_cof module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_elf.html">brutus_elf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_metadata.html">brutus_metadata module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_mpfit.html">brutus_mpfit module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_plots.html">brutus_plots module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_ppxf.html">brutus_ppxf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_red.html">brutus_red module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="brutus_tools.html">brutus_tools module</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">brutus</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+ 
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="modules.html">Functions</a> &raquo;</li>
+      
+    <li>brutus module</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/modules/brutus.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-brutus">
+<span id="brutus-module"></span><h1>brutus module<a class="headerlink" href="#module-brutus" title="Permalink to this headline">¶</a></h1>
+<p>brutus: a set of Python modules to process datacubes from integral field spectrographs.</p>
+<p>Copyright (C) 2016,  F.P.A. Vogt</p>
+<hr class="docutils" />
+<p>This file contains the master brutus routines to fit the stellar continuum and the 
+emission lines in an IFU data cube (i.e. MUSE). Most of these routines call sub-routines,
+after setting the scene/loading datasets/etc ...</p>
+<p>Any processing step MUST have a dediacted routine in this file call &#8216;run_XXX&#8217;, which can
+then refer to any existing/new brutus/Python module.</p>
+<p>Created April 2016, F.P.A. Vogt - <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a></p>
+<hr class="docutils" />
+<p>This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.</p>
+<p>This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.</p>
+<p>You should have received a copy of the GNU General Public License
+along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<dl class="function">
+<dt id="brutus.run_extragal_dered">
+<code class="descclassname">brutus.</code><code class="descname">run_extragal_dered</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_extragal_dered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_extragal_dered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects the line fluxes for the extragalactic reddening using Ha and Hb.</p>
+<p>This function returns a corrected set of line fluxes, as well as the associated Av 
+map.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make a plot of the Av map or not.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">Should I add some info about each curve here ?</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_find_structures">
+<code class="descclassname">brutus.</code><code class="descname">run_find_structures</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>interactive_mode=True</em>, <em>automatic_mode=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_find_structures"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_find_structures" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to identify structures (e.g. HII regions) in the data from
+a 2D image (i.e. an line intensity map), and save them to a pickle file. When
+interactive_mode=True, the user can manually refine the selection. Set
+automatic_mode=False to skip the automatic detection.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_fit_continuum">
+<code class="descclassname">brutus.</code><code class="descname">run_fit_continuum</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em>, <em>method='lowess'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_fit_continuum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_fit_continuum" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function fits the continuum in the datacube, either using ppxf (if SNR is decent)
+or using a simple polynomial value. It is designed to use multiprocessing to speed
+things up on good computers. It deals with the data columns-per-columns, and 
+can be restarted mid-course, in case of a crash.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_fit_elines">
+<code class="descclassname">brutus.</code><code class="descname">run_fit_elines</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>start_row=None</em>, <em>end_row=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_fit_elines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_fit_elines" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function fits the emission lines in the datacube, after subtracting the continuum
+derived using LOWESSS or PPXF. It is designed to use multiprocessing to speed
+things up on good computers. It deals with the data columns-per-columns, and 
+can be restarted mid-course, in case of a crash.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_gal_dered">
+<code class="descclassname">brutus.</code><code class="descname">run_gal_dered</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_gal_dered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_gal_dered" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects for Galactic extinction, given the Ab and Av extinction.</p>
+<p>This function erives the Alambda value for any wavelength, and corrects the data to
+correct for our &#8220;local&#8221; extinction. Intended for extragalactic sources.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make a plot of the Alambda correction applied or not.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">To reproduce the approach from NED, use the Ab and Av value for you object from 
+there, and set curve=&#8217;f99&#8217;, rv=3.1.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_inspect_fit">
+<code class="descclassname">brutus.</code><code class="descname">run_inspect_fit</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, irange=[None, None], vrange=[None, None]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_inspect_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_inspect_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup the interactive inspection of the fit results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>irange: list of int [default: [None,None]]</dt>
+<dd><p class="first last">The range of the colorbar for the intensity plot.</p>
+</dd>
+<dt>vrange: list of int [default: [None,None]]    </dt>
+<dd><p class="first last">The range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_make_ap_cube">
+<code class="descclassname">brutus.</code><code class="descname">run_make_ap_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_make_ap_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_make_ap_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to make a cube from a series of apertures (x,y,rs).
+For compativilty with spaxels-by-spaxels analysis codes (incl.brutus), make the cube
+the same size as the original, and repleace each spectra in a given aperture by the
+total aperture spectra. Spaxels outside any apertures are nan&#8217;s. 
+Assigned spaxels to one aperture only, in order of decreasing flux peak. This makes 
+the data redondant, but will allow for a rapid and direct processing of the resulting
+cube by brutus.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_make_continuum_cube">
+<code class="descclassname">brutus.</code><code class="descname">run_make_continuum_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>method='lowess'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_make_continuum_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_make_continuum_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to construct a &#8220;usable and decent&#8221; datacube out of the
+mess generated by the continuum fitting function, i.e. out of the many pickle 
+files generated.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_make_elines_cube">
+<code class="descclassname">brutus.</code><code class="descname">run_make_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_make_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_make_elines_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to construct a &#8220;usable and decent&#8221; datacube out of the
+mess generated by the emission line fitting function, i.e. out of the many pickle 
+files generated.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_plot_elines_cube">
+<code class="descclassname">brutus.</code><code class="descname">run_plot_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_plot_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_plot_elines_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates some plots for the emission lines: F, I, v and sigma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>vrange: list of int [default: None]</dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity plot.</p>
+</dd>
+<dt>sigrangre: list of int [default: None]        </dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_plot_ppxf_sol">
+<code class="descclassname">brutus.</code><code class="descname">run_plot_ppxf_sol</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_plot_ppxf_sol"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_plot_ppxf_sol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates some plots for the stellar kinematics parameters derived via ppxf.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>vrange: list of int [default: None]</dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity plot.</p>
+</dd>
+<dt>sigrangre: list of int [default: None]        </dt>
+<dd><p class="first last">If set, the range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_snr_maps">
+<code class="descclassname">brutus.</code><code class="descname">run_snr_maps</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_snr_maps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_snr_maps" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the SNR maps for the continuum and Ha (or other line). 
+It also creates a map of spaxels with any signal at all.
+The resulting maps are saved to a fits file with full header and WCS coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make a plot of the SNR maps or not.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">This function is a &#8220;first guess&#8221; of the SNR for latter use in the code. A more
+reliable measure of the SNR for the emission line should be computed after they
+have been fitted.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="brutus_cof.html" class="btn btn-neutral float-right" title="brutus_cof module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="modules.html" class="btn btn-neutral" title="Functions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Frédéric P.A. Vogt.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

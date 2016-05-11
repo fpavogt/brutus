@@ -3,8 +3,8 @@
 FAQ 
 ====
 
-**Q1: What does brian stands for ?**
-   - Just think of the word *brian* as a *brilliant acronym* for the Python code 
-     described in those pages.
+**Q1: What does brutus stands for ?**
+   - Does everything really need to stand for anything these days ?
 
-------
+
+

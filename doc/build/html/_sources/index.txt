@@ -1,25 +1,25 @@
-.. brian documentation master file, created by
+.. brutus documentation master file, created by
    sphinx-quickstart on Fri Apr 22 11:23:38 2016.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-brian |release|
+brutus |release|
 ==================
 
 .. warning::
-   These pages describe brian |release|. The module is currently under construction, and 
+   These pages describe brutus |release|. The module is currently under construction, and 
    NOT yet ready for deployment. For more information, send an email to 
    frederic.vogt@alumni.anu.edu.au.
    
 
-brian is a Python module designed to process datacubes from Integral Field 
+brutus is a Python module designed to process datacubes from Integral Field 
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. **The focus 
-of brian is primarily set on performing a detailed emission line analysis, including a 
-good quality removal of the continuum.** As such, brian 
+of brutus is primarily set on performing a detailed emission line analysis, including a 
+good quality removal of the continuum.** As such, brutus 
 is suitable for processing both extragalactic targets (e.g. star-forming galaxies) 
 and galactic objects (PNs, SNRs, HII regions).
 
-Some of the features of brian include:
+Some of the features of brutus include:
 
   - **the direct use of reduced datacubes** (e.g. produced from the official MUSE data reduction 
     pipeline) without requiring prior modifications,
@@ -42,8 +42,9 @@ Some of the features of brian include:
     emission line spectra.
 
 
-brian can use up to ~300 cpus at once to speed up the processing of large datasets. 
-brian also exploits existing tools with proven track-records developed by the community 
+brutus can use up to ``ny`` cpus at once (where ``nx*ny`` is the number of spaxels in the
+datacube; ``ny~300`` for one MUSE cube) to speed up the processing of large datasets. 
+brutus also exploits existing tools with proven track-records developed by the community 
 and individuals, including `Astropy <http://www.astropy.org/>`_, 
 `pyneb <http://www.iac.es/proyecto/PyNeb/>`_,
 `statsmodels <http://statsmodels.sourceforge.net/>`_, 
@@ -54,12 +55,12 @@ and individuals, including `Astropy <http://www.astropy.org/>`_,
 .. note::
 
     You can track the latest changes in the code via the `associated Github repository 
-    <https://github.com/fpavogt/brian>`_.
+    <https://github.com/fpavogt/brutus>`_.
     
     See also the :ref:`changelog` for a global overview.
     
 
-Contents:
+Contents
 ------------------
 .. toctree::
    :maxdepth: 1
@@ -74,7 +75,7 @@ Contents:
 
 
 Indices and tables
-==================
+--------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
@@ -83,17 +84,18 @@ Indices and tables
 
 ----
 
-Copyright notice:
+Copyright notice
+*******************
  
-This file is part of the brian Python module.
-The brian Python module is free software: you can redistribute it and/or modify it under 
+This file is part of the brutus Python module.
+The brutus Python module is free software: you can redistribute it and/or modify it under 
 the terms of the GNU General Public License as published by the Free Software Foundation, 
 version 3 of the License.
  
-The brian Python module is distributed in the hope that it will be useful, but without any 
+The brutus Python module is distributed in the hope that it will be useful, but without any 
 warranty; without even the implied warranty of merchantability or fitness for a particular 
 purpose.  See the GNU General Public License for more details.
  
-You should have received a copy of the GNU General Public License along with the brian 
+You should have received a copy of the GNU General Public License along with the brutus 
 Python module.  If not, see http://www.gnu.org/licenses/ .
  
