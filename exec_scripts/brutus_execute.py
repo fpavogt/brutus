@@ -21,6 +21,8 @@
 
  TO DO: 
  - propagate error when correcting for extragalctic reddening
+ - when inspecting fit, check if galactic dered spectra was used or not.
+ - when plotting emission lines, check if the extragalactic correction was applied or not.
 
  Created February 2016, F.P.A. Vogt - frederic.vogt@alumni.anu.edu.au
 '''
@@ -74,8 +76,8 @@ proc_steps = [
     # ----- Continuum fitting ------------------------------------------------------------
     # First, fit the continuum using a LOWESS filter. Much more elegant than a polynomial!
     {'step':'fit_continuum', 'run':False, 'suffix':'02',
-     'args':{'start_row': 0, # Where to start the fitting ? None = 0
-             'end_row': 0, # Where to end the fitting ? None = max
+     'args':{'start_row': 150, # Where to start the fitting ? None = 0
+             'end_row': 150, # Where to end the fitting ? None = max
              'method': 'lowess', # What kind of fitting is this ?
             },
     },
@@ -87,8 +89,8 @@ proc_steps = [
     # Then, we do it again using PPXF, but only for the spaxels with "decent" SNR ...
     # (ppxf = separate install)
     {'step':'fit_continuum', 'run':False, 'suffix':'04',
-     'args':{'start_row': 0, # Where to start the fitting ? None = 0
-             'end_row': 0, # Where to end the fitting ? None = max
+     'args':{'start_row': 150, # Where to start the fitting ? None = 0
+             'end_row': 150, # Where to end the fitting ? None = max
              'method': 'ppxf', # What kind of fitting is this ?
              }
     },
@@ -103,11 +105,16 @@ proc_steps = [
              'sigrange':[20,80],
             },
     },
+    # Build the complete continuum cube, as a mix of lowess and ppxf fits as defined by
+    # the user.
+    {'step':'build_continuum_mix', 'run':False, 'suffix':'07',
+     'args':{},
+    },
     # ----- Emission line fitting --------------------------------------------------------
     # Let's move on to emission line fitting.
     {'step':'fit_elines', 'run':False, 'suffix':'07',
-     'args':{'start_row':0, # Where to start the fitting ? None = 0
-             'end_row':0, # Where to end the fitting ? None = max
+     'args':{'start_row':150, # Where to start the fitting ? None = 0
+             'end_row':150, # Where to end the fitting ? None = max
             },
     },
     # Construct a datacube with the emission line parameters, using the output of the 
@@ -115,6 +122,7 @@ proc_steps = [
     {'step':'make_elines_cube', 'run':False, 'suffix':'08',
      'args':{},
     },
+    # Make some pretty plots for the emission lines fitting
     {'step':'plot_elines_cube', 'run':False, 'suffix':'09',
      'args':{'vrange':[7210,7400], # Velocity range in km/s for the colorbar 
              'sigrange':[40,60], # Dispersion range in m/s for the colorbar
@@ -146,20 +154,34 @@ proc_steps = [
     # This approach is much less invasive, and somewhat more elegant. After all, the 
     # aperture cube is build to be processed on a spaxel-by-spaxel basis ! It's somewhat
     # time consuming, but you'll have to live with it for now.
+    
     # ----- Emission line analysis -------------------------------------------------------
     # Now, correct for the extragalactic reddening of the spectra, using Ha and Hb
-    {'step':'extragal_dered', 'run':True, 'suffix':'13',
+    {'step':'extragal_dered', 'run':False, 'suffix':'13',
      'args':{'do_plot':True},
     },
+    
+    # Fit the kinematic PA using M. Cappellari's routine
+    #{'step':'fit_pa', 'run':False, 'suffix':'14',
+    # 'args':{'do_plot':True},
+    #},
     # Compute the electron density
-    #{'step':'electron_density', 'run':False, 'suffix':'05',
+    #{'step':'electron_density', 'run':False, 'suffix':'15',
     # 'args':{},
     #},
+    
     # Derive the oxygen abundance and ionization parameters using pyqz 
     # (pyqz = separate install)
-    #{'step':'get_QZ', 'run':False, 'suffix':'05',
-    # 'args':{},
-    #},
+    {'step':'get_QZ', 'run':True, 'suffix':'16',
+     'args':{'start_row':171,  # Where to start the fitting ? None = 0
+             'end_row':None, # Where to end the fitting ? None = max
+            },
+    },
+    # Construct the cube from all the pyqz outputs 
+    {'step':'make_QZ_cube', 'run':True, 'suffix':'17',
+     'args':{'do_plot': True,
+            },
+    },
     
     ]
     

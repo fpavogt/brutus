@@ -47,15 +47,14 @@ def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
     # the redshift in fattening the line, i.e. sigma is the "true" sigma in the object
     # rest frame.
         
-    obj_sigma_err = obj_sigma**2 * (errs[0]/sigma**2 + 
-                                    errs[1]/lam**2)    
+    obj_sigma_err = obj_sigma * np.sqrt(errs[0]**2/sigma**2 + errs[1]**2/lam**2)    
         
     if inst=='MUSE':
         
         # TODO: understand what is the TRUE spectral resolution of MUSE !
         # Measure it from the sky emission lines + arc lines ?      
         # For now, get it from the ref. file.    
-        
+        '''
         # What is the velocity dispersion we have in A?     
         inst_sigma = lam/(brutus_tools.inst_resolution(inst=inst)(lam) * 
                                                                    2*np.sqrt(2*np.log(2)))
@@ -69,6 +68,11 @@ def obs_sigma(sigma, lam, inst='MUSE', in_errs = None):
         
         this_sigma_err = inst_sigma_err * (inst_sigma/this_sigma)**2 + \
                          obj_sigma_err * (obj_sigma/this_sigma)**2
+        '''
+        
+        # For now, pretend that there is no instrumental dispersion
+        this_sigma = obj_sigma
+        this_sigma_err = obj_sigma_err
         
     else:
     
@@ -384,8 +388,8 @@ def els_mpfit(specerr,lams=None, be=None, params=None):
     # Create the dictionary containing the spectra, error, etc ...    
     fa = {'x':lams, 'y':spec, 'err':np.sqrt(err), 'method':params['line_profile'], 
           'be':be, 'inst':params['inst']}
-    
+          
     m = mpfit.mpfit(line_fit_erf, p0, functkw=fa, parinfo=parinfo, quiet=1) 
-    
+
     return m
 # ----------------------------------------------------------------------------------------    

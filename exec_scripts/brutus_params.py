@@ -30,23 +30,24 @@ brutus_params = {
 
     # ---| General variables |------------------------------------------------------------
     'target': 'HCG91c', # The generic name for files created by brutus
-    'z_target': 0.023983, # Guess redshift of galaxy
+    'z_target': 0.02435, # Guess redshift of galaxy
     'inst': 'MUSE', # Which instrument took the data ?
-    'multiprocessing': True,
+    'multiprocessing': 8,
     'verbose':True,
-    'warnings':'ignore', # 'ignore' = silence known (?) warnings about all-nan's spaxels
-                         # 'default' = default system behavior.
+    'warnings':'default', # 'ignore' = silence known (?) warnings about all-nan's spaxels
+                          # 'default' = default system behavior.
 
 	# ---| Location and name of the data file to process |--------------------------------
-    'data_loc': os.path.join(proj_dir,'reduc/'), # relative path from this file loc !
-    'data_fn': 'WFM-HCG91c-3-0_DATACUBE_FINAL_WFM-NOAO-N_475-935.fits',
+    'data_loc': os.path.join(proj_dir,'reduc'), # relative path from this file loc !
+    'data_fn': 'HCG91c_DATACUBE_FINAL_1.25_nosky.fits',
 
 	# ---| Generic locations for plots and products |-------------------------------------
-    'plot_loc': os.path.join(proj_dir,'plots/') ,
-    'prod_loc': os.path.join(proj_dir,'products/'),
-    'tmp_loc': os.path.join(proj_dir,'products/tmp/'),
+    'plot_loc': os.path.join(proj_dir,'plots') ,
+    'prod_loc': os.path.join(proj_dir,'products'),
+    'tmp_loc': os.path.join(proj_dir,'products','tmp'),
+    'pyqz_loc': os.path.join(proj_dir,'products','pyqz'),
     
-    'fn_list_fn': 'filenames_dictionary.pkl', # Name of the dictionary for filenames
+    'fn_list_fn': 'HCG91c_fn_dictionary.pkl', # Name of the dictionary for filenames
     
     # ---| Constructing SNR maps |--------------------------------------------------------
     'cont_range':[6400.,6500.], # The range over which to get the continuum SNR.
@@ -67,7 +68,7 @@ brutus_params = {
     # PPXF specific variables
     'ppxf_snr_min': 3,  # What's the lowest SNR to run the PPXF fit ?
     'ppxf_snr_max': None, # What's the highest SNR to run the PPXF fit ? None = max
-    'ppxf_sl_name': 'MILES_ppxf_default',   # Name of the stellar libraries for ppxf
+    'ppxf_sl_name': 'MILES_Padova00_kb_1.30_sub_sub',   # Name of the stellar libraries for ppxf
     'ppxf_sampling':1, # Sampling of the spectra when log-rebining them.
     # ppxf_sampling > 1 can help reduce errors when log-rebining and de-log-rebining the 
     # ppxf fit output. But ppxf_sampling>1 is very expansive time-wise. Worth it only with 
@@ -80,7 +81,9 @@ brutus_params = {
     # ---| Emission line fitting | -------------------------------------------------------
     # How do I want to subtract the continuum: give the range of snr (in the continuum!)
     # and the corresponding technique.
-    'which_cont_sub':{'0->max':'lowess'},
+    'which_cont_sub':{'0->3':'lowess',
+                      '3->max':'ppxf',
+                     },
     
     # For the inital delta-v guess, the code looks at one single line. Which one is the
     # strongest in your case ? Give here the un-redshifted wavelength.
@@ -90,7 +93,7 @@ brutus_params = {
     # 'gauss_hist' = gaussian, accounting for bin size (the correct way).
     'line_profile':'gauss', # 'gauss', 'gauss-herm'
     
-    'elines_snr_min': 0,  # What's the lowest SNR to run the line fit ?
+    'elines_snr_min': 3,  # What's the lowest SNR to run the line fit ?
     'elines_snr_max': None, # What's the highest SNR to run the line fit ? None = max
     
     # What lines do I want to fit, and how ?
@@ -102,58 +105,58 @@ brutus_params = {
     # allow to define "fixed" parameters (that will NOT befitted), set lower/upper bounds,
     # and tie a parameters with another one (e.g. line intensity, velocity, etc ...)
     
-    'elines':{'a':[[ha,0,20], # Line reference wavelength, guess dispersion (km/s)
+    'elines':{'a':[[ha,0,20,5], # Line reference wavelength, guess dispersion (km/s), min SNR
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, # Intensity >0
                    {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':''}, # Velocity
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':''}, # Dispersion >0
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
                   ],
-              'b':[[n2h,0,20], 
+              'b':[[n2h,0,20,3], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(a)'},
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
                   ],
-              'c':[[n2l,0,20],
+              'c':[[n2l,0,20,3],
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./3.*p(b)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(a)'},
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
                   ],
-              'd':[[s2h,0,20], 
+              'd':[[s2h,0,20,3], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(a)'}, 
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
                   ],
-              'e':[[s2l,0,20], 
+              'e':[[s2l,0,20,3], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(a)'}, 
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4
                   ],
-              'f':[[hb,0,20],
+              'f':[[hb,0,20,3],
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':''},
+                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'},
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':''},
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
                   ],
-              'g':[[o3h,0,20], 
+              'g':[[o3h,0,20,3], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':''}, 
-                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(f)'}, 
+                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(f)'},
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
                   ],
-              'h':[[o3l,0,20], 
+              'h':[[o3l,0,20,3], 
                    {'fixed':0, 'limited':[1,0], 'limits':[0.,0.], 'tied':'1./2.98*p(g)'},
-                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(f)'}, 
+                   {'fixed':0, 'limited':[1,1], 'limits':[6900.,7600.], 'tied':'p(a)'}, 
                    {'fixed':0, 'limited':[1,1], 'limits':[1.,100.], 'tied':'p(f)'},
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h3
                    {'fixed':1, 'limited':[0,0], 'limits':[0.,0.], 'tied':''}, # h4 
@@ -180,7 +183,21 @@ brutus_params = {
                           # 'f99': Fitzpatrick (1999)
                           # 'ccm89': Cardelli, Clayton & Mathis (1989)
     'egal_rv': 3.08, # The value of Rv. Use 3.08 for a Calzetti-like law, when using 'fd05'.
-    'egal_rva':4.3,  # The value of Rva, if using 'fd05'.       
+    'egal_rva':4.3,  # The value of Rva, if using 'fd05'.   
+    
+    # ---| Pyqz |-------------------------------------------------------------------------
+    
+    
+    # Do I want to use the line fluxes corrected for extragalactic attenuation ?
+    'pyqz_use_egal_dered': True,
+    
+    # Which diagnostic grids to use to derive logQ and Tot[O]+12 ?
+    'pyqz_diags': ['[NII]/[SII]+;[OIII]/Hb', 
+                   '[NII]/[SII]+;[OIII]/[SII]+',
+                   #'[NII]/[SII]+;[NII]/Ha;[OIII]/Hb'
+                  ],
+    
+        
     }
     
 

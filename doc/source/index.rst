@@ -10,14 +10,31 @@ brutus |release|
    These pages describe brutus |release|. The module is currently under construction, and 
    NOT yet ready for deployment. For more information, send an email to 
    frederic.vogt@alumni.anu.edu.au.
-   
 
-brutus is a Python module designed to process datacubes from Integral Field 
+
+.. image:: _static/09_HCG91c_eline-a-6562.81_F.png 
+    :width: 220px
+
+.. image:: _static/09_HCG91c_eline-a-6562.81_v.png
+    :width: 220px
+    
+.. image:: _static/17_HCG91c_pyqz_<Tot[O]+12{KDE}>.png
+    :width: 220px
+ 
+.. image:: _static/11_HCG91c_ap_list_6562.81.png
+    :width: 220px        
+
+.. image:: _static/12_HCG91c_ap_map.png
+    :width: 220px 
+    
+.. image:: _static/17_HCG91c_pyqz_<LogQ{KDE}>.png
+    :width: 220px 
+
+brutus is a set of Python modules designed to process datacubes from Integral Field 
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. **The focus 
 of brutus is primarily set on performing a detailed emission line analysis, including a 
-good quality removal of the continuum.** As such, brutus 
-is suitable for processing both extragalactic targets (e.g. star-forming galaxies) 
-and galactic objects (PNs, SNRs, HII regions).
+good quality removal of the continuum.** brutus is suitable for processing both 
+extragalactic targets (e.g. star-forming galaxies) and galactic objects (PNs, SNRs, HII regions).
 
 Some of the features of brutus include:
 
@@ -49,7 +66,8 @@ and individuals, including `Astropy <http://www.astropy.org/>`_,
 `pyneb <http://www.iac.es/proyecto/PyNeb/>`_,
 `statsmodels <http://statsmodels.sourceforge.net/>`_, 
 `APLyp <https://aplpy.github.io/>`_, 
-`ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_, and
+`ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_, 
+`fit_kinematics_pa <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_, and
 `Montage <http://montage.ipac.caltech.edu/>`_.
 
 .. note::

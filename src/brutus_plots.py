@@ -26,7 +26,7 @@ from brutus_metadata import alligator
      
 import matplotlib as mpl
 # Use tex - a pain to setup, but it looks great when it works !
-mpl.rc('MacOSX')
+#mpl.rc('MacOSX')
 mpl.rc('font',**{'family':'sans-serif', 'serif':['Computer Modern Serif'], 
                  'sans-serif':['Helvetica'], 'size':20, 
                  'weight':500, 'variant':'normal'})
@@ -540,7 +540,7 @@ class SpecManager(object):
         faster, and with no doubt A LOT more elegant. Suggestions welcome.
     '''
     def __init__(self, fig, ax1a, ax1b, ax3a, ax3b, ax3c, ax3d,
-                       patches, spectra, lams, data, lowess, ppxf, elines):
+                       patches, spectra, lams, data, lowess, ppxf, cont_mix, elines):
 
         self.fig = fig
         self.ax1a = ax1a
@@ -557,7 +557,7 @@ class SpecManager(object):
         
         self.spec3 = spectra[0]
         self.lowess3 = spectra[1]
-        self.ppxf3 = spectra[2]
+        self.ppxf3 = spectra[2] 
         self.fit3 = spectra[3]
         
         self.dspec3b = spectra[4]
@@ -568,6 +568,7 @@ class SpecManager(object):
         self.data = data
         self.lowess = lowess
         self.ppxf = ppxf
+        self.cont_mix = cont_mix
         self.elines = elines
          
         self.cid = self.canvas.mpl_connect('button_press_event', self.onpress)
@@ -619,7 +620,7 @@ class SpecManager(object):
                                        self.lowess[:,int(event.ydata),int(event.xdata)],
                                        '-',c='darkorange',drawstyle='steps-mid', lw=2) 
             self.fit3 = self.ax3a.plot(self.lams,
-                                       self.lowess[:,int(event.ydata),int(event.xdata)]+
+                                       self.cont_mix[:,int(event.ydata),int(event.xdata)]+
                                        self.elines[:,int(event.ydata),int(event.xdata)],
                                        '-',c='royalblue',drawstyle='steps-mid', lw=1) 
             
@@ -633,7 +634,7 @@ class SpecManager(object):
                                        '-',c='k',drawstyle='steps-mid', lw=1) 
             self.dspec3d = self.ax3d.plot(self.lams,
                                        self.data[:,int(event.ydata),int(event.xdata)]-
-                                       self.lowess[:,int(event.ydata),int(event.xdata)]-
+                                       self.cont_mix[:,int(event.ydata),int(event.xdata)]-
                                        self.elines[:,int(event.ydata),int(event.xdata)],
                                        '-',c='k',drawstyle='steps-mid', lw=1)                                             
             
@@ -670,7 +671,8 @@ class SpecManager(object):
             
 # ----------------------------------------------------------------------------------------      
 
-def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn=False):
+def inspect_spaxels(lams, data, lowess, ppxf, cont_mix, 
+                    elines, map, vmap, irange, vrange, ofn=False):
     ''' Interactive inspection fo the brutus fit output.
     
     This function generates an interactive plot allowing to select individual spaxels 
@@ -685,6 +687,8 @@ def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn
             The fitted lowess continuum cube.
         ppxf: 3-D numpy array
             The fitted ppxf continuum cube.
+        cont_mix:
+            The continuum cube that is already mixed,l according to the user choices.
         elines: 3-D numpy array
             The pure emission line cube.
         map: 2-D numpy array
@@ -732,7 +736,7 @@ def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn
     im2 = ax1b.imshow(vmap, cmap=alligator, origin='lower', vmin=vrange[0],vmax=vrange[1], 
                       interpolation='nearest')               
      
-    # A red dot for showin which spaxel we're at. 
+    # A red dot for showing which spaxel we're at. 
     symb = plt.Rectangle([nx-0.5,ny-0.5],1,1,angle=0,color='r')
     patch1a = ax1a.add_patch(symb)
     symb = plt.Rectangle([nx-0.5,ny-0.5],1,1,angle=0,color='r')
@@ -767,12 +771,12 @@ def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn
     ppxf3 = ax3a.plot(lams,ppxf[:,ny,nx],'-',c='firebrick', drawstyle='steps-mid', lw=2)   
     lowess3 = ax3a.plot(lams,lowess[:,ny,nx],'-',c='darkorange', drawstyle='steps-mid',
                                                                                    lw=2)  
-    fit3 = ax3a.plot(lams,lowess[:,ny,nx]+elines[:,ny,nx],'-',c='royalblue', 
+    fit3 = ax3a.plot(lams,cont_mix[:,ny,nx]+elines[:,ny,nx],'-',c='royalblue', 
                                                                    drawstyle='steps-mid') 
                                                                                                                            
     dspec3b = ax3b.plot(lams,data[:,ny,nx]-lowess[:,ny,nx],'k-',drawstyle='steps-mid')    
     dspec3c = ax3c.plot(lams,data[:,ny,nx]-ppxf[:,ny,nx],'k-',drawstyle='steps-mid')    
-    dspec3d = ax3d.plot(lams,data[:,ny,nx]-lowess[:,ny,nx]-elines[:,ny,nx],'k-',
+    dspec3d = ax3d.plot(lams,data[:,ny,nx]-cont_mix[:,ny,nx]-elines[:,ny,nx],'k-',
                                                                    drawstyle='steps-mid')    
     spectra = [spec3,ppxf3,lowess3,fit3,dspec3b,dspec3c,dspec3d]
 
@@ -795,7 +799,7 @@ def inspect_spaxels(lams, data,lowess, ppxf,elines,map,vmap, irange, vrange, ofn
     
     # Launch the interactive black magic        
     specmanager = SpecManager(fig,ax1a,ax1b,ax3a,ax3b,ax3c,ax3d,
-                              patches, spectra, lams,data, lowess, ppxf, elines)       
+                              patches, spectra, lams, data, lowess, ppxf, cont_mix, elines)       
     plt.show()
     
     # A little trick to wait for the user to be done before proceeding

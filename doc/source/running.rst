@@ -19,7 +19,8 @@ inside ``brutus_param.py``, via the dictionary ``brutus_params``.
 
 .. todo::
    
-    A detailed list of what everything is/does would be nice.
+    A detailed list of what everything is/does would be nice. Until then, look at the 
+    comments inside the file.
 
 
 Once everything is set as it should be, run the script ::

@@ -37,6 +37,10 @@ extensions = [
     'sphinx.ext.viewcode',
 ]
 
+# The MAthjax path
+#mathjax_path="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -108,7 +112,6 @@ pygments_style = 'sphinx'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
-
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -206,7 +209,7 @@ html_static_path = ['_static']
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'briandoc'
+htmlhelp_basename = 'brutusdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 

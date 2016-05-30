@@ -37,16 +37,42 @@ The basic packages below are required for brutus to work properly:
 * matplotlib (1.4.2 or above)
 * `aplpy <https://aplpy.github.io/>`_
 * montage (`download <http://montage.ipac.caltech.edu/docs/download.html>`_ | `install instructions <http://montage.ipac.caltech.edu/docs/build.html>`_)
-* `statsmodel <http://statsmodels.sourceforge.net/>`_
 * `astropy <http://www.astropy.org/>`_
-* `photutils <http://photutils.readthedocs.io/en/latest/>`_
+
+The packages below might be required, depending what step is being executed. Install what
+you need:
+
+* `statsmodel <http://statsmodels.sourceforge.net/>`_ [LOWESS continuum fitting; pyqz]
+* `photutils <http://photutils.readthedocs.io/en/latest/>`_ [structure identification]
+* `ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_ [ppxf continuum fitting]
+* `fit_kinematics_pa <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_ [Kinematic fitting]
+
+.. _plotting:
+
+A note on the brutus plots
+---------------------------
+
+brutus relies on matplotlib (and aplpy which itself relies on matplotlib) to create plots.
+By default, brutus will try to use a full :math:`\LaTeX` installation present on the system 
+(a.k.a. via the ``rcparams`` setting ``usetex: True``) to create good looking diagrams. 
+If this is a problem (e.g. if :math:`\LaTeX` is not present on the machine that runs brutus), 
+you can: 
+
+    - install `TexLive <https://www.tug.org/texlive/acquire-netinstall.html>`_
+      **[recommended]**, to get the brutus plots to look they way they are meant to look, or
+    - set ``mpl.rc('text', **{'usetex':False})`` in ``brutus_plots.py`` to use the limited
+      :math:`\LaTeX` capabilities that ship with matplotlib.  
+
+Nate that if you decide to go with the second option, you might still encounter issues 
+here and there.
+
 
 Testing the installation
 ------------------------
 
 .. todo::
-   Create an elegant little thing to test that brutus is working fine. For now, just try to
-   ``import brutus``.
+   Eventually, I should create an elegant little thing to test that brutus is working fine. 
+   For now, just try to ``import brutus``.
 
 .. _troubleshooting:
 

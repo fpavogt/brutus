@@ -170,6 +170,38 @@ GNU General Public License for more details.</p>
 <p>You should have received a copy of the GNU General Public License
 along with this program.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
 <dl class="function">
+<dt id="brutus.run_build_continuum_mix">
+<code class="descclassname">brutus.</code><code class="descname">run_build_continuum_mix</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_build_continuum_mix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_build_continuum_mix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct the mixed continuum cube, following the user&#8217;s wishes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brutus.run_extragal_dered">
 <code class="descclassname">brutus.</code><code class="descname">run_extragal_dered</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_extragal_dered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_extragal_dered" title="Permalink to this definition">¶</a></dt>
 <dd><p>Corrects the line fluxes for the extragalactic reddening using Ha and Hb.</p>
@@ -278,6 +310,49 @@ there, and set curve=&#8217;f99&#8217;, rv=3.1.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="brutus.run_get_QZ">
+<code class="descclassname">brutus.</code><code class="descname">run_get_QZ</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>start_row=0</em>, <em>end_row=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_get_QZ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_get_QZ" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the ionization parameter and oxygen abundance of HII regions
+using the pyqz module: <a class="reference external" href="http://fpavogt.github.io/pyqz/">http://fpavogt.github.io/pyqz/</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>start_row: int [default: 0]</dt>
+<dd><p class="first last">The starting row from which to process the data</p>
+</dd>
+<dt>end_row: int [default: None]</dt>
+<dd><p class="first last">The row at which to finish the processing. Set to None for the max row.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">pyqz is NOT included with brutus. A separate installation is required.
+See <a class="reference external" href="http://fpavogt.github.io/pyqz/installation.html">http://fpavogt.github.io/pyqz/installation.html</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brutus.run_inspect_fit">
 <code class="descclassname">brutus.</code><code class="descname">run_inspect_fit</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, irange=[None, None], vrange=[None, None]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_inspect_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_inspect_fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup the interactive inspection of the fit results.</p>
@@ -300,6 +375,42 @@ there, and set curve=&#8217;f99&#8217;, rv=3.1.</p>
 </dd>
 <dt>vrange: list of int [default: [None,None]]    </dt>
 <dd><p class="first last">The range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_make_QZ_cube">
+<code class="descclassname">brutus.</code><code class="descname">run_make_QZ_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_make_QZ_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_make_QZ_cube" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to construct a &#8220;usable and decent&#8221; datacube out of the
+mess generated by the pyqz step.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make some nifty plots or not.</p>
 </dd>
 </dl>
 </td>

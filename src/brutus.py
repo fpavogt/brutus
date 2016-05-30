@@ -41,6 +41,7 @@ import pickle
 import multiprocessing
 import warnings
 import glob
+import warnings
 
 from brutus_metadata import __version__
 
@@ -48,11 +49,16 @@ import brutus_tools
 import brutus_cof
 import brutus_elf
 import brutus_plots
-import brutus_ppxf
+try:
+    import brutus_ppxf
+    import ppxf_util as util
+except:
+    warnings.warn("Faild to load brutus_ppxf. Is ppxf installed ?")
+
 import brutus_red
 from brutus_metadata import *
 
-import ppxf_util as util
+import pyqz
    
 # ---------------------------------------------------------------------------------------- 
   
@@ -474,13 +480,16 @@ def run_fit_continuum(fn_list, params, suffix=None, start_row = None, end_row = 
             # Did the user specify a number of processes to use ?
             if type(params['multiprocessing']) == np.int:
                 nproc = params['multiprocessing']
-                pool = multiprocessing.Pool(processes = nproc, 
-                                            initializer = brutus_tools.init_worker())
                 
             else: # Ok, just use them all ...
                 nproc = multiprocessing.cpu_count()
-                pool = multiprocessing.Pool(processes=None, 
-                                            initializer = brutus_tools.init_worker())
+                
+			# Limiting the maximum number of cpus for ppxf, to avoid memory errors... 
+            if nproc > 8 and method == 'ppxf':
+                nproc = 8
+                
+            pool = multiprocessing.Pool(processes = nproc, 
+			                            initializer = brutus_tools.init_worker())    
 			
             if params['verbose']:
                 sys.stdout.write('\r   Fitting spectra in row %2.i, %i at a time ...' % 
@@ -561,7 +570,7 @@ def run_make_continuum_cube(fn_list, params, suffix=None, method='lowess'):
                                                         header1['NAXIS1'])) * np.nan
     
     # For ppxf, also create a spectrum with the de-logged rebin original spectra. Useful 
-    # to characterize the error associated with log-bin-delog-bin process employed here.
+    # to characterize the error associated with log-bin-delog-rebin process employed here.
     delog_raw_cube = np.zeros_like(data) * np.nan
                                                         
     # Loop through the rows, and extract the results. 
@@ -774,9 +783,101 @@ def run_plot_ppxf_sol(fn_list, params, suffix=None, vrange=None, sigrange=None):
     os.remove(fn_tmp)
     
     return fn_list    
-    
 # ----------------------------------------------------------------------------------------
 
+def run_build_continuum_mix(fn_list, params, suffix=None):   
+    ''' Construct the mixed continuum cube, following the user's wishes.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames.
+    '''   
+    
+    if params['verbose']:
+        print '-> Constructing the mixed continuum cube.'
+    
+    # First, the raw datacube. Use the galactic deredened one if it exists.
+    if fn_list['galdered_cube'] is None:
+        hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    else:
+        hdu = pyfits.open(os.path.join(params['prod_loc'],fn_list['galdered_cube']))
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close()
+    
+    # I also need the continuum cubes
+    if fn_list['lowess_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
+        if os.path.isfile(fn):
+            hdu = pyfits.open(fn)
+            cont_lowess = hdu[1].data
+            hdu.close()
+    
+    if fn_list['ppxf_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
+        if os.path.isfile(fn):
+            hdu = pyfits.open(fn)
+            cont_ppxf = hdu[1].data
+            hdu.close()
+    
+    # I also need to load the SNR cube for the spaxel selection
+    hdu = pyfits.open(os.path.join(params['prod_loc'],fn_list['snr_cube']))
+    snr_cont = hdu[1].data                               
+    snr_elines = hdu[2].data
+    hdu.close()        
+    
+     
+    # Here, I don't use nan's. Should I ? 
+    cont_mix = np.zeros_like(data) 
+    
+    # Very well, now, combine the different continua
+    for key in params['which_cont_sub'].keys():
+        if params['verbose']:
+            print '   SNR %s: %s' % (key,params['which_cont_sub'][key])
+            sys.stdout.flush()
+                
+        llim = np.int(key.split('->')[0])
+        if key.split('->')[1] == 'max':
+            ulim = np.nanmax(snr_cont)+1.
+        else:
+        	ulim = np.int(key.split('->')[1])
+         
+        # Assume the continuum subtraction is error free (either lowess or models).
+        if params['which_cont_sub'][key] == 'lowess':
+            cont_mix[:,(snr_cont>=llim)*(snr_cont<ulim)] = \
+                     cont_lowess[:,(snr_cont>=llim) * (snr_cont<ulim)] 
+        elif params['which_cont_sub'][key] == 'ppxf':
+            cont_mix[:,(snr_cont>=llim)*(snr_cont<ulim)] = \
+                     cont_ppxf[:,(snr_cont>=llim) * (snr_cont<ulim)]   
+    
+    # Save the cube
+    hdu0 = pyfits.PrimaryHDU(None, header0)
+    hdu1 = pyfits.ImageHDU(cont_mix)
+    # Make sure the WCS coordinates are included as well
+    hdu1 = brutus_tools.hdu_add_wcs(hdu1,header1)
+    hdu1 = brutus_tools.hdu_add_lams(hdu1,header1)
+    # Also include a brief mention about which version of brutus is being used
+    hdu1 = brutus_tools.hdu_add_brutus(hdu1,suffix)
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+    fn_out = os.path.join(params['prod_loc'],
+                          suffix+'_'+params['target']+'_mixed_continuum_cube.fits')
+    hdu.writeto(fn_out, clobber=True)
+    
+    # Add the generic filename to the dictionary of filenames
+    fn_list['cont_mix_cube'] = suffix+'_'+params['target']+'_mixed_continuum_cube.fits'
+    
+    return fn_list  
+# ----------------------------------------------------------------------------------------
 
 def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = None, 
                    ):
@@ -786,6 +887,10 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
     things up on good computers. It deals with the data columns-per-columns, and 
     can be restarted mid-course, in case of a crash. 
     '''
+    
+    nlines = len(params['elines'].keys())
+    if params['verbose']:
+        print '-> Starting the emission line fitting for %2.i line(s).' % nlines 
     
     # Rather than launch it all at once, let's be smart in case of problems. I'll run
 	# the fits row-by-row with multiprocessing (hence up to 300cpus can help!), and save
@@ -816,43 +921,15 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
     hdu.close()
     
     # I also need the continuum cubes
-    if fn_list['lowess_cube']:
-        fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
+    if fn_list['cont_mix_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['cont_mix_cube'])
         if os.path.isfile(fn):
             hdu = pyfits.open(fn)
-            cont_lowess = hdu[1].data
+            cont_mix_cube = hdu[1].data
             hdu.close()
-    if fn_list['ppxf_cube']:
-        fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
-        if os.path.isfile(fn):
-            hdu = pyfits.open(fn)
-            cont_ppxf = hdu[1].data
-            hdu.close()
-    
-    nlines = len(params['elines'].keys())
-    if params['verbose']:
-        print '-> Starting the emission line fitting for %2.i line(s).' % nlines 
-    
-    # Very well, now, perform the continuum subtraction.
-    for key in params['which_cont_sub'].keys():
-        if params['verbose']:
-            print '   Subtracting the %s continuum from the data [SNR:%s]' % \
-                   (params['which_cont_sub'][key],key)
-            sys.stdout.flush()
-            
-        llim = np.int(key.split('->')[0])
-        if key.split('->')[1] == 'max':
-            ulim = np.nanmax(snr_cont)+1.
-        else:
-        	ulim = np.int(key.split('->')[1])
-         
-        # Assume the continuum subtraction is error free (either lowess or models).
-        if params['which_cont_sub'][key] == 'lowess':
-            data[:,(snr_cont>=llim)*(snr_cont<ulim)] -= \
-                 cont_lowess[:,(snr_cont>=llim) * (snr_cont<ulim)] 
-        elif params['which_cont_sub'][key] == 'ppxf':
-            data[:,(snr_cont>=llim)*(snr_cont<ulim)] -= \
-                 cont_ppfx[:,(snr_cont>=llim) * (snr_cont<ulim)]                                                      
+        
+        # Very well, now, perform the continuum subtraction.
+        data -= cont_mix_cube
     
     # Get some info about the cube
     nrows = header1['NAXIS1']
@@ -927,14 +1004,14 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
 	    # Until I then re-build the entire cube later on ? Also allow for better
 	    # row-by-row flexibility.
         fn = os.path.join(params['tmp_loc'],
-                          suffix+'_'+params['target']+'_row_'+
+                          suffix+'_'+params['target']+'_elines_row_'+
                           str(np.int(row)).zfill(4)+'.pkl')
         file = open(fn,'w')
         pickle.dump(els,file)
         file.close()
    	
    	# Add the generic filename to the dictionary of filenames
-   	fn_list['elines_pickle'] = suffix+'_'+params['target']+'_row_'
+   	fn_list['elines_pickle'] = suffix+'_'+params['target']+'_elines_row_'
    	     
     print ' done !'
     
@@ -976,9 +1053,10 @@ def run_make_elines_cube(fn_list, params, suffix=None):
     # and h3 and h4 maps
     # Let's get to it.
     elines_fullspec_cube = data * np.nan # That way, I keep the nan's in the raw data
-    elines_params_cube = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    # 7 params: Flux, I, v, sigma, h3, h4, SNR
+    elines_params_cube = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
     # And the associated errors !
-    elines_params_err = np.zeros((6*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    elines_params_err = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
     # Also save the status from mpfit. Could be useful for sorting the good from the bad.
     elines_fit_status = np.zeros((header1['NAXIS2'],header1['NAXIS1']))*np.nan
     
@@ -1008,17 +1086,21 @@ def run_make_elines_cube(fn_list, params, suffix=None):
             stats = [item.status for item in ms]
             
             # Here, I need to make sure the ps and errs array have a decent shape, even 
-            # when the fit failed. Also store the variance = (STD that comes of mpfit**2) 
+            # when the fit failed. Also store the STD that comes out of mpfit (NOT the variance!) 
             ps = [np.zeros_like(ps[0])*np.nan if not(item.status in [1,2,3,4]) else ps[j] 
                                                             for (j,item) in enumerate(ms)]
             
             errs = [np.zeros_like(ps[0])*np.nan if not(item.status in [1,2,3,4]) else 
-                                                 errs[j]**2 for (j,item) in enumerate(ms)]
+                                                 errs[j] for (j,item) in enumerate(ms)]
             
             
             # Fill the corresponding datacube
-            elines_params_cube[:,:,row] = np.array(ps).T
-            elines_params_err[:,:,row] = np.array(errs).T
+            # First, what are my indices ? I need to keep one slice empty for the SNR of 
+            # each line. Get the indices where I will thus store the fit params.
+            ind = np.array([np.arange(6)+7*j for j in range(nlines)]).reshape(nlines*6)
+            
+            elines_params_cube[ind,:,row] = np.array(ps).T
+            elines_params_err[ind,:,row] = np.array(errs).T
             elines_fit_status[:,row] = np.array(stats).T
             
             # now, reconstruct the full emission line spectrum
@@ -1030,24 +1112,52 @@ def run_make_elines_cube(fn_list, params, suffix=None):
             elines_fullspec_cube[:,:,row] = elines_specs.T
             
     
-    # Now, for each line, the first of these lines is the reference wavelength. 
+    # Now, for each line, the first of these slices is the reference wavelength. 
     # Replace this by the total flux instead ! And make some plots if requested.
-    for (k,key) in enumerate(params['elines'].keys()):
+    for (k,key) in enumerate(np.sort(params['elines'].keys())):
         
         # Calculate the sigma of the fit, in A (incl. instrument dispersion,etc ...)
         # as well as the associated error.
-        zlams = elines_params_cube[6*k] * (1.+ elines_params_cube[6*k+2] / c )
-        zlams_err = elines_params_cube[6*k]**2 * elines_params_err[6*k+2]/c**2
-        sigma_obs_A = brutus_elf.obs_sigma(elines_params_cube[6*k+3],zlams, 
+        # WARNING: unlike the data, these are the 1-sigma error coming out of mpfit.
+        # Mind the **2 !
+        zlams = elines_params_cube[7*k] * (1.+ elines_params_cube[7*k+2] / c )
+        zlams_err = elines_params_cube[7*k] * elines_params_err[7*k+2]/c # The 1-std err
+        sigma_obs_A = brutus_elf.obs_sigma(elines_params_cube[7*k+3],zlams, 
                                           inst=params['inst'], 
-                                          in_errs=[elines_params_err[6*k+2],zlams_err,0.] )
+                                          in_errs=[elines_params_err[7*k+3],zlams_err] )
         
         # Compute the line flux
-        elines_params_cube[6*k,:,:] = np.sqrt(2*np.pi) * elines_params_cube[6*k+1,:,:] * \
+        elines_params_cube[7*k,:,:] = np.sqrt(2*np.pi) * elines_params_cube[7*k+1,:,:] * \
                                       sigma_obs_A[0]                           
         # What about the error ?
-        elines_params_err[6*k,:,:] = 2*np.pi * (elines_params_err[6*k+1,:,:]**2 * sigma_obs_A[0] + \
-                                                sigma_obs_A[1] * elines_params_cube[6*k+1,:,:]**2)           
+        elines_params_err[7*k,:,:] = \
+            np.abs(elines_params_cube[7*k,:,:]) * \
+            np.sqrt(elines_params_err[7*k+1,:,:]**2/elines_params_cube[7*k+1,:,:]**2 +
+                    sigma_obs_A[1]**2/sigma_obs_A[0]**2)           
+    
+    
+    # Now for each line, calculate the SNR
+    # For this, I need the continuum cubes
+    if fn_list['cont_mix_cube']:
+        fn = os.path.join(params['prod_loc'],fn_list['cont_mix_cube'])
+        hdu = pyfits.open(fn)
+        cont_mix_cube = hdu[1].data
+        hdu.close()
+    else:
+        cont_mix_cube = np.zeros_like(data)
+        
+    # Compute the residual cube
+    residuals = data - cont_mix_cube - elines_fullspec_cube
+    
+    cont_range = params['cont_range']
+    lams0 = lams / (params['z_target'] + 1)
+    
+    # Compute the noise over the region of interest defined by the user
+    noise = np.nanstd(residuals[(lams0>=cont_range[0])*(lams0<=cont_range[1]),:,:],axis=0) 
+    
+    for (k, key) in enumerate(np.sort(params['elines'].keys())):
+        elines_params_cube[7*k+6,:,:] = elines_params_cube[7*k+1,:,:]/noise
+       
     
     # Export the cube for each emission line parameters as a multi-extension fits file        
     # Do the same for the errors - i.e. params and errors are in two distinct cubes
@@ -1057,14 +1167,14 @@ def run_make_elines_cube(fn_list, params, suffix=None):
         hdus = [hdu0]
         # Use the sorted keys, to ensure the same order as the fit parameters
         for (k,key) in enumerate(np.sort(params['elines'].keys())):
-            hduk = pyfits.ImageHDU(epc[6*k:6*k+6,:,:])
+            hduk = pyfits.ImageHDU(epc[7*k:7*k+7,:,:])
             # Make sure the WCS coordinates are included as well
             hduk = brutus_tools.hdu_add_wcs(hduk,header1)
             # Also include a brief mention about which version of brutus is being used
             hduk = brutus_tools.hdu_add_brutus(hduk,suffix)
             # Add the line reference wavelength for future references
             hduk.header['BR_REFL'] = (params['elines'][key][0][0], 'reference wavelength')
-            hduk.header['BR_CKEY'] = ('F,I,v,sigma','Content of the cube planes')
+            hduk.header['BR_CKEY'] = ('F,I,v,sigma,h3,h4,SNR','Content of the cube planes')
             
             hdus.append(hduk)
             
@@ -1158,8 +1268,13 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
         this_data = hdu[k+1].data
         
         # Make single pretty plots for Flux, Intensity, velocity and velocity dispersion                                        
-        for (t,typ) in enumerate(['F','I','v','sigma','h3', 'h4']):
-            # Create a dedicated HDU
+        for (t,typ) in enumerate(['F','I','v','sigma','h3', 'h4', 'SNR']):
+            
+            # Take into account the SNR from the user
+            if typ != 'SNR':
+                this_data[t][this_data[-1] <params['elines'][key][0][3]] = np.nan
+            
+            # Create a dedicated HDU    
             tmphdu = pyfits.PrimaryHDU(this_data[t])
             # Add the WCS information
             tmphdu = brutus_tools.hdu_add_wcs(tmphdu,this_header)
@@ -1176,14 +1291,14 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
             if t == 0:
                 my_vmin = None
                 my_vmax = None
-                my_cmap = None
+                my_cmap = 'alligator'
                 my_stretch = 'arcsinh'
                 my_label = r'F [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]'
                 my_cbticks = [125,250,500,1000,2000,4000]
             elif t == 1:
                 my_vmin = None
                 my_vmax = None
-                my_cmap = None
+                my_cmap = 'alligator'
                 my_stretch = 'arcsinh'
                 my_label = r'I [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]'
                 my_cbticks = [50,100,200,400,800,1600]
@@ -1269,8 +1384,8 @@ def run_inspect_fit(fn_list,params, suffix=None, irange=[None,None], vrange=[Non
     lams = np.arange(0, header1['NAXIS3'],1) * header1['CD3_3'] + header1['CRVAL3']
     
     # The Lowess continuum fit
-    fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
-    if os.path.isfile(fn):
+    if not(fn_list['lowess_cube'] is None):
+        fn = os.path.join(params['prod_loc'],fn_list['lowess_cube'])
         hdu = pyfits.open(fn)
         lowess = hdu[1].data
         hdu.close()  
@@ -1278,17 +1393,27 @@ def run_inspect_fit(fn_list,params, suffix=None, irange=[None,None], vrange=[Non
         lowess = np.zeros_like(data)*np.nan
         
     # The ppxf continuum fit
-    fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
-    if os.path.isfile(fn):
+    if not(fn_list['ppxf_cube'] is None):
+        fn = os.path.join(params['prod_loc'],fn_list['ppxf_cube'])
         hdu = pyfits.open(fn)
         ppxf = hdu[1].data
         hdu.close()  
     else:
-       ppxf = np.zeros_like(data)*np.nan
+        ppxf = np.zeros_like(data)*np.nan
+    
+    # The continuum mix datacube
+    if not(fn_list['cont_mix_cube'] is None):
+        fn = os.path.join(params['prod_loc'],fn_list['cont_mix_cube'])
+        hdu = pyfits.open(fn)
+        cont_mix = hdu[1].data
+        hdu.close()  
+    else:
+        cont_mix = np.zeros_like(data)*np.nan
+    
        
     # The elines fit
-    fn = os.path.join(params['prod_loc'],fn_list['elines_spec_cube'])
-    if os.path.isfile(fn):
+    if not(fn_list['elines_spec_cube'] is None):
+        fn = os.path.join(params['prod_loc'],fn_list['elines_spec_cube'])
         hdu = pyfits.open(fn)
         elines = hdu[1].data
         hdu.close() 
@@ -1297,8 +1422,8 @@ def run_inspect_fit(fn_list,params, suffix=None, irange=[None,None], vrange=[Non
     
     # Also open the map and vmap to be displayed. 
     # TODO: give user the choice of image on the right
-    fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
-    if os.path.isfile(fn):
+    if not(fn_list['elines_params_cube'] is None):
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
         hdu = pyfits.open(fn)
         map = hdu[1].data[0]
         vmap = hdu[1].data[2]
@@ -1311,8 +1436,9 @@ def run_inspect_fit(fn_list,params, suffix=None, irange=[None,None], vrange=[Non
     my_ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+'_fit_inspection_')
 
     # Launch the interactive plot
-    brutus_plots.inspect_spaxels(lams,data,lowess,ppxf,elines,map,vmap,irange, vrange,
-                                ofn = my_ofn)    
+    brutus_plots.inspect_spaxels(lams,data,lowess,ppxf,cont_mix, elines, map, vmap, 
+                                 irange, vrange,
+                                 ofn = my_ofn)    
         
     return fn_list
 # ----------------------------------------------------------------------------------------
@@ -1565,6 +1691,9 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
         Should I add some info about each curve here ? 
     '''  
     
+    if params['verbose']:
+        print '-> Correcting for the extragalactic attenuation.'
+    
     # Open the raw data cube
     if fn_list['galdered_cube'] is None:
         hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
@@ -1580,14 +1709,16 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
     lams = np.arange(0, header1['NAXIS3'],1) * header1['CD3_3'] + header1['CRVAL3']
     nlines = len(params['elines'].keys())
 
-    # Import the Halpha and Hbeta maps 
+    # Import the Halpha and Hbeta maps, and mask any spaxel not within the proper SNR range
     fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
     hdu = pyfits.open(fn)
     for (k,key) in enumerate(np.sort(params['elines'].keys())):
         if params['elines'][key][0][0] == ha:
             ha_map = hdu[k+1].data[0]
+            ha_map[hdu[k+1].data[-1] < params['elines'][key][0][3]] = np.nan
         elif params['elines'][key][0][0] == hb:
             hb_map = hdu[k+1].data[0]
+            hb_map[hdu[k+1].data[-1] < params['elines'][key][0][3]] = np.nan
     hdu.close()
 
 
@@ -1598,8 +1729,8 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
 
     # Now, for each emission line fitted, let's correct the flux:
     # A storage structure for the emission lines. Keep the un-reddened flux as well.
-    drelines_params_cube = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
-    drelines_perror_cube = np.zeros((7*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    drelines_params_cube = np.zeros((8*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    drelines_perror_cube = np.zeros((8*nlines,header1['NAXIS2'],header1['NAXIS1']))*np.nan
 
     # Load the current line parameters, loop through, and save to a new - bigger - array.
     # Also take care of the error
@@ -1612,20 +1743,20 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
     
     # Loop through each emission line
     for (k,key) in enumerate(np.sort(params['elines'].keys())):
-        drelines_params_cube[7*k+1:7*(k+1)] = hdu[k+1].data
-        drelines_perror_cube[7*k+1:7*(k+1)] = hdu_err[k+1].data
+        drelines_params_cube[8*k+1:8*(k+1)] = hdu[k+1].data
+        drelines_perror_cube[8*k+1:8*(k+1)] = hdu_err[k+1].data
         # And add the de-reddened line flux in the first layer.
         # Note: the reddening correction is based on the de-redshifted line wavelength,
         # because this happens in the rest-frame of the target !
         this_lam = params['elines'][key][0][0]
-        drelines_params_cube[7*k] = hdu[k+1].data[0] * \
+        drelines_params_cube[8*k] = hdu[k+1].data[0] * \
                                      brutus_red.extragalactic_red(this_lam, hahb, 
                                                                  params['hahb_0'],
                                                                  curve = params['egal_curve'], 
                                                                  rv = params['egal_rv'],
                                                                  rva = params['egal_rva'])
         # Assume the reddening correction is error free ... sigh...
-        drelines_perror_cube[7*k] = hdu_err[k+1].data[0] * \
+        drelines_perror_cube[8*k] = hdu_err[k+1].data[0] * \
                                      (brutus_red.extragalactic_red(this_lam, hahb, 
                                                                  params['hahb_0'],
                                                                  curve = params['egal_curve'], 
@@ -1644,14 +1775,14 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
         hdus = [hdu0]
         # Use the sorted keys, to ensure the same order as the fit parameters
         for (k,key) in enumerate(np.sort(params['elines'].keys())):
-            hduk = pyfits.ImageHDU(epc[7*k:7*(k+1),:,:])
+            hduk = pyfits.ImageHDU(epc[8*k:8*(k+1),:,:])
             # Make sure the WCS coordinates are included as well
             hduk = brutus_tools.hdu_add_wcs(hduk,header1)
             # Also include a brief mention about which version of brutus is being used
             hduk = brutus_tools.hdu_add_brutus(hduk,suffix)
             # Add the line reference wavelength for future references
             hduk.header['BR_REFL'] = (params['elines'][key][0][0], 'reference wavelength')
-            hduk.header['BR_CKEY'] = ('dredF,F,I,v,sigma','Content of the cube planes')
+            hduk.header['BR_CKEY'] = ('dredF,F,I,v,sigma,h3,h4','Content of the cube planes')
             
             hdus.append(hduk)
             
@@ -1690,12 +1821,303 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
         this_ofn = os.path.join(params['plot_loc'],
                           suffix+'_'+params['target']+'_Av_map.pdf')
         brutus_plots.make_2Dplot(fn_out,ext=1, ofn=this_ofn, contours=False, 
-                                    vmin=0, vmax = 3, cmap='alligator',
+                                    vmin=0, vmax = 2, cmap='alligator',
                                     stretch = 'linear', 
                                     cblabel=r'A$_V$ [mag]', 
                                     cbticks = None)
                                     
     return fn_list
-        
+# ---------------------------------------------------------------------------------------- 
+  
+def run_get_QZ(fn_list, params, suffix = None, start_row = 0, end_row = None):
+    '''
+    This function computes the ionization parameter and oxygen abundance of HII regions
+    using the pyqz module: http://fpavogt.github.io/pyqz/ 
     
-      
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        start_row: int [default: 0]
+                   The starting row from which to process the data
+        end_row: int [default: None]
+                 The row at which to finish the processing. Set to None for the max row.
+                 
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+                 
+    :Notes:
+        pyqz is NOT included with brutus. A separate installation is required.
+        See http://fpavogt.github.io/pyqz/installation.html
+    '''       
+    
+    if params['verbose']:
+        print '-> Deriving Log(Q) and Tot(O)+12 using pyqz.'
+    
+    # Very well, now I need to open the line fluxes.
+    if params['pyqz_use_egal_dered']:
+
+        fn = os.path.join(params['prod_loc'],fn_list['dered_elines_params'])
+        fn_e = os.path.join(params['prod_loc'],fn_list['dered_elines_perror'])
+    else:
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+        fn_e = os.path.join(params['prod_loc'],fn_list['elines_perror_cube'])
+
+    # Alright, now I need to extract the line fluxes and errors
+    # Open the files
+    hdu = pyfits.open(fn)
+    header0 = hdu[0].header
+
+    hdu_e = pyfits.open(fn_e)
+    header0_e = hdu_e[0].header
+
+    # All elines definition are inside elines_pyqz inside brutus_metadata. 
+    # For each of them, construct a flux map.
+
+    elines_fluxes = {}
+    elines_errors = {}
+
+    # Look at each emission line fitted. If it is part of a "pyqz emission line
+    for (k,akey) in enumerate(np.sort(params['elines'].keys())):
+    
+        this_header = hdu[k+1].header
+        this_data = hdu[k+1].data
+        this_error = hdu_e[k+1].data
+                               
+        lam = this_header['BR_REFL']
+        
+        for key in elines_pyqz.keys(): # Search all possible known pyqz lines
+            if lam in elines_pyqz[key]: # Wavelength match ? I found a line.
+            
+                flux = this_data[0]
+                err = this_error[0]
+                
+                # Take into account the SNR
+                flux[this_data[-1]<params['elines'][akey][0][3]] = np.nan
+            
+                # Already exists ? - then I found a line with multiple components
+                if key in elines_fluxes.keys(): 
+                    elines_fluxes[key].append(flux) # append the flux
+                    elines_errors[key].append(err)
+                else:
+                    elines_fluxes[key] = [flux] # Save the data for later
+                    elines_errors[key] = [err]
+                       
+    # Close the hdus
+    hdu.close()
+    hdu_e.close()
+                    
+    # Alright, I extracted all my lines fluxes. Am I missing anything ? 
+    for key in elines_fluxes.keys():
+        if len(elines_fluxes[key]) != len(elines_pyqz[key]):
+            sys.exit('ERROR: a line component is missing for %s. Was it fitted ?' % key)
+
+    # Now, proceed to construct the dictionary of line fluxes and errors.
+    nlines = len(elines_fluxes.keys())
+
+    nx = this_header['NAXIS1']
+    ny = this_header['NAXIS2']
+
+    # Get some info about the cube
+    nrows = this_header['NAXIS1']
+    if start_row is None:
+        start_row = 0
+    if end_row is None:
+	    end_row = nrows-1 
+    
+    # Very well, let's start the loop on rows. If the code crashes/is interrupted, you'll
+	# loose the current row. Just live with it.
+	# Here, multiprocessing is already implemented inside the pyqz module. No need to do
+	# anything else but feed pyqz.get_global_qz() big chunks in a for loop.
+    for row in np.linspace(start_row, end_row, end_row-start_row+1):       
+	    
+        if params['multiprocessing']:
+            if type(params['multiprocessing']) == np.int:    
+                nproc = params['multiprocessing']
+                
+            else: # Ok, just use them all ...
+                nproc = multiprocessing.cpu_count()
+        else:
+            nproc = 1
+	        
+        sys.stdout.write('\r   Dealing with spectra in row %2.i, %i at a time ...' % 
+                         (row,nproc))
+        sys.stdout.flush() 
+        
+        # The structure to hold the list of line fluxes, for each row
+        allmylines = np.zeros((ny,nlines*2))
+        allmynames = []
+        
+        # Very well, let's start filling a big array with all my lines fluxes lined up 
+        for (k,key) in enumerate(elines_fluxes.keys()):
+
+             # Very well, sum it all
+            fluxes = np.sum(elines_fluxes[key],axis=0)
+            errors = np.sqrt(np.sum([item**2 for item in elines_errors[key]],axis=0)) # CHECK THAT THIS DOES WHAT I THINK IT DOES ! 
+            # pyqz requires errors as 1-std. Like the output of mpfit.
+            # Also get rid of the nan's in the errors ... because pyqz can't deal with them.
+            errors[np.isnan(errors)] = 0.0
+
+            allmylines[:,2*k] = fluxes[:,row].reshape(ny)
+            allmylines[:,2*k+1] = errors[:,row].reshape(ny)
+    
+            allmynames.append(key)
+            allmynames.append('std'+key)
+    
+        # I need to keep track of which spaxel went where, so I can make sense of the files
+        # generated by pyqz. 
+        spaxel_ids = ['%i-%i' % (row,i) for i in range(ny)]    
+    
+        # Ready to go - let's launch pyqz
+        pyqz_out = pyqz.get_global_qz(allmylines, allmynames, params['pyqz_diags'], 
+                                      ids = spaxel_ids, 
+                                      qzs = ['LogQ', 'Tot[O]+12'],
+                                      Pk=5.0, kappa = np.inf, struct='pp', sampling=1, 
+                                      error_pdf = 'normal', 
+                                      srs=400, flag_level=2.0,  KDE_method='gauss', 
+                                      KDE_qz_sampling = 101j, KDE_do_singles = True, 
+                                      KDE_pickle_loc = params['pyqz_loc'], 
+                                      verbose = False, nproc = nproc)    
+ 
+	    # Here, I need to save these results. Pickle could be fast and temporary,
+	    # Until I then re-build the entire cube later on ? Also allow for better
+	    # row-by-row flexibility.
+        fn = os.path.join(params['tmp_loc'],
+                          suffix+'_'+params['target']+'_pyqz_row_'+
+                          str(np.int(row)).zfill(4)+'.pkl')
+        file = open(fn,'w')
+        pickle.dump(pyqz_out,file)
+        file.close()
+   	
+   	# Add the generic filename to the dictionary of filenames
+   	fn_list['pyqz_pickle'] = suffix+'_'+params['target']+'_pyqz_row_'
+   	     
+    print ' done !'
+    
+    return fn_list
+# ----------------------------------------------------------------------------------------
+
+def run_make_QZ_cube(fn_list, params, suffix=None, do_plot = True):   
+    ''' 
+    This function is designed to construct a "usable and decent" datacube out of the
+    mess generated by the pyqz step.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        do_plot: bool [default: True]
+                 Whether to make some nifty plots or not.
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+    ''' 
+    
+    # First, load the original datacube. I need to know how much stuff was fitted.
+    if fn_list['galdered_cube'] is None:
+        hdu = pyfits.open(os.path.join(params['data_loc'],params['data_fn']))
+    else:
+        hdu = pyfits.open(os.path.join(params['prod_loc'],fn_list['galdered_cube']))
+        
+    header0 = hdu[0].header
+    data = hdu[1].data
+    header1 = hdu[1].header
+    error = hdu[2].data
+    header2 = hdu[2].header
+    hdu.close() 
+    
+    nrows = header1['NAXIS1']
+       
+    # Very well, what do I want to extract ?
+    # A 2-D map for all the variable returned by pyqz. STore this in a multi-extension fits
+    
+    # Open one of these files, to check how much variables I want to map
+    fns = glob.glob(os.path.join(params['tmp_loc'],'*pyqz*.pkl'))
+    
+    ftmp = open(fns[0],'r')
+    content = pickle.load(ftmp)
+    ftmp.close()
+    
+    map_names = content[1] # All the different variable names.
+   
+    all_maps = np.zeros((len(map_names),header1['NAXIS2'],header1['NAXIS1']))*np.nan
+    
+    if params['verbose']:
+        print '-> Constructing the datacube for the pyqz output.'
+       
+    # Loop through the rows, and extract the results. 
+    # Try to loop through everything - in case this step was run in chunks.
+    for row in range(0,nrows):
+        progress = 100. * (row+1.)/nrows
+        sys.stdout.write('\r   Building cube [%5.1f%s]' % 
+                         (progress,'%'))
+        sys.stdout.flush()
+
+        fn = os.path.join(params['tmp_loc'],
+                          fn_list['pyqz_pickle']+str(np.int(row)).zfill(4)+'.pkl')
+
+        if os.path.isfile(fn):
+            # Very well, I have some fit here. Let's get them back
+            myfile = open(fn,'r')
+            ms = pickle.load(myfile)  
+            myfile.close() 
+        
+            # Ok, one line to store it all back !
+            all_maps[:,:,row] = ms[0].T
+    
+    # Get ready with the extension file
+    hdu0 = pyfits.PrimaryHDU(None,header0)
+    
+    hdus = [hdu0]
+    # Store each map in a dedicated HDU
+    for (k,key) in enumerate(map_names):
+        hduk = pyfits.ImageHDU(all_maps[k,:,:])
+        # Make sure the WCS coordinates are included as well
+        hduk = brutus_tools.hdu_add_wcs(hduk,header1)
+        # Also include a brief mention about which version of brutus is being used
+        hduk = brutus_tools.hdu_add_brutus(hduk,suffix)
+        # Add the line reference wavelength for future references
+        hduk.header['BR_PYQZ'] = (key, 'pyqz variable')
+            
+        hdus.append(hduk)
+            
+    hdu = pyfits.HDUList(hdus=hdus)
+    fn_out = os.path.join(params['prod_loc'], 
+                          suffix+'_'+params['target']+'_pyqz_QZs.fits')
+    hdu.writeto(fn_out, clobber=True)
+        
+    # Add the filename to the dictionary of filenames
+    fn_list['pyqz_QZs'] = suffix+'_'+params['target']+'_pyqz_QZs.fits'
+    
+    print ' '
+    
+    # Make some plots, if requested:
+    for (m,map) in enumerate(map_names):
+        
+        
+        ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+'_pyqz_'+
+                         map.replace(';','-').replace('|','_').replace('/','_vs_')+'.pdf')
+        
+        brutus_plots.make_2Dplot(fn_out, # path to the data (complete!)
+                    ext = m+1, # Which extension am I looking for ?
+                    ofn = ofn, # Savefig filename
+                    contours = False, # Draw any contours 
+                    stretch = 'linear',
+                    vmin = None, 
+                    vmax = None,
+                    cmap = 'alligator',
+                    cblabel = map,
+                    cbticks = None,
+                )
+    
+    return fn_list    
+
+# ----------------------------------------------------------------------------------------
+  

@@ -1,3 +1,5 @@
 *.pyc
 *.ipynb_checkpoints
 .DS_Store
+Mkb1.30*.fits
+

@@ -230,7 +230,7 @@ def setup_spectral_library(velscale, inst, sl_name, fit_lims, z):
     # and Age along the two axes of the rectangular grid of templates.
     metal_str = sl_models[sl_name]['metal_str']
     for k, mh in enumerate(metal_str):
-        files = [s for s in fns if mh in s]
+        files = [s for s in fns if 'Z'+mh in s]
         for j, filename in enumerate(files):
             # Resample the spectra to match the instrumental resolution
             ssp = sl_resample(filename, z=z, inst=inst, sl_name=sl_name, do_cap=True)
@@ -238,7 +238,7 @@ def setup_spectral_library(velscale, inst, sl_name, fit_lims, z):
             # Log-rebin the spectrum
             log_lam, ssp_new, velscale = brutus_tools.log_rebin(lam_range_temp, ssp, 
                                                                 velscale=velscale)
-            
+
             templates[:, j, k] = ssp_new  # Templates are *not* normalized here
             logAge_grid[j, k] = logAge[j]
             metal_grid[j, k] = metal[k]
