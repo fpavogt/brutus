@@ -85,6 +85,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installing brutus</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#a-note-on-the-brutus-plots">A note on the brutus plots</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-the-installation">Testing the installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#troubleshooting">Troubleshooting</a></li>
 </ul>
@@ -169,17 +170,41 @@ are welcome and will be examined in detail.</p>
 <li>matplotlib (1.4.2 or above)</li>
 <li><a class="reference external" href="https://aplpy.github.io/">aplpy</a></li>
 <li>montage (<a class="reference external" href="http://montage.ipac.caltech.edu/docs/download.html">download</a> | <a class="reference external" href="http://montage.ipac.caltech.edu/docs/build.html">install instructions</a>)</li>
-<li><a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodel</a></li>
 <li><a class="reference external" href="http://www.astropy.org/">astropy</a></li>
-<li><a class="reference external" href="http://photutils.readthedocs.io/en/latest/">photutils</a></li>
 </ul>
+<p>The packages below might be required, depending what step is being executed. Install what
+you need:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodel</a> [LOWESS continuum fitting; pyqz]</li>
+<li><a class="reference external" href="http://photutils.readthedocs.io/en/latest/">photutils</a> [structure identification]</li>
+<li><a class="reference external" href="http://www-astro.physics.ox.ac.uk/~mxc/software/">ppxf</a> [ppxf continuum fitting]</li>
+<li><a class="reference external" href="http://www-astro.physics.ox.ac.uk/~mxc/software/">fit_kinematics_pa</a> [Kinematic fitting]</li>
+</ul>
+</div>
+<div class="section" id="a-note-on-the-brutus-plots">
+<span id="plotting"></span><h2>A note on the brutus plots<a class="headerlink" href="#a-note-on-the-brutus-plots" title="Permalink to this headline">¶</a></h2>
+<p>brutus relies on matplotlib (and aplpy which itself relies on matplotlib) to create plots.
+By default, brutus will try to use a full <span class="math">\(\LaTeX\)</span> installation present on the system
+(a.k.a. via the <code class="docutils literal"><span class="pre">rcparams</span></code> setting <code class="docutils literal"><span class="pre">usetex:</span> <span class="pre">True</span></code>) to create good looking diagrams.
+If this is a problem (e.g. if <span class="math">\(\LaTeX\)</span> is not present on the machine that runs brutus),
+you can:</p>
+<blockquote>
+<div><ul class="simple">
+<li>install <a class="reference external" href="https://www.tug.org/texlive/acquire-netinstall.html">TexLive</a>
+<strong>[recommended]</strong>, to get the brutus plots to look they way they are meant to look, or</li>
+<li>set <code class="docutils literal"><span class="pre">mpl.rc('text',</span> <span class="pre">**{'usetex':False})</span></code> in <code class="docutils literal"><span class="pre">brutus_plots.py</span></code> to use the limited
+<span class="math">\(\LaTeX\)</span> capabilities that ship with matplotlib.</li>
+</ul>
+</div></blockquote>
+<p>Nate that if you decide to go with the second option, you might still encounter issues
+here and there.</p>
 </div>
 <div class="section" id="testing-the-installation">
 <h2>Testing the installation<a class="headerlink" href="#testing-the-installation" title="Permalink to this headline">¶</a></h2>
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
-<p class="last">Create an elegant little thing to test that brutus is working fine. For now, just try to
-<code class="docutils literal"><span class="pre">import</span> <span class="pre">brutus</span></code>.</p>
+<p class="last">Eventually, I should create an elegant little thing to test that brutus is working fine.
+For now, just try to <code class="docutils literal"><span class="pre">import</span> <span class="pre">brutus</span></code>.</p>
 </div>
 </div>
 <div class="section" id="troubleshooting">

@@ -146,39 +146,104 @@ e.g.:</p>
 <p>brutus uses several packages that <strong>should also be acknowledged in their own right.</strong>
 The following Tex-formatted acknowledgment is one way to do so:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span>This research has made use of \textsc{brutus}, a Python module to process data cubes
-from integral field spectrographs. \textsc{brutus} relies on \textsc{statsmodel}
-(Seabold &amp; Perktold 2010), \textsc{ppxf} (Cappellari &amp; Emsellem 2004),
-\textsc{matplotlib} (Hunter 2007), \textsc{astropy}, a community-developed core Python
-package for Astronomy (Astropy Collaboration et al., 2013), \textsc{photutils}, an
-affiliated package of \textsc{astropy} for photometry, \textsc{aplpy}, an open-source
-plotting package for Python hosted at \url{http://aplpy.github.com}, \textsc{montage},
-funded by the National Science Foundation under Grant Number ACI-1440620 and
-previously funded by the National Aeronautics and Space Administration’s Earth Science
-Technology Office, Computation Technologies Project, under Cooperative Agreement
-Number NCC5-626 between NASA and the California Institute of Technology, and
-\textsc{mpfit}, a Python script that uses the Levenberg-Marquardt technique
-(Moré 1978) to solve least-squares problems, based on an original Fortran code part of
-the \textsc{minpack}-1 package.
+from integral field spectrographs hosted at \url{http://fpavogt.github.io/brutus/}.
+\textsc{brutus} relies on \textsc{statsmodel} (Seabold &amp; Perktold 2010),
+\textsc{ppxf} (Cappellari &amp; Emsellem 2004), \textsc{fit_kinematic_pa}
+(Krajnovic et al., 2006) \textsc{matplotlib} (Hunter 2007), \textsc{astropy},
+a community-developed core Python package for Astronomy
+(Astropy Collaboration et al., 2013), \textsc{photutils}, an affiliated package of
+\textsc{astropy} for photometry, \textsc{aplpy}, an open-source plotting package for
+Python hosted at \url{http://aplpy.github.com}, \textsc{montage}, funded by the
+National Science Foundation under Grant Number ACI-1440620 and previously funded by
+the National Aeronautics and Space Administration’s Earth Science Technology Office,
+Computation Technologies Project, under Cooperative Agreement Number NCC5-626 between
+NASA and the California Institute of Technology, and \textsc{mpfit}, a Python script
+that uses the Levenberg-Marquardt technique (Moré 1978) to solve least-squares
+problems, based on an original Fortran code part of the \textsc{minpack}-1 package.
 </pre></div>
 </div>
+<p>Finally, you also ought to cite the following works, depending on your use of brutus:</p>
+<blockquote>
+<div><ol class="arabic">
+<li><dl class="first docutils">
+<dt>Cleveland(1979);</dt>
+<dd><p class="first last">the reference for the Locally Weighted Scatterplot Smoothing (LOWESS) algorithm used
+by brutus (via statsmodels) to fit the continuum.</p>
+</dd>
+</dl>
+</li>
+<li><p class="first">The default SSP models shipped with brutus are:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">Stellar</span> <span class="n">population</span> <span class="n">synthesis</span> <span class="n">model</span> <span class="n">predictions</span> <span class="n">using</span> <span class="n">the</span> <span class="n">MILES</span> <span class="n">stellar</span> <span class="n">libraries</span>
+<span class="p">(</span><span class="n">Sánchez</span><span class="o">-</span><span class="n">Blázquez</span> <span class="n">et</span> <span class="n">al</span><span class="o">.</span> <span class="mi">2006</span><span class="p">,</span> <span class="n">Falcón</span><span class="o">-</span><span class="n">Barroso</span> <span class="n">et</span> <span class="n">al</span><span class="o">.</span> <span class="mi">2011</span><span class="p">)</span> <span class="n">at</span> <span class="n">FWHM</span><span class="o">=</span><span class="mf">2.5</span> <span class="n">Å</span><span class="p">,</span> <span class="n">based</span> <span class="n">on</span>
+<span class="n">the</span> <span class="n">code</span> <span class="n">presented</span> <span class="ow">in</span> <span class="n">Vazdekis</span> <span class="n">et</span> <span class="n">al</span><span class="o">.</span> <span class="p">(</span><span class="mi">2010</span><span class="p">),</span> <span class="n">using</span> <span class="n">a</span> <span class="n">Kroupa</span> <span class="n">revised</span> <span class="n">IMF</span> <span class="k">with</span>
+<span class="n">slope</span> <span class="mf">1.3</span> <span class="p">(</span><span class="n">Kroupa</span> <span class="mi">2001</span><span class="p">),</span> <span class="n">Padova</span> <span class="o">+</span><span class="mi">00</span>  <span class="p">(</span><span class="n">Girardi</span> <span class="n">et</span> <span class="n">al</span><span class="o">.</span> <span class="mi">2000</span><span class="p">)</span> <span class="n">isochrones</span><span class="p">,</span> <span class="n">metallicities</span>
+<span class="n">ranging</span> <span class="kn">from</span> <span class="o">-</span><span class="mf">2.32</span> <span class="n">to</span> <span class="o">+</span><span class="mf">0.22</span><span class="p">,</span> <span class="ow">and</span> <span class="n">ages</span> <span class="n">of</span> <span class="mf">0.0631</span> <span class="n">to</span> <span class="mf">17.7828</span> <span class="n">Gyr</span><span class="o">.</span>
+</pre></div>
+</div>
+</li>
+<li><dl class="first docutils">
+<dt>The reddening laws:</dt>
+<dd><p class="first">Either the Cardelli, Clayton &amp; Mathis (1989) law, Calzetti et al. (2000) law or
+the theoretical model of a turbulent dust screen of <strong>Fischera &amp; Dopita (2005)
+[default]</strong> for the extragalactic attenuation corrections, and
+the <strong>Fitzpatrick (1999) law [default]</strong> for the galactic extinction.</p>
+<p>If you use the extinction values <span class="math">\(A_V\)</span> and <span class="math">\(A_B\)</span> from the NASA
+Extragalactic Database (NED) to correct for the Galactic extinction [default], then
+to be thorough, you should mention that:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">The</span> <span class="n">Galactic</span> <span class="n">extinction</span> <span class="ow">is</span> <span class="n">derived</span> <span class="n">using</span> <span class="n">NED</span> <span class="kn">from</span> <span class="nn">the</span> <span class="n">Schlafly</span> <span class="o">&amp;</span> <span class="n">Finkbeiner</span>
+<span class="p">(</span><span class="mi">2011</span><span class="p">)</span> <span class="n">recalibration</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Schlegel</span><span class="p">,</span> <span class="n">Finkbeiner</span> <span class="o">&amp;</span> <span class="n">Davis</span> <span class="p">(</span><span class="mi">1998</span><span class="p">)</span> <span class="n">infrared</span><span class="o">-</span><span class="n">based</span>
+<span class="n">dust</span> <span class="nb">map</span><span class="o">.</span> <span class="n">The</span> <span class="nb">map</span> <span class="ow">is</span> <span class="n">based</span> <span class="n">on</span> <span class="n">dust</span> <span class="n">emission</span> <span class="kn">from</span> <span class="nn">COBE</span><span class="o">/</span><span class="n">DIRBE</span> <span class="ow">and</span> <span class="n">IRAS</span><span class="o">/</span><span class="n">ISSA</span><span class="p">;</span>
+<span class="n">the</span> <span class="n">recalibration</span> <span class="n">assumes</span> <span class="n">a</span> <span class="n">Fitzpatrick</span> <span class="p">(</span><span class="mi">1999</span><span class="p">)</span> <span class="n">reddening</span> <span class="n">law</span> <span class="k">with</span> <span class="n">Rv</span> <span class="o">=</span> <span class="mf">3.1</span> <span class="ow">and</span>
+<span class="n">different</span> <span class="n">source</span> <span class="n">spectrum</span> <span class="n">than</span> <span class="n">Schlegel</span><span class="p">,</span> <span class="n">Finkbeiner</span> <span class="o">&amp;</span> <span class="n">Davis</span> <span class="p">(</span><span class="mi">1998</span><span class="p">)</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>and you also ought to acknowledge NED itself:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">research</span> <span class="n">has</span> <span class="n">also</span> <span class="n">made</span> <span class="n">use</span> <span class="n">of</span> <span class="n">the</span> <span class="n">NASA</span><span class="o">/</span><span class="n">IPAC</span> <span class="n">Extragalactic</span> <span class="n">Database</span> <span class="p">(</span><span class="n">NED</span><span class="p">)</span>
+<span class="n">which</span> <span class="ow">is</span> <span class="n">operated</span> <span class="n">by</span> <span class="n">the</span> <span class="n">Jet</span> <span class="n">Propulsion</span> <span class="n">Laboratory</span><span class="p">,</span> <span class="n">California</span> <span class="n">Institute</span> <span class="n">of</span>
+<span class="n">Technology</span><span class="p">,</span> <span class="n">under</span> <span class="n">contract</span> <span class="k">with</span> <span class="n">the</span> <span class="n">National</span> <span class="n">Aeronautics</span> <span class="ow">and</span> <span class="n">Space</span> <span class="n">Administration</span><span class="o">.</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ol>
+</div></blockquote>
 <dl class="docutils">
 <dt>References:</dt>
 <dd><ul class="first last">
 <li><p class="first"><a class="reference external" href="http://cdsads.u-strasbg.fr/abs/2013A%26A...558A..33A">Astropy Collaboration et al. (2013)</a></p>
 </li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/1989ApJ...345..245C">Cardelli, Clayton &amp; Mathis (1989)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2000ApJ...533..682C">Calzetti et al. (2000)</a></p>
+</li>
 <li><p class="first"><a class="reference external" href="http://cdsads.u-strasbg.fr/abs/2004PASP..116..138C">Cappellari &amp; Emsellem (2004)</a></p>
 </li>
-<li><p class="first"><a class="reference external" href="http://cdsads.u-strasbg.fr/abs/2007CSE.....9...90H">Hunter (2007)</a></p>
-</li>
-<li><p class="first">Seabold &amp; Perktold (2010):</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">seabold2010</span><span class="p">,</span>
-    <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Statsmodels</span><span class="p">:</span> <span class="n">Econometric</span> <span class="ow">and</span> <span class="n">statistical</span> <span class="n">modeling</span> <span class="k">with</span> <span class="n">python</span><span class="p">},</span>
-    <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Seabold</span><span class="p">,</span> <span class="n">Skipper</span> <span class="ow">and</span> <span class="n">Perktold</span><span class="p">,</span> <span class="n">Josef</span><span class="p">},</span>
-    <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="mi">9</span><span class="n">th</span> <span class="n">Python</span> <span class="ow">in</span> <span class="n">Science</span> <span class="n">Conference</span><span class="p">},</span>
-    <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2010</span><span class="p">},</span>
+<li><p class="first">Cleveland (1979):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@article</span><span class="p">{</span><span class="n">doi</span><span class="p">:</span><span class="mf">10.1080</span><span class="o">/</span><span class="mf">01621459.1979</span><span class="o">.</span><span class="mi">10481038</span><span class="p">,</span>
+    <span class="n">author</span> <span class="o">=</span> <span class="p">{</span> <span class="n">William</span> <span class="n">S</span><span class="o">.</span>   <span class="n">Cleveland</span> <span class="p">},</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="p">{</span><span class="n">Robust</span> <span class="n">Locally</span> <span class="n">Weighted</span> <span class="n">Regression</span> <span class="ow">and</span> <span class="n">Smoothing</span> <span class="n">Scatterplots</span><span class="p">},</span>
+    <span class="n">journal</span> <span class="o">=</span> <span class="p">{</span><span class="n">Journal</span> <span class="n">of</span> <span class="n">the</span> <span class="n">American</span> <span class="n">Statistical</span> <span class="n">Association</span><span class="p">},</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="p">{</span><span class="mi">74</span><span class="p">},</span>
+    <span class="n">number</span> <span class="o">=</span> <span class="p">{</span><span class="mi">368</span><span class="p">},</span>
+    <span class="n">pages</span> <span class="o">=</span> <span class="p">{</span><span class="mi">829</span><span class="o">-</span><span class="mi">836</span><span class="p">},</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1979</span><span class="p">},</span>
+    <span class="n">doi</span> <span class="o">=</span> <span class="p">{</span><span class="mf">10.1080</span><span class="o">/</span><span class="mf">01621459.1979</span><span class="o">.</span><span class="mi">10481038</span><span class="p">},</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2011A%26A...532A..95F">Falcón-Barroso et al. (2011)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2005ApJ...619..340F">Fischera &amp; Dopita (2005)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2000A%26AS..141..371G">Girardi et al. (2000)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://cdsads.u-strasbg.fr/abs/2007CSE.....9...90H">Hunter (2007)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2006MNRAS.366..787K">Krajnovic et al. (2006)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2001MNRAS.322..231K">Kroupa 2001</a></p>
 </li>
 <li><p class="first">Moré (1978):</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inbook</span><span class="p">{</span><span class="n">more1978</span><span class="p">,</span>
@@ -197,6 +262,24 @@ the \textsc{minpack}-1 package.
 <span class="p">}</span>
 </pre></div>
 </div>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2006MNRAS.371..703S">Sánchez-Blázquez et al. (2006)</a></p>
+</li>
+<li><p class="first">Seabold &amp; Perktold (2010):</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="nd">@inproceedings</span><span class="p">{</span><span class="n">seabold2010</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="p">{</span><span class="n">Statsmodels</span><span class="p">:</span> <span class="n">Econometric</span> <span class="ow">and</span> <span class="n">statistical</span> <span class="n">modeling</span> <span class="k">with</span> <span class="n">python</span><span class="p">},</span>
+    <span class="n">author</span><span class="o">=</span><span class="p">{</span><span class="n">Seabold</span><span class="p">,</span> <span class="n">Skipper</span> <span class="ow">and</span> <span class="n">Perktold</span><span class="p">,</span> <span class="n">Josef</span><span class="p">},</span>
+    <span class="n">booktitle</span><span class="o">=</span><span class="p">{</span><span class="mi">9</span><span class="n">th</span> <span class="n">Python</span> <span class="ow">in</span> <span class="n">Science</span> <span class="n">Conference</span><span class="p">},</span>
+    <span class="n">year</span><span class="o">=</span><span class="p">{</span><span class="mi">2010</span><span class="p">},</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/2011ApJ...737..103S">Schlafly &amp; Finkbeiner (2011)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/abs/1998ApJ...500..525S">Schlegel, Finkbeiner &amp; Davis (1998)</a></p>
+</li>
+<li><p class="first"><a class="reference external" href="http://adsabs.harvard.edu/doi/10.1111/j.1365-2966.2010.16407.x">Vazdekis et al. (2010)</a></p>
 </li>
 </ul>
 </dd>

@@ -4,15 +4,18 @@ Changelog
 =========
 
 TODO:
- - allow for more stellar templates
- - add the reference to the LOWESS paper in the acknowledgment
- - add the reference to the stellar templates in the acknowledgments
- - in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction
- - add references to reddening laws in the acknowledgments
-
+ - computed electron density from the [SII] line ratio
+ - compute the kinematic PA using fit_kinematic_pa
 
 v0.3.0, May 2016, F.P.A. Vogt:
- - renamed brian to brutus - to avoid conflict with existing brian module on pypi
+ - renamed brian to brutus - to avoid conflict with existing brian module on pypi.
+ - added computation of LogQ and Tot[O]+12 via pyqz.
+ - bug fixes.
+ - downloaded additional stellar templates from the MILES library.
+ - created a "mixed continuum" cube, used in the interactive fit inspection (and elsewhere).
+ - created pyqz plots
+ - beefed-up the acknowledgment section of the doc to include the reddening laws, the
+   MILES spectral l;ibrary info, the reference to fit_kinematic_pa.
  
 ------------------------------------------------------------------------------------------
  

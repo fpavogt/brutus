@@ -138,16 +138,20 @@
 <dl class="docutils">
 <dt>TODO:</dt>
 <dd><ul class="first last simple">
-<li>allow for more stellar templates</li>
-<li>add the reference to the LOWESS paper in the acknowledgment</li>
-<li>add the reference to the stellar templates in the acknowledgments</li>
-<li>in the fit inspection tool, know if ppxf or lowess is used for continuum subtraction</li>
-<li>add references to reddening laws in the acknowledgments</li>
+<li>computed electron density from the [SII] line ratio</li>
+<li>compute the kinematic PA using fit_kinematic_pa</li>
 </ul>
 </dd>
 <dt>v0.3.0, May 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
-<li>renamed brian to brutus - to avoid conflict with existing brian module on pypi</li>
+<li>renamed brian to brutus - to avoid conflict with existing brian module on pypi.</li>
+<li>added computation of LogQ and Tot[O]+12 via pyqz.</li>
+<li>bug fixes.</li>
+<li>downloaded additional stellar templates from the MILES library.</li>
+<li>created a &#8220;mixed continuum&#8221; cube, used in the interactive fit inspection (and elsewhere).</li>
+<li>created pyqz plots</li>
+<li>beefed-up the acknowledgment section of the doc to include the reddening laws, the
+MILES spectral l;ibrary info, the reference to fit_kinematic_pa.</li>
 </ul>
 </dd>
 </dl>

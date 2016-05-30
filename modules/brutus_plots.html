@@ -213,7 +213,7 @@ on a matplotlib plot window.</p>
 
 <dl class="class">
 <dt id="brutus_plots.SpecManager">
-<em class="property">class </em><code class="descclassname">brutus_plots.</code><code class="descname">SpecManager</code><span class="sig-paren">(</span><em>fig</em>, <em>ax1a</em>, <em>ax1b</em>, <em>ax3a</em>, <em>ax3b</em>, <em>ax3c</em>, <em>ax3d</em>, <em>patches</em>, <em>spectra</em>, <em>lams</em>, <em>data</em>, <em>lowess</em>, <em>ppxf</em>, <em>elines</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#SpecManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.SpecManager" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">brutus_plots.</code><code class="descname">SpecManager</code><span class="sig-paren">(</span><em>fig</em>, <em>ax1a</em>, <em>ax1b</em>, <em>ax3a</em>, <em>ax3b</em>, <em>ax3c</em>, <em>ax3d</em>, <em>patches</em>, <em>spectra</em>, <em>lams</em>, <em>data</em>, <em>lowess</em>, <em>ppxf</em>, <em>cont_mix</em>, <em>elines</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#SpecManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.SpecManager" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
 <p>The class managing the interactive inspection of the fitted data.</p>
 <p>This class is designed to select spaxels, and plot the associated fit.</p>
@@ -332,7 +332,7 @@ apertures (1 per row), defined by (x,y,r) its center and radius (in pixels).</p>
 
 <dl class="function">
 <dt id="brutus_plots.inspect_spaxels">
-<code class="descclassname">brutus_plots.</code><code class="descname">inspect_spaxels</code><span class="sig-paren">(</span><em>lams</em>, <em>data</em>, <em>lowess</em>, <em>ppxf</em>, <em>elines</em>, <em>map</em>, <em>vmap</em>, <em>irange</em>, <em>vrange</em>, <em>ofn=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#inspect_spaxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.inspect_spaxels" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brutus_plots.</code><code class="descname">inspect_spaxels</code><span class="sig-paren">(</span><em>lams</em>, <em>data</em>, <em>lowess</em>, <em>ppxf</em>, <em>cont_mix</em>, <em>elines</em>, <em>map</em>, <em>vmap</em>, <em>irange</em>, <em>vrange</em>, <em>ofn=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#inspect_spaxels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.inspect_spaxels" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interactive inspection fo the brutus fit output.</p>
 <p>This function generates an interactive plot allowing to select individual spaxels 
 and visualize how well/bad they were fitted.</p>
@@ -352,6 +352,9 @@ and visualize how well/bad they were fitted.</p>
 </dd>
 <dt>ppxf: 3-D numpy array</dt>
 <dd><p class="first last">The fitted ppxf continuum cube.</p>
+</dd>
+<dt>cont_mix:</dt>
+<dd><p class="first last">The continuum cube that is already mixed,l according to the user choices.</p>
 </dd>
 <dt>elines: 3-D numpy array</dt>
 <dd><p class="first last">The pure emission line cube.</p>

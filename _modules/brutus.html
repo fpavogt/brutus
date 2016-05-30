@@ -176,6 +176,7 @@
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
 
@@ -183,11 +184,16 @@
 <span class="kn">import</span> <span class="nn">brutus_cof</span>
 <span class="kn">import</span> <span class="nn">brutus_elf</span>
 <span class="kn">import</span> <span class="nn">brutus_plots</span>
-<span class="kn">import</span> <span class="nn">brutus_ppxf</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">brutus_ppxf</span>
+    <span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Faild to load brutus_ppxf. Is ppxf installed ?&quot;</span><span class="p">)</span>
+
 <span class="kn">import</span> <span class="nn">brutus_red</span>
 <span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="o">*</span>
 
-<span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">pyqz</span>
    
 <span class="c1"># ---------------------------------------------------------------------------------------- </span>
   
@@ -609,13 +615,16 @@
             <span class="c1"># Did the user specify a number of processes to use ?</span>
             <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">:</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]</span>
-                <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span> <span class="o">=</span> <span class="n">nproc</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
                 
             <span class="k">else</span><span class="p">:</span> <span class="c1"># Ok, just use them all ...</span>
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-                <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
-                                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>
+                
+			<span class="c1"># Limiting the maximum number of cpus for ppxf, to avoid memory errors... </span>
+            <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">8</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
+                <span class="n">nproc</span> <span class="o">=</span> <span class="mi">8</span>
+                
+            <span class="n">pool</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Pool</span><span class="p">(</span><span class="n">processes</span> <span class="o">=</span> <span class="n">nproc</span><span class="p">,</span> 
+			                            <span class="n">initializer</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">init_worker</span><span class="p">())</span>    
 			
             <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
                 <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Fitting spectra in row %2.i, </span><span class="si">%i</span><span class="s1"> at a time ...&#39;</span> <span class="o">%</span> 
@@ -696,7 +705,7 @@
                                                         <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     
     <span class="c1"># For ppxf, also create a spectrum with the de-logged rebin original spectra. Useful </span>
-    <span class="c1"># to characterize the error associated with log-bin-delog-bin process employed here.</span>
+    <span class="c1"># to characterize the error associated with log-bin-delog-rebin process employed here.</span>
     <span class="n">delog_raw_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
                                                         
     <span class="c1"># Loop through the rows, and extract the results. </span>
@@ -909,9 +918,101 @@
     <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fn_list</span>    </div>
-    
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
 
+<div class="viewcode-block" id="run_build_continuum_mix"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_build_continuum_mix">[docs]</a><span class="k">def</span> <span class="nf">run_build_continuum_mix</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; Construct the mixed continuum cube, following the user&#39;s wishes.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames.</span>
+<span class="sd">    &#39;&#39;&#39;</span>   
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the mixed continuum cube.&#39;</span>
+    
+    <span class="c1"># First, the raw datacube. Use the galactic deredened one if it exists.</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;galdered_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;galdered_cube&#39;</span><span class="p">]))</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># I also need the continuum cubes</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">cont_lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">cont_ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># I also need to load the SNR cube for the spaxel selection</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;snr_cube&#39;</span><span class="p">]))</span>
+    <span class="n">snr_cont</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>                               
+    <span class="n">snr_elines</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>        
+    
+     
+    <span class="c1"># Here, I don&#39;t use nan&#39;s. Should I ? </span>
+    <span class="n">cont_mix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> 
+    
+    <span class="c1"># Very well, now, combine the different continua</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span> <span class="s1">&#39;   SNR </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+                
+        <span class="n">llim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
+            <span class="n">ulim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">snr_cont</span><span class="p">)</span><span class="o">+</span><span class="mf">1.</span>
+        <span class="k">else</span><span class="p">:</span>
+        	<span class="n">ulim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+         
+        <span class="c1"># Assume the continuum subtraction is error free (either lowess or models).</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;lowess&#39;</span><span class="p">:</span>
+            <span class="n">cont_mix</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">=</span> \
+                     <span class="n">cont_lowess</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> 
+        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
+            <span class="n">cont_mix</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">=</span> \
+                     <span class="n">cont_ppxf</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span>   
+    
+    <span class="c1"># Save the cube</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">header0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">cont_mix</span><span class="p">)</span>
+    <span class="c1"># Make sure the WCS coordinates are included as well</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_lams</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+    <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">suffix</span><span class="p">)</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_mixed_continuum_cube.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Add the generic filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_mixed_continuum_cube.fits&#39;</span>
+    
+    <span class="k">return</span> <span class="n">fn_list</span>  </div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
 
 <div class="viewcode-block" id="run_fit_elines"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_fit_elines">[docs]</a><span class="k">def</span> <span class="nf">run_fit_elines</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
                    <span class="p">):</span>
@@ -921,6 +1022,10 @@
 <span class="sd">    things up on good computers. It deals with the data columns-per-columns, and </span>
 <span class="sd">    can be restarted mid-course, in case of a crash. </span>
 <span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the emission line fitting for %2.i line(s).&#39;</span> <span class="o">%</span> <span class="n">nlines</span> 
     
     <span class="c1"># Rather than launch it all at once, let&#39;s be smart in case of problems. I&#39;ll run</span>
 	<span class="c1"># the fits row-by-row with multiprocessing (hence up to 300cpus can help!), and save</span>
@@ -951,43 +1056,15 @@
     <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
     
     <span class="c1"># I also need the continuum cubes</span>
-    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">]:</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
             <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-            <span class="n">cont_lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">cont_mix_cube</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
             <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">]:</span>
-        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
-            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
-            <span class="n">cont_ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-    
-    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-        <span class="k">print</span> <span class="s1">&#39;-&gt; Starting the emission line fitting for %2.i line(s).&#39;</span> <span class="o">%</span> <span class="n">nlines</span> 
-    
-    <span class="c1"># Very well, now, perform the continuum subtraction.</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
-            <span class="k">print</span> <span class="s1">&#39;   Subtracting the </span><span class="si">%s</span><span class="s1"> continuum from the data [SNR:</span><span class="si">%s</span><span class="s1">]&#39;</span> <span class="o">%</span> \
-                   <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">],</span><span class="n">key</span><span class="p">)</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-            
-        <span class="n">llim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
-            <span class="n">ulim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">snr_cont</span><span class="p">)</span><span class="o">+</span><span class="mf">1.</span>
-        <span class="k">else</span><span class="p">:</span>
-        	<span class="n">ulim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;-&gt;&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
-         
-        <span class="c1"># Assume the continuum subtraction is error free (either lowess or models).</span>
-        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;lowess&#39;</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">-=</span> \
-                 <span class="n">cont_lowess</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> 
-        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;which_cont_sub&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span> <span class="o">-=</span> \
-                 <span class="n">cont_ppfx</span><span class="p">[:,(</span><span class="n">snr_cont</span><span class="o">&gt;=</span><span class="n">llim</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">snr_cont</span><span class="o">&lt;</span><span class="n">ulim</span><span class="p">)]</span>                                                      
+        
+        <span class="c1"># Very well, now, perform the continuum subtraction.</span>
+        <span class="n">data</span> <span class="o">-=</span> <span class="n">cont_mix_cube</span>
     
     <span class="c1"># Get some info about the cube</span>
     <span class="n">nrows</span> <span class="o">=</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
@@ -1062,14 +1139,14 @@
 	    <span class="c1"># Until I then re-build the entire cube later on ? Also allow for better</span>
 	    <span class="c1"># row-by-row flexibility.</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
-                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span><span class="o">+</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_row_&#39;</span><span class="o">+</span>
                           <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
         <span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">els</span><span class="p">,</span><span class="nb">file</span><span class="p">)</span>
         <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
    	
    	<span class="c1"># Add the generic filename to the dictionary of filenames</span>
-   	<span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_pickle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_row_&#39;</span>
+   	<span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_pickle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_elines_row_&#39;</span>
    	     
     <span class="k">print</span> <span class="s1">&#39; done !&#39;</span>
     
@@ -1111,9 +1188,10 @@
     <span class="c1"># and h3 and h4 maps</span>
     <span class="c1"># Let&#39;s get to it.</span>
     <span class="n">elines_fullspec_cube</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="c1"># That way, I keep the nan&#39;s in the raw data</span>
-    <span class="n">elines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="c1"># 7 params: Flux, I, v, sigma, h3, h4, SNR</span>
+    <span class="n">elines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="c1"># And the associated errors !</span>
-    <span class="n">elines_params_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">6</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">elines_params_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="c1"># Also save the status from mpfit. Could be useful for sorting the good from the bad.</span>
     <span class="n">elines_fit_status</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     
@@ -1143,17 +1221,21 @@
             <span class="n">stats</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ms</span><span class="p">]</span>
             
             <span class="c1"># Here, I need to make sure the ps and errs array have a decent shape, even </span>
-            <span class="c1"># when the fit failed. Also store the variance = (STD that comes of mpfit**2) </span>
+            <span class="c1"># when the fit failed. Also store the STD that comes out of mpfit (NOT the variance!) </span>
             <span class="n">ps</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span> <span class="k">else</span> <span class="n">ps</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> 
                                                             <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ms</span><span class="p">)]</span>
             
             <span class="n">errs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span> <span class="k">else</span> 
-                                                 <span class="n">errs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ms</span><span class="p">)]</span>
+                                                 <span class="n">errs</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="n">item</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ms</span><span class="p">)]</span>
             
             
             <span class="c1"># Fill the corresponding datacube</span>
-            <span class="n">elines_params_cube</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-            <span class="n">elines_params_err</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="c1"># First, what are my indices ? I need to keep one slice empty for the SNR of </span>
+            <span class="c1"># each line. Get the indices where I will thus store the fit params.</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">+</span><span class="mi">7</span><span class="o">*</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nlines</span><span class="p">)])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nlines</span><span class="o">*</span><span class="mi">6</span><span class="p">)</span>
+            
+            <span class="n">elines_params_cube</span><span class="p">[</span><span class="n">ind</span><span class="p">,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">elines_params_err</span><span class="p">[</span><span class="n">ind</span><span class="p">,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">errs</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             <span class="n">elines_fit_status</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
             
             <span class="c1"># now, reconstruct the full emission line spectrum</span>
@@ -1165,24 +1247,52 @@
             <span class="n">elines_fullspec_cube</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">elines_specs</span><span class="o">.</span><span class="n">T</span>
             
     
-    <span class="c1"># Now, for each line, the first of these lines is the reference wavelength. </span>
+    <span class="c1"># Now, for each line, the first of these slices is the reference wavelength. </span>
     <span class="c1"># Replace this by the total flux instead ! And make some plots if requested.</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
         
         <span class="c1"># Calculate the sigma of the fit, in A (incl. instrument dispersion,etc ...)</span>
         <span class="c1"># as well as the associated error.</span>
-        <span class="n">zlams</span> <span class="o">=</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">c</span> <span class="p">)</span>
-        <span class="n">zlams_err</span> <span class="o">=</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">elines_params_err</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">c</span><span class="o">**</span><span class="mi">2</span>
-        <span class="n">sigma_obs_A</span> <span class="o">=</span> <span class="n">brutus_elf</span><span class="o">.</span><span class="n">obs_sigma</span><span class="p">(</span><span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="n">zlams</span><span class="p">,</span> 
+        <span class="c1"># WARNING: unlike the data, these are the 1-sigma error coming out of mpfit.</span>
+        <span class="c1"># Mind the **2 !</span>
+        <span class="n">zlams</span> <span class="o">=</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">+</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">c</span> <span class="p">)</span>
+        <span class="n">zlams_err</span> <span class="o">=</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">elines_params_err</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">c</span> <span class="c1"># The 1-std err</span>
+        <span class="n">sigma_obs_A</span> <span class="o">=</span> <span class="n">brutus_elf</span><span class="o">.</span><span class="n">obs_sigma</span><span class="p">(</span><span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="n">zlams</span><span class="p">,</span> 
                                           <span class="n">inst</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">],</span> 
-                                          <span class="n">in_errs</span><span class="o">=</span><span class="p">[</span><span class="n">elines_params_err</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span><span class="n">zlams_err</span><span class="p">,</span><span class="mf">0.</span><span class="p">]</span> <span class="p">)</span>
+                                          <span class="n">in_errs</span><span class="o">=</span><span class="p">[</span><span class="n">elines_params_err</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">3</span><span class="p">],</span><span class="n">zlams_err</span><span class="p">]</span> <span class="p">)</span>
         
         <span class="c1"># Compute the line flux</span>
-        <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span> <span class="o">*</span> \
+        <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span> <span class="o">*</span> \
                                       <span class="n">sigma_obs_A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>                           
         <span class="c1"># What about the error ?</span>
-        <span class="n">elines_params_err</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">elines_params_err</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">sigma_obs_A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> \
-                                                <span class="n">sigma_obs_A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>           
+        <span class="n">elines_params_err</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">,:,:]</span> <span class="o">=</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">,:,:])</span> <span class="o">*</span> \
+            <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">elines_params_err</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span>
+                    <span class="n">sigma_obs_A</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sigma_obs_A</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>           
+    
+    
+    <span class="c1"># Now for each line, calculate the SNR</span>
+    <span class="c1"># For this, I need the continuum cubes</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">])</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">cont_mix_cube</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cont_mix_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        
+    <span class="c1"># Compute the residual cube</span>
+    <span class="n">residuals</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">cont_mix_cube</span> <span class="o">-</span> <span class="n">elines_fullspec_cube</span>
+    
+    <span class="n">cont_range</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;cont_range&#39;</span><span class="p">]</span>
+    <span class="n">lams0</span> <span class="o">=</span> <span class="n">lams</span> <span class="o">/</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Compute the noise over the region of interest defined by the user</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanstd</span><span class="p">(</span><span class="n">residuals</span><span class="p">[(</span><span class="n">lams0</span><span class="o">&gt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">lams0</span><span class="o">&lt;=</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),:,:],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> 
+    
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+        <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">6</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">elines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">,:,:]</span><span class="o">/</span><span class="n">noise</span>
+       
     
     <span class="c1"># Export the cube for each emission line parameters as a multi-extension fits file        </span>
     <span class="c1"># Do the same for the errors - i.e. params and errors are in two distinct cubes</span>
@@ -1192,14 +1302,14 @@
         <span class="n">hdus</span> <span class="o">=</span> <span class="p">[</span><span class="n">hdu0</span><span class="p">]</span>
         <span class="c1"># Use the sorted keys, to ensure the same order as the fit parameters</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
-            <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">6</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">6</span><span class="p">,:,:])</span>
+            <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">7</span><span class="p">,:,:])</span>
             <span class="c1"># Make sure the WCS coordinates are included as well</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
             <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">suffix</span><span class="p">)</span>
             <span class="c1"># Add the line reference wavelength for future references</span>
             <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_REFL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;reference wavelength&#39;</span><span class="p">)</span>
-            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_CKEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;F,I,v,sigma&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_CKEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;F,I,v,sigma,h3,h4,SNR&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
             
             <span class="n">hdus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hduk</span><span class="p">)</span>
             
@@ -1293,8 +1403,13 @@
         <span class="n">this_data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         
         <span class="c1"># Make single pretty plots for Flux, Intensity, velocity and velocity dispersion                                        </span>
-        <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">typ</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;h4&#39;</span><span class="p">]):</span>
-            <span class="c1"># Create a dedicated HDU</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">typ</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="s1">&#39;F&#39;</span><span class="p">,</span><span class="s1">&#39;I&#39;</span><span class="p">,</span><span class="s1">&#39;v&#39;</span><span class="p">,</span><span class="s1">&#39;sigma&#39;</span><span class="p">,</span><span class="s1">&#39;h3&#39;</span><span class="p">,</span> <span class="s1">&#39;h4&#39;</span><span class="p">,</span> <span class="s1">&#39;SNR&#39;</span><span class="p">]):</span>
+            
+            <span class="c1"># Take into account the SNR from the user</span>
+            <span class="k">if</span> <span class="n">typ</span> <span class="o">!=</span> <span class="s1">&#39;SNR&#39;</span><span class="p">:</span>
+                <span class="n">this_data</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="n">this_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            
+            <span class="c1"># Create a dedicated HDU    </span>
             <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">this_data</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
             <span class="c1"># Add the WCS information</span>
             <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">tmphdu</span><span class="p">,</span><span class="n">this_header</span><span class="p">)</span>
@@ -1311,14 +1426,14 @@
             <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">my_vmin</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="n">my_vmax</span> <span class="o">=</span> <span class="bp">None</span>
-                <span class="n">my_cmap</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
                 <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;arcsinh&#39;</span>
                 <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;F [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]&#39;</span>
                 <span class="n">my_cbticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">125</span><span class="p">,</span><span class="mi">250</span><span class="p">,</span><span class="mi">500</span><span class="p">,</span><span class="mi">1000</span><span class="p">,</span><span class="mi">2000</span><span class="p">,</span><span class="mi">4000</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">my_vmin</span> <span class="o">=</span> <span class="bp">None</span>
                 <span class="n">my_vmax</span> <span class="o">=</span> <span class="bp">None</span>
-                <span class="n">my_cmap</span> <span class="o">=</span> <span class="bp">None</span>
+                <span class="n">my_cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span>
                 <span class="n">my_stretch</span> <span class="o">=</span> <span class="s1">&#39;arcsinh&#39;</span>
                 <span class="n">my_label</span> <span class="o">=</span> <span class="s1">r&#39;I [10$^{-20}$ erg s$^{-1}$ cm$^{-2}$]&#39;</span>
                 <span class="n">my_cbticks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">50</span><span class="p">,</span><span class="mi">100</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">400</span><span class="p">,</span><span class="mi">800</span><span class="p">,</span><span class="mi">1600</span><span class="p">]</span>
@@ -1404,8 +1519,8 @@
     <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS3&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
     
     <span class="c1"># The Lowess continuum fit</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;lowess_cube&#39;</span><span class="p">])</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
         <span class="n">lowess</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  
@@ -1413,17 +1528,27 @@
         <span class="n">lowess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         
     <span class="c1"># The ppxf continuum fit</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_cube&#39;</span><span class="p">])</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
         <span class="n">ppxf</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  
     <span class="k">else</span><span class="p">:</span>
-       <span class="n">ppxf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+        <span class="n">ppxf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="c1"># The continuum mix datacube</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;cont_mix_cube&#39;</span><span class="p">])</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">cont_mix</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cont_mix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
        
     <span class="c1"># The elines fit</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_spec_cube&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_spec_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_spec_cube&#39;</span><span class="p">])</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
         <span class="n">elines</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
@@ -1432,8 +1557,8 @@
     
     <span class="c1"># Also open the map and vmap to be displayed. </span>
     <span class="c1"># TODO: give user the choice of image on the right</span>
-    <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
         <span class="nb">map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">vmap</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -1446,8 +1571,9 @@
     <span class="n">my_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_fit_inspection_&#39;</span><span class="p">)</span>
 
     <span class="c1"># Launch the interactive plot</span>
-    <span class="n">brutus_plots</span><span class="o">.</span><span class="n">inspect_spaxels</span><span class="p">(</span><span class="n">lams</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">lowess</span><span class="p">,</span><span class="n">ppxf</span><span class="p">,</span><span class="n">elines</span><span class="p">,</span><span class="nb">map</span><span class="p">,</span><span class="n">vmap</span><span class="p">,</span><span class="n">irange</span><span class="p">,</span> <span class="n">vrange</span><span class="p">,</span>
-                                <span class="n">ofn</span> <span class="o">=</span> <span class="n">my_ofn</span><span class="p">)</span>    
+    <span class="n">brutus_plots</span><span class="o">.</span><span class="n">inspect_spaxels</span><span class="p">(</span><span class="n">lams</span><span class="p">,</span><span class="n">data</span><span class="p">,</span><span class="n">lowess</span><span class="p">,</span><span class="n">ppxf</span><span class="p">,</span><span class="n">cont_mix</span><span class="p">,</span> <span class="n">elines</span><span class="p">,</span> <span class="nb">map</span><span class="p">,</span> <span class="n">vmap</span><span class="p">,</span> 
+                                 <span class="n">irange</span><span class="p">,</span> <span class="n">vrange</span><span class="p">,</span>
+                                 <span class="n">ofn</span> <span class="o">=</span> <span class="n">my_ofn</span><span class="p">)</span>    
         
     <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
@@ -1700,6 +1826,9 @@
 <span class="sd">        Should I add some info about each curve here ? </span>
 <span class="sd">    &#39;&#39;&#39;</span>  
     
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Correcting for the extragalactic attenuation.&#39;</span>
+    
     <span class="c1"># Open the raw data cube</span>
     <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;galdered_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
@@ -1715,14 +1844,16 @@
     <span class="n">lams</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS3&#39;</span><span class="p">],</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CD3_3&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;CRVAL3&#39;</span><span class="p">]</span>
     <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
-    <span class="c1"># Import the Halpha and Hbeta maps </span>
+    <span class="c1"># Import the Halpha and Hbeta maps, and mask any spaxel not within the proper SNR range</span>
     <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
     <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
         <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">ha</span><span class="p">:</span>
             <span class="n">ha_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">ha_map</span><span class="p">[</span><span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
         <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">hb</span><span class="p">:</span>
             <span class="n">hb_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">hb_map</span><span class="p">[</span><span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
     <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
 
@@ -1733,8 +1864,8 @@
 
     <span class="c1"># Now, for each emission line fitted, let&#39;s correct the flux:</span>
     <span class="c1"># A storage structure for the emission lines. Keep the un-reddened flux as well.</span>
-    <span class="n">drelines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-    <span class="n">drelines_perror_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">7</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">drelines_params_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">8</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">drelines_perror_cube</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">8</span><span class="o">*</span><span class="n">nlines</span><span class="p">,</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
 
     <span class="c1"># Load the current line parameters, loop through, and save to a new - bigger - array.</span>
     <span class="c1"># Also take care of the error</span>
@@ -1747,20 +1878,20 @@
     
     <span class="c1"># Loop through each emission line</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
-        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">8</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">8</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="c1"># And add the de-reddened line flux in the first layer.</span>
         <span class="c1"># Note: the reddening correction is based on the de-redshifted line wavelength,</span>
         <span class="c1"># because this happens in the rest-frame of the target !</span>
         <span class="n">this_lam</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
+        <span class="n">drelines_params_cube</span><span class="p">[</span><span class="mi">8</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
                                      <span class="n">brutus_red</span><span class="o">.</span><span class="n">extragalactic_red</span><span class="p">(</span><span class="n">this_lam</span><span class="p">,</span> <span class="n">hahb</span><span class="p">,</span> 
                                                                  <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hahb_0&#39;</span><span class="p">],</span>
                                                                  <span class="n">curve</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;egal_curve&#39;</span><span class="p">],</span> 
                                                                  <span class="n">rv</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;egal_rv&#39;</span><span class="p">],</span>
                                                                  <span class="n">rva</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;egal_rva&#39;</span><span class="p">])</span>
         <span class="c1"># Assume the reddening correction is error free ... sigh...</span>
-        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
+        <span class="n">drelines_perror_cube</span><span class="p">[</span><span class="mi">8</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdu_err</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> \
                                      <span class="p">(</span><span class="n">brutus_red</span><span class="o">.</span><span class="n">extragalactic_red</span><span class="p">(</span><span class="n">this_lam</span><span class="p">,</span> <span class="n">hahb</span><span class="p">,</span> 
                                                                  <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hahb_0&#39;</span><span class="p">],</span>
                                                                  <span class="n">curve</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;egal_curve&#39;</span><span class="p">],</span> 
@@ -1779,14 +1910,14 @@
         <span class="n">hdus</span> <span class="o">=</span> <span class="p">[</span><span class="n">hdu0</span><span class="p">]</span>
         <span class="c1"># Use the sorted keys, to ensure the same order as the fit parameters</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
-            <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">7</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">7</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),:,:])</span>
+            <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">epc</span><span class="p">[</span><span class="mi">8</span><span class="o">*</span><span class="n">k</span><span class="p">:</span><span class="mi">8</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),:,:])</span>
             <span class="c1"># Make sure the WCS coordinates are included as well</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
             <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
             <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">suffix</span><span class="p">)</span>
             <span class="c1"># Add the line reference wavelength for future references</span>
             <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_REFL&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;reference wavelength&#39;</span><span class="p">)</span>
-            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_CKEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dredF,F,I,v,sigma&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
+            <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_CKEY&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dredF,F,I,v,sigma,h3,h4&#39;</span><span class="p">,</span><span class="s1">&#39;Content of the cube planes&#39;</span><span class="p">)</span>
             
             <span class="n">hdus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hduk</span><span class="p">)</span>
             
@@ -1825,15 +1956,306 @@
         <span class="n">this_ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
                           <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_Av_map.pdf&#39;</span><span class="p">)</span>
         <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
-                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
+                                    <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
                                     <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;A$_V$ [mag]&#39;</span><span class="p">,</span> 
                                     <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
                                     
     <span class="k">return</span> <span class="n">fn_list</span></div>
-        
+<span class="c1"># ---------------------------------------------------------------------------------------- </span>
+  
+<div class="viewcode-block" id="run_get_QZ"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_get_QZ">[docs]</a><span class="k">def</span> <span class="nf">run_get_QZ</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function computes the ionization parameter and oxygen abundance of HII regions</span>
+<span class="sd">    using the pyqz module: http://fpavogt.github.io/pyqz/ </span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        start_row: int [default: 0]</span>
+<span class="sd">                   The starting row from which to process the data</span>
+<span class="sd">        end_row: int [default: None]</span>
+<span class="sd">                 The row at which to finish the processing. Set to None for the max row.</span>
+<span class="sd">                 </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">                 </span>
+<span class="sd">    :Notes:</span>
+<span class="sd">        pyqz is NOT included with brutus. A separate installation is required.</span>
+<span class="sd">        See http://fpavogt.github.io/pyqz/installation.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>       
     
-      
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Deriving Log(Q) and Tot(O)+12 using pyqz.&#39;</span>
+    
+    <span class="c1"># Very well, now I need to open the line fluxes.</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;pyqz_use_egal_dered&#39;</span><span class="p">]:</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_params&#39;</span><span class="p">])</span>
+        <span class="n">fn_e</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_perror&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+        <span class="n">fn_e</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_perror_cube&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Alright, now I need to extract the line fluxes and errors</span>
+    <span class="c1"># Open the files</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="n">hdu_e</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn_e</span><span class="p">)</span>
+    <span class="n">header0_e</span> <span class="o">=</span> <span class="n">hdu_e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="c1"># All elines definition are inside elines_pyqz inside brutus_metadata. </span>
+    <span class="c1"># For each of them, construct a flux map.</span>
+
+    <span class="n">elines_fluxes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">elines_errors</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Look at each emission line fitted. If it is part of a &quot;pyqz emission line</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">akey</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+    
+        <span class="n">this_header</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+        <span class="n">this_data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">this_error</span> <span class="o">=</span> <span class="n">hdu_e</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                               
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;BR_REFL&#39;</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">elines_pyqz</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> <span class="c1"># Search all possible known pyqz lines</span>
+            <span class="k">if</span> <span class="n">lam</span> <span class="ow">in</span> <span class="n">elines_pyqz</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span> <span class="c1"># Wavelength match ? I found a line.</span>
+            
+                <span class="n">flux</span> <span class="o">=</span> <span class="n">this_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">this_error</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                
+                <span class="c1"># Take into account the SNR</span>
+                <span class="n">flux</span><span class="p">[</span><span class="n">this_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">akey</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            
+                <span class="c1"># Already exists ? - then I found a line with multiple components</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">elines_fluxes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span> 
+                    <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="c1"># append the flux</span>
+                    <span class="n">elines_errors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">flux</span><span class="p">]</span> <span class="c1"># Save the data for later</span>
+                    <span class="n">elines_errors</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">err</span><span class="p">]</span>
+                       
+    <span class="c1"># Close the hdus</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">hdu_e</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                    
+    <span class="c1"># Alright, I extracted all my lines fluxes. Am I missing anything ? </span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">elines_fluxes</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">elines_pyqz</span><span class="p">[</span><span class="n">key</span><span class="p">]):</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s1">&#39;ERROR: a line component is missing for </span><span class="si">%s</span><span class="s1">. Was it fitted ?&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># Now, proceed to construct the dictionary of line fluxes and errors.</span>
+    <span class="n">nlines</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="n">nx</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
+    <span class="n">ny</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Get some info about the cube</span>
+    <span class="n">nrows</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">start_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">end_row</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+	    <span class="n">end_row</span> <span class="o">=</span> <span class="n">nrows</span><span class="o">-</span><span class="mi">1</span> 
+    
+    <span class="c1"># Very well, let&#39;s start the loop on rows. If the code crashes/is interrupted, you&#39;ll</span>
+	<span class="c1"># loose the current row. Just live with it.</span>
+	<span class="c1"># Here, multiprocessing is already implemented inside the pyqz module. No need to do</span>
+	<span class="c1"># anything else but feed pyqz.get_global_qz() big chunks in a for loop.</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span> <span class="n">end_row</span><span class="p">,</span> <span class="n">end_row</span><span class="o">-</span><span class="n">start_row</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>       
+	    
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">:</span>    
+                <span class="n">nproc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;multiprocessing&#39;</span><span class="p">]</span>
+                
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># Ok, just use them all ...</span>
+                <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+	        
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Dealing with spectra in row %2.i, </span><span class="si">%i</span><span class="s1"> at a time ...&#39;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">row</span><span class="p">,</span><span class="n">nproc</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span> 
+        
+        <span class="c1"># The structure to hold the list of line fluxes, for each row</span>
+        <span class="n">allmylines</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ny</span><span class="p">,</span><span class="n">nlines</span><span class="o">*</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">allmynames</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># Very well, let&#39;s start filling a big array with all my lines fluxes lined up </span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+
+             <span class="c1"># Very well, sum it all</span>
+            <span class="n">fluxes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="n">item</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">elines_errors</span><span class="p">[</span><span class="n">key</span><span class="p">]],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="c1"># CHECK THAT THIS DOES WHAT I THINK IT DOES ! </span>
+            <span class="c1"># pyqz requires errors as 1-std. Like the output of mpfit.</span>
+            <span class="c1"># Also get rid of the nan&#39;s in the errors ... because pyqz can&#39;t deal with them.</span>
+            <span class="n">errors</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">errors</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+            <span class="n">allmylines</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">fluxes</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span>
+            <span class="n">allmylines</span><span class="p">[:,</span><span class="mi">2</span><span class="o">*</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">errors</span><span class="p">[:,</span><span class="n">row</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">ny</span><span class="p">)</span>
+    
+            <span class="n">allmynames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">allmynames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;std&#39;</span><span class="o">+</span><span class="n">key</span><span class="p">)</span>
+    
+        <span class="c1"># I need to keep track of which spaxel went where, so I can make sense of the files</span>
+        <span class="c1"># generated by pyqz. </span>
+        <span class="n">spaxel_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%i</span><span class="s1">-</span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">)]</span>    
+    
+        <span class="c1"># Ready to go - let&#39;s launch pyqz</span>
+        <span class="n">pyqz_out</span> <span class="o">=</span> <span class="n">pyqz</span><span class="o">.</span><span class="n">get_global_qz</span><span class="p">(</span><span class="n">allmylines</span><span class="p">,</span> <span class="n">allmynames</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;pyqz_diags&#39;</span><span class="p">],</span> 
+                                      <span class="n">ids</span> <span class="o">=</span> <span class="n">spaxel_ids</span><span class="p">,</span> 
+                                      <span class="n">qzs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;LogQ&#39;</span><span class="p">,</span> <span class="s1">&#39;Tot[O]+12&#39;</span><span class="p">],</span>
+                                      <span class="n">Pk</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">kappa</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">struct</span><span class="o">=</span><span class="s1">&#39;pp&#39;</span><span class="p">,</span> <span class="n">sampling</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                                      <span class="n">error_pdf</span> <span class="o">=</span> <span class="s1">&#39;normal&#39;</span><span class="p">,</span> 
+                                      <span class="n">srs</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span> <span class="n">flag_level</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>  <span class="n">KDE_method</span><span class="o">=</span><span class="s1">&#39;gauss&#39;</span><span class="p">,</span> 
+                                      <span class="n">KDE_qz_sampling</span> <span class="o">=</span> <span class="mi">101j</span><span class="p">,</span> <span class="n">KDE_do_singles</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> 
+                                      <span class="n">KDE_pickle_loc</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;pyqz_loc&#39;</span><span class="p">],</span> 
+                                      <span class="n">verbose</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">nproc</span> <span class="o">=</span> <span class="n">nproc</span><span class="p">)</span>    
+ 
+	    <span class="c1"># Here, I need to save these results. Pickle could be fast and temporary,</span>
+	    <span class="c1"># Until I then re-build the entire cube later on ? Also allow for better</span>
+	    <span class="c1"># row-by-row flexibility.</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_row_&#39;</span><span class="o">+</span>
+                          <span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
+        <span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">pyqz_out</span><span class="p">,</span><span class="nb">file</span><span class="p">)</span>
+        <span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+   	
+   	<span class="c1"># Add the generic filename to the dictionary of filenames</span>
+   	<span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;pyqz_pickle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_row_&#39;</span>
+   	     
+    <span class="k">print</span> <span class="s1">&#39; done !&#39;</span>
+    
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_make_QZ_cube"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_make_QZ_cube">[docs]</a><span class="k">def</span> <span class="nf">run_make_QZ_cube</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">    This function is designed to construct a &quot;usable and decent&quot; datacube out of the</span>
+<span class="sd">    mess generated by the pyqz step.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        do_plot: bool [default: True]</span>
+<span class="sd">                 Whether to make some nifty plots or not.</span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">    &#39;&#39;&#39;</span> 
+    
+    <span class="c1"># First, load the original datacube. I need to know how much stuff was fitted.</span>
+    <span class="k">if</span> <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;galdered_cube&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_loc&#39;</span><span class="p">],</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;data_fn&#39;</span><span class="p">]))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;galdered_cube&#39;</span><span class="p">]))</span>
+        
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">header2</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+    
+    <span class="n">nrows</span> <span class="o">=</span> <span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]</span>
+       
+    <span class="c1"># Very well, what do I want to extract ?</span>
+    <span class="c1"># A 2-D map for all the variable returned by pyqz. STore this in a multi-extension fits</span>
+    
+    <span class="c1"># Open one of these files, to check how much variables I want to map</span>
+    <span class="n">fns</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span><span class="s1">&#39;*pyqz*.pkl&#39;</span><span class="p">))</span>
+    
+    <span class="n">ftmp</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fns</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ftmp</span><span class="p">)</span>
+    <span class="n">ftmp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="n">map_names</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="c1"># All the different variable names.</span>
+   
+    <span class="n">all_maps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">map_names</span><span class="p">),</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">],</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS1&#39;</span><span class="p">]))</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the datacube for the pyqz output.&#39;</span>
+       
+    <span class="c1"># Loop through the rows, and extract the results. </span>
+    <span class="c1"># Try to loop through everything - in case this step was run in chunks.</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">nrows</span><span class="p">):</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="mf">100.</span> <span class="o">*</span> <span class="p">(</span><span class="n">row</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="n">nrows</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Building cube [</span><span class="si">%5.1f%s</span><span class="s1">]&#39;</span> <span class="o">%</span> 
+                         <span class="p">(</span><span class="n">progress</span><span class="p">,</span><span class="s1">&#39;%&#39;</span><span class="p">))</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span>
+                          <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;pyqz_pickle&#39;</span><span class="p">]</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">(</span><span class="n">row</span><span class="p">))</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pkl&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+            <span class="c1"># Very well, I have some fit here. Let&#39;s get them back</span>
+            <span class="n">myfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+            <span class="n">ms</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">myfile</span><span class="p">)</span>  
+            <span class="n">myfile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> 
+        
+            <span class="c1"># Ok, one line to store it all back !</span>
+            <span class="n">all_maps</span><span class="p">[:,:,</span><span class="n">row</span><span class="p">]</span> <span class="o">=</span> <span class="n">ms</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+    
+    <span class="c1"># Get ready with the extension file</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+    
+    <span class="n">hdus</span> <span class="o">=</span> <span class="p">[</span><span class="n">hdu0</span><span class="p">]</span>
+    <span class="c1"># Store each map in a dedicated HDU</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">map_names</span><span class="p">):</span>
+        <span class="n">hduk</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">all_maps</span><span class="p">[</span><span class="n">k</span><span class="p">,:,:])</span>
+        <span class="c1"># Make sure the WCS coordinates are included as well</span>
+        <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
+        <span class="n">hduk</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hduk</span><span class="p">,</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="c1"># Add the line reference wavelength for future references</span>
+        <span class="n">hduk</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_PYQZ&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s1">&#39;pyqz variable&#39;</span><span class="p">)</span>
+            
+        <span class="n">hdus</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hduk</span><span class="p">)</span>
+            
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="n">hdus</span><span class="p">)</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> 
+                          <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_QZs.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;pyqz_QZs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_QZs.fits&#39;</span>
+    
+    <span class="k">print</span> <span class="s1">&#39; &#39;</span>
+    
+    <span class="c1"># Make some plots, if requested:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="nb">map</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">map_names</span><span class="p">):</span>
+        
+        
+        <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_&#39;</span><span class="o">+</span>
+                         <span class="nb">map</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;_vs_&#39;</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+        
+        <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="c1"># path to the data (complete!)</span>
+                    <span class="n">ext</span> <span class="o">=</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="c1"># Which extension am I looking for ?</span>
+                    <span class="n">ofn</span> <span class="o">=</span> <span class="n">ofn</span><span class="p">,</span> <span class="c1"># Savefig filename</span>
+                    <span class="n">contours</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="c1"># Draw any contours </span>
+                    <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                    <span class="n">vmin</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
+                    <span class="n">vmax</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
+                    <span class="n">cblabel</span> <span class="o">=</span> <span class="nb">map</span><span class="p">,</span>
+                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                <span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">fn_list</span>    </div>
+
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+  
 </pre></div>
 
            </div>

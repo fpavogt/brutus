@@ -182,28 +182,32 @@
     <span class="c1"># the redshift in fattening the line, i.e. sigma is the &quot;true&quot; sigma in the object</span>
     <span class="c1"># rest frame.</span>
         
-    <span class="n">obj_sigma_err</span> <span class="o">=</span> <span class="n">obj_sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">errs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> 
-                                    <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">lam</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>    
+    <span class="n">obj_sigma_err</span> <span class="o">=</span> <span class="n">obj_sigma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">errs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">lam</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>    
         
     <span class="k">if</span> <span class="n">inst</span><span class="o">==</span><span class="s1">&#39;MUSE&#39;</span><span class="p">:</span>
         
         <span class="c1"># TODO: understand what is the TRUE spectral resolution of MUSE !</span>
         <span class="c1"># Measure it from the sky emission lines + arc lines ?      </span>
         <span class="c1"># For now, get it from the ref. file.    </span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        # What is the velocity dispersion we have in A?     </span>
+<span class="sd">        inst_sigma = lam/(brutus_tools.inst_resolution(inst=inst)(lam) * </span>
+<span class="sd">                                                                   2*np.sqrt(2*np.log(2)))</span>
+<span class="sd">        # Here, assume no error coming from the Resolution curve ... sigh...</span>
+<span class="sd">        </span>
+<span class="sd">        inst_sigma_err = errs[1]/(brutus_tools.inst_resolution(inst=inst)(lam) * </span>
+<span class="sd">                                                               2*np.sqrt(2*np.log(2)))**2</span>
+<span class="sd">        </span>
+<span class="sd">        # Then combine sigma, in A</span>
+<span class="sd">        this_sigma = np.sqrt(obj_sigma**2 + inst_sigma**2)</span>
+<span class="sd">        </span>
+<span class="sd">        this_sigma_err = inst_sigma_err * (inst_sigma/this_sigma)**2 + \</span>
+<span class="sd">                         obj_sigma_err * (obj_sigma/this_sigma)**2</span>
+<span class="sd">        &#39;&#39;&#39;</span>
         
-        <span class="c1"># What is the velocity dispersion we have in A?     </span>
-        <span class="n">inst_sigma</span> <span class="o">=</span> <span class="n">lam</span><span class="o">/</span><span class="p">(</span><span class="n">brutus_tools</span><span class="o">.</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">)(</span><span class="n">lam</span><span class="p">)</span> <span class="o">*</span> 
-                                                                   <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span>
-        <span class="c1"># Here, assume no error coming from the Resolution curve ... sigh...</span>
-        
-        <span class="n">inst_sigma_err</span> <span class="o">=</span> <span class="n">errs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="p">(</span><span class="n">brutus_tools</span><span class="o">.</span><span class="n">inst_resolution</span><span class="p">(</span><span class="n">inst</span><span class="o">=</span><span class="n">inst</span><span class="p">)(</span><span class="n">lam</span><span class="p">)</span> <span class="o">*</span> 
-                                                               <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)))</span><span class="o">**</span><span class="mi">2</span>
-        
-        <span class="c1"># Then combine sigma, in A</span>
-        <span class="n">this_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">obj_sigma</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">inst_sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        
-        <span class="n">this_sigma_err</span> <span class="o">=</span> <span class="n">inst_sigma_err</span> <span class="o">*</span> <span class="p">(</span><span class="n">inst_sigma</span><span class="o">/</span><span class="n">this_sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> \
-                         <span class="n">obj_sigma_err</span> <span class="o">*</span> <span class="p">(</span><span class="n">obj_sigma</span><span class="o">/</span><span class="n">this_sigma</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># For now, pretend that there is no instrumental dispersion</span>
+        <span class="n">this_sigma</span> <span class="o">=</span> <span class="n">obj_sigma</span>
+        <span class="n">this_sigma_err</span> <span class="o">=</span> <span class="n">obj_sigma_err</span>
         
     <span class="k">else</span><span class="p">:</span>
     
@@ -519,9 +523,9 @@
     <span class="c1"># Create the dictionary containing the spectra, error, etc ...    </span>
     <span class="n">fa</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">lams</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;err&#39;</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">err</span><span class="p">),</span> <span class="s1">&#39;method&#39;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;line_profile&#39;</span><span class="p">],</span> 
           <span class="s1">&#39;be&#39;</span><span class="p">:</span><span class="n">be</span><span class="p">,</span> <span class="s1">&#39;inst&#39;</span><span class="p">:</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;inst&#39;</span><span class="p">]}</span>
-    
+          
     <span class="n">m</span> <span class="o">=</span> <span class="n">mpfit</span><span class="o">.</span><span class="n">mpfit</span><span class="p">(</span><span class="n">line_fit_erf</span><span class="p">,</span> <span class="n">p0</span><span class="p">,</span> <span class="n">functkw</span><span class="o">=</span><span class="n">fa</span><span class="p">,</span> <span class="n">parinfo</span><span class="o">=</span><span class="n">parinfo</span><span class="p">,</span> <span class="n">quiet</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> 
-    
+
     <span class="k">return</span> <span class="n">m</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------    </span>
 </pre></div>
