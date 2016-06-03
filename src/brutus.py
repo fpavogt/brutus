@@ -43,23 +43,32 @@ import warnings
 import glob
 import warnings
 
-from brutus_metadata import __version__
-
+# Import brutus-specific tools
 import brutus_tools
 import brutus_cof
 import brutus_elf
 import brutus_plots
+import brutus_red
+from brutus_metadata import *
+from brutus_metadata import __version__
+
+# Import other important tools, but don't fail, in case the user doesn't need them.
 try:
     import brutus_ppxf
     import ppxf_util as util
 except:
     warnings.warn("Faild to load brutus_ppxf. Is ppxf installed ?")
 
-import brutus_red
-from brutus_metadata import *
+try:
+    import fit_kinematic_pa as fkp
+except:
+    warnings.warn("Faild to load fit_kinematic_pa. Is it installed ?")
 
-import pyqz
-   
+try:
+    import pyqz
+except:
+    warnings.warn("Faild to load pyqz. Is it installed ?")
+
 # ---------------------------------------------------------------------------------------- 
   
 def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
@@ -168,6 +177,7 @@ def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
                             contours = [3,5,10,20], vmin=0,vmax=30,
                             cbticks=[0,3,5,10,20,30], 
                             cblabel = r'Continuum SNR %.2f\AA\ - %.2f\AA' % (cont_range[0],cont_range[1]),
+                            scalebar = params['scalebar'],
                             )  
         brutus_plots.make_2Dplot(fn_out,2, 
                             os.path.join(params['plot_loc'],
@@ -175,6 +185,7 @@ def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
                             contours = [3,5,10,20], vmin=0,vmax=30,
                             cbticks=[0,3,5,10,20,30],
                             cblabel = r'%.2f\AA\ emission line SNR' % params['ref_dv_line'],
+                            scalebar = params['scalebar'],
                             )    
         brutus_plots.make_2Dplot(fn_out,3, 
                             os.path.join(params['plot_loc'],
@@ -182,6 +193,7 @@ def run_snr_maps(fn_list, params, suffix = None, do_plot = False):
                             vmin=0,vmax=1,cbticks=[0,1],
                             cmap ='alligator',
                             cblabel = r'Spaxels with data',
+                            scalebar = None
                             )               
                          
     return fn_list
@@ -777,7 +789,9 @@ def run_plot_ppxf_sol(fn_list, params, suffix=None, vrange=None, sigrange=None):
         brutus_plots.make_2Dplot(fn_tmp,ext=0, ofn=this_ofn, contours=False, 
                                     vmin=my_vmin, vmax = my_vmax, cmap=my_cmap,
                                     stretch = my_stretch, cblabel=my_label, 
-                                    cbticks = my_cbticks)                                   
+                                    cbticks = my_cbticks,
+                                    scalebar = params['scalebar'],
+                                    )                                   
     
     # Delete the temporary fits file
     os.remove(fn_tmp)
@@ -947,7 +961,6 @@ def run_fit_elines(fn_list, params, suffix=None, start_row = None, end_row = Non
 	# loose the current row. Just live with it.
     for row in np.linspace(start_row,end_row, end_row-start_row+1):   
 	    
-	    #TODO: fit only a subset of spaxels with Halpha detected ?
 		# Alright, now deal with the spaxels outside the user-chosen SNR range.
 		# Replace them with nan's
         good_spaxels = np.ones((header1['NAXIS2']))
@@ -1327,7 +1340,8 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
             brutus_plots.make_2Dplot(fn_tmp,ext=0, ofn=this_ofn, contours=False, 
                                     vmin=my_vmin, vmax = my_vmax, cmap=my_cmap,
                                     stretch = my_stretch, cblabel=my_label, 
-                                    cbticks = my_cbticks)                                   
+                                    cbticks = my_cbticks,
+                                    scalebar = params['scalebar'],)                                   
     
     # Delete the temporary fits file
     os.remove(fn_tmp)
@@ -1340,7 +1354,8 @@ def run_plot_elines_cube(fn_list, params, suffix=None, vrange=None,
                                                         '_eline_mpfit_status.pdf') 
     brutus_plots.make_2Dplot(fn,ext=1, ofn=ofn, contours=False, vmin=-16, vmax = 8,
                            cmap='alligator',stretch='linear', 
-                           cbticks=[-16,0,1,2,3,4,5,6,7,8], cblabel='mpfit status',)
+                           cbticks=[-16,0,1,2,3,4,5,6,7,8], cblabel='mpfit status',
+                           scalebar = None)
     
     return fn_list
 # ----------------------------------------------------------------------------------------
@@ -1641,7 +1656,9 @@ def run_make_ap_cube(fn_list, params, suffix=None, do_plot=True):
                                     vmin=0, vmax = len(xs), cmap='alligator',
                                     stretch = 'linear', 
                                     cblabel=r'Aperture idendification number', 
-                                    cbticks = None)  
+                                    cbticks = None,
+                                    scalebar = None,
+                                )  
     
     # And also save the aperture spectral cube to a fits file
     hdu0 = pyfits.PrimaryHDU(None,header0)
@@ -1824,9 +1841,266 @@ def run_extragal_dered(fn_list, params, suffix=None, do_plot=True):
                                     vmin=0, vmax = 2, cmap='alligator',
                                     stretch = 'linear', 
                                     cblabel=r'A$_V$ [mag]', 
-                                    cbticks = None)
+                                    cbticks = None,
+                                    scalebar = params['scalebar'],
+                                )
                                     
     return fn_list
+# ---------------------------------------------------------------------------------------- 
+  
+def run_fit_kinematic_pa(fn_list, params, suffix = None, do_plot = True, 
+                         vrange = [None,None]):
+    '''
+    This function computes the kinematic position angle for the stars or the gas, 
+    via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus). 
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        do_plot: bool [default: True]
+                 Whether to make a plot of the kinematic map or not.
+        vrange: list of int [default: [None,None]]    
+                The range of the colorbar for the velocity plot.
+                 
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+                 
+    :Notes:
+        pyqz is NOT included with brutus. A separate installation is required.
+        See http://fpavogt.github.io/pyqz/installation.html
+    '''
+    
+    if params['verbose']:
+        print '-> Fitting the kinematic position angle.'
+    
+    all_kin_pas = {}
+    
+    # How many kinematic maps do I want to fit ?
+    for kin in params['fit_kin']:
+        if params['verbose']:
+            print '   [%s] ...' % kin
+            
+        # First, I need to load the kinematic maps and the associated errors
+        if kin == 'ppxf': 
+        
+            fn = os.path.join(params['prod_loc'],fn_list['ppxf_sol_map']) 
+            hdu = pyfits.open(fn)
+            header1 = hdu[1].header
+            vel = hdu[1].data[0]
+            dvel = None # No error on the velocity coming from ppxf. Will be set to 10km/s 
+                        # by fit_kinematic_pa()
+            hdu.close()
+            
+        elif kin in params['elines'].keys():
+            
+            ind = np.sort(params['elines'].keys()).tolist().index(kin)
+            
+            fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+            hdu = pyfits.open(fn)
+            header1 = hdu[ind+1].header
+            vel = hdu[ind+1].data[2]
+            snr = hdu[ind+1].data[-1]
+            vel[snr<params['elines'][kin][0][3]] = np.nan # Take into account the SNR
+            hdu.close()
+            
+            fn = os.path.join(params['prod_loc'],fn_list['elines_perror_cube'])
+            hdu = pyfits.open(fn)
+            dvel = hdu[ind+1].data[2]
+            hdu.close()
+        
+        # Correct for the redshift
+        vel -= params['z_target'] * c # Correct for the velocity
+                
+        # Very well, I now have my velocity map. How big is it ?
+        (ny,nx) = np.shape(vel)
+        
+        # Build the array of indices
+        ys,xs = np.mgrid[0:ny:1,0:nx:1]
+        
+        # Now, I need to recenter this based on the kinematical center for the object
+        ys = ys.astype(float) - params['fit_kin_center'][1]
+        xs = xs.astype(float) - params['fit_kin_center'][1]
+        
+        # Handle the presence of NaNs ...
+        xs = xs[vel==vel]
+        ys = ys[vel==vel]
+        vel_nonan = vel[vel==vel]
+        if not(dvel is None):
+            dvel = dvel[vel==vel]
+    
+        # Reschape all of it ...    
+        xs = xs.reshape(np.size(xs))
+        ys = ys.reshape(np.size(ys))
+        vel_nonan = vel_nonan.reshape(np.size(vel_nonan))
+        if not(dvel is None):
+            dvel = dvel.reshape(np.size(dvel))
+            
+        # Very well, let's launch the processing
+        all_kin_pas[kin] = fkp.fit_kinematic_pa(xs, ys, vel_nonan, dvel = dvel,
+                                                debug = False, 
+                                                nsteps = params['fit_kin_nsteps'], 
+                                                plot = False)
+    
+        # Ok, what do I want to do with this ? A plot, and save it for later ?
+        if do_plot:
+            
+            # Create a temporary FITS file
+            fn_tmp = os.path.join(params['tmp_loc'],suffix+'_tmp.fits')
+            
+            # Let's create a temporary fits file with the given velocity map  
+            tmphdu = pyfits.PrimaryHDU(vel + params['z_target'] * c)
+            # Add the WCS information
+            tmphdu = brutus_tools.hdu_add_wcs(tmphdu,header1)
+            tmphdu.writeto(fn_tmp, clobber=True)
+            
+        
+            # Alright, let's make a velocity plot.
+            if kin in params['elines'].keys():
+                ofn = suffix+'_'+params['target']+'_fit_kinematic_pa_%s.pdf' % \
+                                                              params['elines'][kin][0][0]
+            else:
+                ofn = suffix+'_'+params['target']+'_fit_kinematic_pa_%s.pdf' % kin
+            
+            ofn = os.path.join(params['plot_loc'], ofn)
+            
+            brutus_plots.make_2Dvelplot(fn_tmp, # path to the data (complete!)
+                                        ext = 0, # Which extension am I looking for ?
+                                        ofn = ofn, # Savefig filename
+                                        contours = False, # Draw any contours 
+                                        stretch = 'linear',
+                                        vmin = vrange[0], 
+                                        vmax = vrange[1],
+                                        cmap = 'alligator',
+                                        cblabel = r'v [km s$^{-1}$]',
+                                        cbticks = None,
+                                        scalebar = params['scalebar'],
+                                        pa = all_kin_pas[kin][:2], 
+                                        center = params['fit_kin_center'],
+                                        )
+            # Clean up the temporary file
+            os.remove(fn_tmp)
+            
+    # Add the filename to the dictionary of filenames
+    fn_list['fit_kin_pa'] = suffix+'_'+params['target']+'_fit_kinematic_pa.pkl'
+    
+    # And save these avlues in a pickle file, for future access if needed.
+    f = open(os.path.join(params['prod_loc'],fn_list['fit_kin_pa']), 'w')
+    pickle.dump(all_kin_pas, f)
+    f.close()
+
+    return fn_list
+# ---------------------------------------------------------------------------------------- 
+  
+def run_get_ne(fn_list, params, suffix = None, do_plot = True, ratio_range=[None, None]):
+    '''
+    This function computes the kinematic position angle for the stars or the gas, 
+    via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus). 
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        do_plot: bool [default: True]
+                Whether to make a plot of the electron density map or not.
+        ratio_range: list [default[None,None]
+                The line ratio range, for the plot.
+                 
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+                 
+    :Notes:
+        pyqz is NOT included with brutus. A separate installation is required.
+        See http://fpavogt.github.io/pyqz/installation.html
+    '''
+    
+    if params['verbose']:
+        print '-> Constructing the [SII] line ratio.'
+    
+    
+    # Alright, let's load the emission line fluxes
+    if params['pyqz_use_egal_dered']:
+        fn = os.path.join(params['prod_loc'],fn_list['dered_elines_params'])
+        fn_e = os.path.join(params['prod_loc'],fn_list['dered_elines_perror'])
+    else:
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+        fn_e = os.path.join(params['prod_loc'],fn_list['elines_perror_cube'])
+
+    
+    s2h_key = params['elines']
+    
+    # Open the files
+    hdu = pyfits.open(fn)
+    header0 = hdu[0].header
+
+    hdu_e = pyfits.open(fn_e)
+    header0_e = hdu_e[0].header
+    
+    
+    # Now loop through these, until I find the lines I need
+    for (k,key) in enumerate(np.sort(params['elines'].keys())):
+        
+        if params['elines'][key][0][0] == s2h:
+            header_s2h = hdu[k+1].header
+            s2h_map = hdu[k+1].data[0]
+            s2h_err = hdu_e[k+1].data[0]
+        elif params['elines'][key][0][0] == s2l:
+            header_s2l = hdu[k+1].header
+            s2l_map = hdu[k+1].data[0]
+            s2l_err = hdu_e[k+1].data[0]
+    
+    # Very well, let's compute the ratio map and error:
+    ratio_map = s2h_map/s2l_map
+    ratio_err = np.abs(ratio_map) * np.sqrt((s2h_err/s2h_map)**2 + (s2l_err/s2l_map)**2)
+    
+    # Let's export this to a dedicated fits file.
+    hdu0 = pyfits.PrimaryHDU(None,header0)
+    hdu1 = pyfits.ImageHDU(ratio_map)
+    hdu2 = pyfits.ImageHDU(ratio_err)
+    for hdu in [hdu1,hdu2]:
+        # Make sure the WCS coordinates are included as well
+        hdu = brutus_tools.hdu_add_wcs(hdu, header_s2h)
+        # Also include a brief mention about which version of brutus is being used
+        hdu = brutus_tools.hdu_add_brutus(hdu, suffix)
+    
+    hdu = pyfits.HDUList(hdus=[hdu0,hdu1,hdu2])
+    fn_out = os.path.join(params['prod_loc'], suffix+'_'+params['target']+'_[SII]-ratio.fits')
+    hdu.writeto(fn_out, clobber=True)
+    
+    # Add the filename to the dictionary of filenames
+    fn_list['ne_map'] = suffix+'_'+params['target']+'_[SII]-ratio.fits'
+    
+    # And now, let's plot it.
+    if do_plot:
+         
+            ofn = suffix+'_'+params['target']+'_[SII]-ratio.pdf'
+            
+            ofn = os.path.join(params['plot_loc'], ofn)
+            
+            brutus_plots.make_2Dplot(fn_out, # path to the data (complete!)
+                                        ext = 1, # Which extension am I looking for ?
+                                        ofn = ofn, # Savefig filename
+                                        contours = False, # Draw any contours 
+                                        stretch = 'linear',
+                                        vmin = ratio_range[0], 
+                                        vmax = ratio_range[1],
+                                        cmap = 'alligator',
+                                        cblabel = r'[S\,\textsc{\smaller{II}}] $\lambda$6731 / [S\,\textsc{\smaller{II}}] $\lambda$6716 ',
+                                        cbticks = None,
+                                        scalebar = params['scalebar'],
+                                        ) 
+        
+    
+    return fn_list
+
 # ---------------------------------------------------------------------------------------- 
   
 def run_get_QZ(fn_list, params, suffix = None, start_row = 0, end_row = None):
@@ -1860,7 +2134,6 @@ def run_get_QZ(fn_list, params, suffix = None, start_row = 0, end_row = None):
     
     # Very well, now I need to open the line fluxes.
     if params['pyqz_use_egal_dered']:
-
         fn = os.path.join(params['prod_loc'],fn_list['dered_elines_params'])
         fn_e = os.path.join(params['prod_loc'],fn_list['dered_elines_perror'])
     else:
@@ -1943,6 +2216,10 @@ def run_get_QZ(fn_list, params, suffix = None, start_row = 0, end_row = None):
                 nproc = multiprocessing.cpu_count()
         else:
             nproc = 1
+        
+        # Limit this to 8 for brutus - memory issues ...
+        if nproc>8:
+            nproc = 8    
 	        
         sys.stdout.write('\r   Dealing with spectra in row %2.i, %i at a time ...' % 
                          (row,nproc))
@@ -2103,7 +2380,12 @@ def run_make_QZ_cube(fn_list, params, suffix=None, do_plot = True):
         
         
         ofn = os.path.join(params['plot_loc'],suffix+'_'+params['target']+'_pyqz_'+
-                         map.replace(';','-').replace('|','_').replace('/','_vs_')+'.pdf')
+                         map.replace(';','_vs_').replace('|','_').replace('/','-')+'.pdf')
+        
+        mymap = map.replace('<','$<$').replace('>','$>$').replace('{','$\{$')
+        mymap = mymap.replace('}','$\}$').replace('Log','$\log$').replace('|','  ')
+        mymap = mymap.replace('_','\_')
+        mylabel = r'' + mymap
         
         brutus_plots.make_2Dplot(fn_out, # path to the data (complete!)
                     ext = m+1, # Which extension am I looking for ?
@@ -2113,11 +2395,242 @@ def run_make_QZ_cube(fn_list, params, suffix=None, do_plot = True):
                     vmin = None, 
                     vmax = None,
                     cmap = 'alligator',
-                    cblabel = map,
+                    cblabel = mylabel,
                     cbticks = None,
+                    scalebar = params['scalebar'],
                 )
     
     return fn_list    
-
 # ----------------------------------------------------------------------------------------
-  
+
+def run_plot_elines_RGB(fn_list, params, suffix=None, 
+                        mixes = [['[NII]','Ha','[OIII]'],], 
+                        stretches = ['log',],
+                        stretch_plims = [[10.,99.5,10.,99.5,10.,99.5],],
+                        stretch_vlims = [[None,None,None,None,None,None],],
+                        use_egal_dered = False,
+                       ):   
+    ''' 
+    This function is designed to make some RGB images from emission lines.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        mixes: list of list [default: [['[NII]','Ha','[OIII]']]]
+             A list of line triplets indicatin the R, G & B channels.
+        stretches: list of string [default: ['log']]
+                   The stretches to apply to the data, e.g. 'linear', 'log', 'arcsinh'.
+        stretch_plims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]
+                       The limiting percentiles for the plot, as 
+                       [pmin_r, pmax_r, pmin_g, pmax_g, pmin_b, pmax_b]
+        stretch_vlims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]
+                       The limtiing values for the plot (superseeds stretch_plims), as
+                       [vmin_r, vmax_r, vmin_g, vmax_g, vmin_b, vmax_b]
+        use_egal_dered: bool [default: False]
+                        If available, whether to use the line fluxes corrected for 
+                        extragalactic attentuation.
+             
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+    ''' 
+    
+    # First, I need to generate 3 individual fits files with the line fluxes
+    if params['verbose']:
+        print '-> Creating some RGB emission line images.'
+    
+    # Very well, now I need to open the line fluxes.
+    if use_egal_dered:
+        fn = os.path.join(params['prod_loc'],fn_list['dered_elines_params'])
+    else:
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+
+    # Alright, now I need to extract the line fluxes
+    # Open the file
+    hdu = pyfits.open(fn)
+    header0 = hdu[0].header
+    header1 = hdu[1].header
+
+    # All elines definition are inside elines_pyqz inside brutus_metadata. 
+    # For the ones the user requested, construct a flux map.
+    elines_fluxes = {}
+    for (m, mix) in enumerate(mixes):
+        elines_fluxes[m] = {0:None, 1:None, 2:None}    
+
+    # Look at each emission line fitted. Do I need it ?
+    for (k,akey) in enumerate(np.sort(params['elines'].keys())):
+    
+        this_header = hdu[k+1].header
+        this_data = hdu[k+1].data
+                               
+        lam = this_header['BR_REFL']
+        
+        for (m,mix) in enumerate(mixes):
+            
+            for (cc,col) in enumerate(mix): # Search all possible lines
+                if lam in elines_pyqz[col]: # Wavelength match ? I found a line.
+            
+                    flux = this_data[0]
+                
+                    # Take into account the SNR
+                    flux[this_data[-1]<params['elines'][akey][0][3]] = np.nan
+            
+                    # Already exists ? - then I found a line with multiple components
+                    if not(elines_fluxes[m][cc] is None): 
+                        elines_fluxes[m][cc] += flux # append the flux
+                    else:
+                        elines_fluxes[m][cc] = flux # Save the data for later
+                       
+    # Close the hdus
+    hdu.close()
+    
+    # Very well, I now have all my line fluxes. Let's deal with each RGB set one at a time.
+    for (m,mix) in enumerate(mixes):
+
+        fns = []
+        
+        ofn = os.path.join(params['plot_loc'],
+                 suffix+'_'+params['target']+'_RGB_%s-%s-%s.pdf' % (mix[0],mix[1],mix[2]))
+                 
+        # Now, let' create 3 independant temporary fits file with WCS coordinates
+        for (cc,col) in enumerate(mix):
+            fn = os.path.join(params['plot_loc'],'RGB_tmp_%i.fits' % cc)
+            fns.append(fn)
+            
+            hdu = pyfits.PrimaryHDU(elines_fluxes[m][cc], header = header1)
+            # Add the wcs info
+            hdu = brutus_tools.hdu_add_wcs(hdu, header1)
+            outfits = pyfits.HDUList([hdu])
+            outfits.writeto(fn,clobber=True)
+    
+        # Great, I am now ready to call the plotting function
+        brutus_plots.make_RGBplot(fns, ofn,  stretch = stretches[m],
+                                  plims = stretch_plims[m], vlims = stretch_vlims[m],
+                                  title = r'RGB: %s %s %s' %  (mix[0],mix[1],mix[2]),
+                                  scalebar = params['scalebar'])
+    
+        # And remember to delete all the temporary files
+        for f in fns:
+            os.remove(f)    
+    
+    return fn_list    
+# ----------------------------------------------------------------------------------------
+
+def run_plot_flux_ratio(fn_list, params, suffix=None, 
+                        ratios = ['[NII]/[OIII]',],
+                        vrange = [[None,None],],
+                        use_egal_dered = False,
+                       ):   
+    ''' 
+    This function is designed to make some images from emission lines flux ratios.
+    
+    :Args:
+        fn_list: dictionary
+                 The dictionary containing all filenames created by brutus.
+        params: dictionary
+                The dictionary containing all paramaters set by the user. 
+        suffix: string [default: None]
+                The tag of this step, to be used in all files generated for rapid id.
+        ratios: list of string [default: ['[NII]/[OIII]']]
+             A list of line ratios to plot.
+        vrange: list of lists [default: [[Mone,None]]]
+                The plot range.
+        use_egal_dered: bool [default: False]
+                        If available, whether to use the line fluxes corrected for 
+                        extragalactic attentuation.
+             
+    :Returns:
+        fn_list: dictionary
+                 The updated dictionary of filenames. 
+    ''' 
+    
+       # First, I need to generate 3 individual fits files with the line fluxes
+    if params['verbose']:
+        print '-> Creating some line ratio images.'
+    
+    # Very well, now I need to open the line fluxes.
+    if use_egal_dered:
+        fn = os.path.join(params['prod_loc'],fn_list['dered_elines_params'])
+    else:
+        fn = os.path.join(params['prod_loc'],fn_list['elines_params_cube'])
+
+    # Alright, now I need to extract the line fluxes
+    # Open the file
+    hdu = pyfits.open(fn)
+    header0 = hdu[0].header
+    header1 = hdu[1].header
+
+    # All elines definition are inside elines_pyqz inside brutus_metadata. 
+    # For the ones the user requested, construct a flux map.
+    elines_fluxes = {}
+    for (m, mix) in enumerate(ratios):
+        elines_fluxes[m] = {0:None, 1:None}    
+
+    # Look at each emission line fitted. Do I need it ?
+    for (k,akey) in enumerate(np.sort(params['elines'].keys())):
+    
+        this_header = hdu[k+1].header
+        this_data = hdu[k+1].data
+                               
+        lam = this_header['BR_REFL']
+        
+        for (m,mix) in enumerate(ratios):
+            
+            for (cc,col) in enumerate(mix.split('/')): # Search all possible lines
+                if lam in elines_pyqz[col]: # Wavelength match ? I found a line.
+            
+                    flux = this_data[0]
+                
+                    # Take into account the SNR
+                    flux[this_data[-1]<params['elines'][akey][0][3]] = np.nan
+            
+                    # Already exists ? - then I found a line with multiple components
+                    if not(elines_fluxes[m][cc] is None): 
+                        elines_fluxes[m][cc] += flux # append the flux
+                    else:
+                        elines_fluxes[m][cc] = flux # Save the data for later
+                       
+    # Close the hdus
+    hdu.close()
+    
+    # Very well, I now have all my line fluxes. Let's deal with each set one at a time.
+    for (m,mix) in enumerate(ratios):
+        
+        ofn = os.path.join(params['plot_loc'],
+                 suffix+'_'+params['target']+'_ratio_%s_vs_%s.pdf' % (mix.split('/')[0],
+                                                                      mix.split('/')[1]))
+                 
+        # Now, let' create a fits file with WCS coordinates
+        fn = os.path.join(params['prod_loc'],
+                 suffix+'_'+params['target']+'_ratio_%s_vs_%s.fits' % (mix.split('/')[0],
+                                                                       mix.split('/')[1]))
+            
+        hdu0 = pyfits.PrimaryHDU(header = header0)
+        hdu1 = pyfits.ImageHDU(np.log10(elines_fluxes[m][0]/elines_fluxes[m][1]))
+        # Make sure the WCS coordinates are included as well
+        hdu1 = brutus_tools.hdu_add_wcs(hdu1,header1)
+        # Also include a brief mention about which version of brutus is being used
+        hdu1 = brutus_tools.hdu_add_brutus(hdu1,suffix)
+        # Add the line reference wavelength for future references
+        hdu1.header['BR_RATIO'] = (mix, 'line ratio')
+            
+        hdu = pyfits.HDUList(hdus=[hdu0,hdu1])
+        hdu.writeto(fn, clobber=True)
+        
+        # Great, I am now ready to call the plotting function
+        brutus_plots.make_2Dplot(fn, ext = 1, ofn = ofn, contours = False, 
+                                 stretch = 'linear',
+                                 vmin = vrange[m][0], 
+                                 vmax = vrange[m][1],
+                                 cmap = alligator,
+                                 cblabel = r'$\log$ %s' %mix,
+                                 cbticks = None,
+                                 scalebar = params['scalebar'],
+                                )
+                                
+    
+    return fn_list  

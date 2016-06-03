@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brutus module &mdash; brutus 0.3.0 documentation</title>
+  <title>brutus module &mdash; brutus 0.3.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brutus 0.3.0 documentation" href="../index.html"/>
+    <link rel="top" title="brutus 0.3.1 documentation" href="../index.html"/>
         <link rel="up" title="Functions" href="modules.html"/>
         <link rel="next" title="brutus_cof module" href="brutus_cof.html"/>
         <link rel="prev" title="Functions" href="modules.html"/> 
@@ -54,6 +54,9 @@
             <a href="../index.html" class="icon icon-home"> brutus
           
 
+          
+            
+            <img src="../_static/brutus.png" class="logo" />
           
           </a>
 
@@ -84,6 +87,7 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -269,6 +273,49 @@ can be restarted mid-course, in case of a crash.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="brutus.run_fit_kinematic_pa">
+<code class="descclassname">brutus.</code><code class="descname">run_fit_kinematic_pa</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, do_plot=True, vrange=[None, None]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_fit_kinematic_pa"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_fit_kinematic_pa" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the kinematic position angle for the stars or the gas, 
+via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make a plot of the kinematic map or not.</p>
+</dd>
+<dt>vrange: list of int [default: [None,None]]    </dt>
+<dd><p class="first last">The range of the colorbar for the velocity plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">pyqz is NOT included with brutus. A separate installation is required.
+See <a class="reference external" href="http://fpavogt.github.io/pyqz/installation.html">http://fpavogt.github.io/pyqz/installation.html</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brutus.run_gal_dered">
 <code class="descclassname">brutus.</code><code class="descname">run_gal_dered</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>do_plot=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_gal_dered"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_gal_dered" title="Permalink to this definition">¶</a></dt>
 <dd><p>Corrects for Galactic extinction, given the Ab and Av extinction.</p>
@@ -333,6 +380,49 @@ using the pyqz module: <a class="reference external" href="http://fpavogt.github
 </dd>
 <dt>end_row: int [default: None]</dt>
 <dd><p class="first last">The row at which to finish the processing. Set to None for the max row.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">pyqz is NOT included with brutus. A separate installation is required.
+See <a class="reference external" href="http://fpavogt.github.io/pyqz/installation.html">http://fpavogt.github.io/pyqz/installation.html</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_get_ne">
+<code class="descclassname">brutus.</code><code class="descname">run_get_ne</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, do_plot=True, ratio_range=[None, None]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_get_ne"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_get_ne" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function computes the kinematic position angle for the stars or the gas, 
+via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>do_plot: bool [default: True]</dt>
+<dd><p class="first last">Whether to make a plot of the electron density map or not.</p>
+</dd>
+<dt>ratio_range: list [default[None,None]</dt>
+<dd><p class="first last">The line ratio range, for the plot.</p>
 </dd>
 </dl>
 </td>
@@ -455,6 +545,56 @@ files generated.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="brutus.run_plot_elines_RGB">
+<code class="descclassname">brutus.</code><code class="descname">run_plot_elines_RGB</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, mixes=[['[NII]', 'Ha', '[OIII]']], stretches=['log'], stretch_plims=[[10.0, 99.5, 10.0, 99.5, 10.0, 99.5]], stretch_vlims=[[None, None, None, None, None, None]], use_egal_dered=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_plot_elines_RGB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_plot_elines_RGB" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to make some RGB images from emission lines.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>mixes: list of list [default: [[&#8216;[NII]&#8217;,&#8217;Ha&#8217;,&#8217;[OIII]&#8217;]]]</dt>
+<dd><p class="first last">A list of line triplets indicatin the R, G &amp; B channels.</p>
+</dd>
+<dt>stretches: list of string [default: [&#8216;log&#8217;]]</dt>
+<dd><p class="first last">The stretches to apply to the data, e.g. &#8216;linear&#8217;, &#8216;log&#8217;, &#8216;arcsinh&#8217;.</p>
+</dd>
+<dt>stretch_plims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]</dt>
+<dd><p class="first last">The limiting percentiles for the plot, as 
+[pmin_r, pmax_r, pmin_g, pmax_g, pmin_b, pmax_b]</p>
+</dd>
+<dt>stretch_vlims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]</dt>
+<dd><p class="first last">The limtiing values for the plot (superseeds stretch_plims), as
+[vmin_r, vmax_r, vmin_g, vmax_g, vmin_b, vmax_b]</p>
+</dd>
+<dt>use_egal_dered: bool [default: False]</dt>
+<dd><p class="first last">If available, whether to use the line fluxes corrected for 
+extragalactic attentuation.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="brutus.run_plot_elines_cube">
 <code class="descclassname">brutus.</code><code class="descname">run_plot_elines_cube</code><span class="sig-paren">(</span><em>fn_list</em>, <em>params</em>, <em>suffix=None</em>, <em>vrange=None</em>, <em>sigrange=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_plot_elines_cube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_plot_elines_cube" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates some plots for the emission lines: F, I, v and sigma.</p>
@@ -477,6 +617,48 @@ files generated.</p>
 </dd>
 <dt>sigrangre: list of int [default: None]        </dt>
 <dd><p class="first last">If set, the range of the colorbar for the velocity dispersion plot.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The updated dictionary of filenames.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus.run_plot_flux_ratio">
+<code class="descclassname">brutus.</code><code class="descname">run_plot_flux_ratio</code><span class="sig-paren">(</span><em>fn_list, params, suffix=None, ratios=['[NII]/[OIII]'], vrange=[[None, None]], use_egal_dered=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus.html#run_plot_flux_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus.run_plot_flux_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function is designed to make some images from emission lines flux ratios.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn_list: dictionary</dt>
+<dd><p class="first last">The dictionary containing all filenames created by brutus.</p>
+</dd>
+<dt>params: dictionary</dt>
+<dd><p class="first last">The dictionary containing all paramaters set by the user.</p>
+</dd>
+<dt>suffix: string [default: None]</dt>
+<dd><p class="first last">The tag of this step, to be used in all files generated for rapid id.</p>
+</dd>
+<dt>ratios: list of string [default: [&#8216;[NII]/[OIII]&#8217;]]</dt>
+<dd><p class="first last">A list of line ratios to plot.</p>
+</dd>
+<dt>vrange: list of lists [default: [[Mone,None]]]</dt>
+<dd><p class="first last">The plot range.</p>
+</dd>
+<dt>use_egal_dered: bool [default: False]</dt>
+<dd><p class="first last">If available, whether to use the line fluxes corrected for 
+extragalactic attentuation.</p>
 </dd>
 </dl>
 </td>
@@ -615,7 +797,7 @@ have been fitted.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

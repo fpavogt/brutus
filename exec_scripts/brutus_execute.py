@@ -76,8 +76,8 @@ proc_steps = [
     # ----- Continuum fitting ------------------------------------------------------------
     # First, fit the continuum using a LOWESS filter. Much more elegant than a polynomial!
     {'step':'fit_continuum', 'run':False, 'suffix':'02',
-     'args':{'start_row': 150, # Where to start the fitting ? None = 0
-             'end_row': 150, # Where to end the fitting ? None = max
+     'args':{'start_row': 0, # Where to start the fitting ? None = 0
+             'end_row': None, # Where to end the fitting ? None = max
              'method': 'lowess', # What kind of fitting is this ?
             },
     },
@@ -89,8 +89,8 @@ proc_steps = [
     # Then, we do it again using PPXF, but only for the spaxels with "decent" SNR ...
     # (ppxf = separate install)
     {'step':'fit_continuum', 'run':False, 'suffix':'04',
-     'args':{'start_row': 150, # Where to start the fitting ? None = 0
-             'end_row': 150, # Where to end the fitting ? None = max
+     'args':{'start_row': 0, # Where to start the fitting ? None = 0
+             'end_row': None, # Where to end the fitting ? None = max
              'method': 'ppxf', # What kind of fitting is this ?
              }
     },
@@ -113,8 +113,8 @@ proc_steps = [
     # ----- Emission line fitting --------------------------------------------------------
     # Let's move on to emission line fitting.
     {'step':'fit_elines', 'run':False, 'suffix':'07',
-     'args':{'start_row':150, # Where to start the fitting ? None = 0
-             'end_row':150, # Where to end the fitting ? None = max
+     'args':{'start_row':0, # Where to start the fitting ? None = 0
+             'end_row':None, # Where to end the fitting ? None = max
             },
     },
     # Construct a datacube with the emission line parameters, using the output of the 
@@ -162,27 +162,55 @@ proc_steps = [
     },
     
     # Fit the kinematic PA using M. Cappellari's routine
-    #{'step':'fit_pa', 'run':False, 'suffix':'14',
-    # 'args':{'do_plot':True},
-    #},
-    # Compute the electron density
-    #{'step':'electron_density', 'run':False, 'suffix':'15',
-    # 'args':{},
-    #},
-    
+    {'step':'fit_kinematic_pa', 'run':False, 'suffix':'14',
+     'args':{'do_plot':True,
+             'vrange':[7210,7400],
+            },
+    },
+    # Compute the electron density from the [SII] line ratio
+    {'step':'get_ne', 'run':False, 'suffix':'15',
+     'args':{'do_plot':True,
+             'ratio_range':[0.4,1.4],
+            },
+    },
     # Derive the oxygen abundance and ionization parameters using pyqz 
     # (pyqz = separate install)
-    {'step':'get_QZ', 'run':True, 'suffix':'16',
-     'args':{'start_row':171,  # Where to start the fitting ? None = 0
+    {'step':'get_QZ', 'run':False, 'suffix':'16',
+     'args':{'start_row':0,  # Where to start the fitting ? None = 0
              'end_row':None, # Where to end the fitting ? None = max
             },
     },
     # Construct the cube from all the pyqz outputs 
-    {'step':'make_QZ_cube', 'run':True, 'suffix':'17',
+    {'step':'make_QZ_cube', 'run':False, 'suffix':'17',
      'args':{'do_plot': True,
             },
     },
-    
+        # Compute the oxygen abundance gradient
+    #{'step':'plot_O_gradient', 'run':False, 'suffix':18,
+    # 'args':{},
+    #},
+    # Compute the star formation rate
+    #{'step':'get_SFR', 'run':False, 'suffix':'19',
+    # 'args':{'do_plot':True,},
+    #},
+    # Plot some RGB images of the different emission lines
+    {'step':'plot_elines_RGB', 'run':True, 'suffix':'20',
+     'args':{'mixes':[['[NII]','Ha','[OIII]'],['[SII]+','[NII]','[OIII]'],], 
+             'stretches': ['log','log'],
+             'stretch_plims': [[10.,99.5,10.,99.5,10.,99.5],
+                               [10.,99.5,10.,99.5,10.,99.5]],
+             'stretch_vlims': [[None,None,None,None,None,None],
+                               [None,None,None,None,None,None]],
+             'use_egal_dered':False,
+            },
+    },
+    # Plot some emission flux line ratio maps
+    {'step':'plot_flux_ratio', 'run':False, 'suffix':'21',
+     'args':{'ratios':['[NII]/[OIII]','[SII]+/[NII]'],
+             'vrange':[[None,None],[None,None]],
+             'use_egal_dered':True,
+            },
+    },
     ]
     
 

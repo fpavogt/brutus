@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 # ---| Some basic parameters |------------------------------------------------------------
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 # Where are we located ?
 # Get the project directory from this file location !
@@ -140,6 +140,8 @@ fn_list = {'snr_cube':None, # The rough measure of the SNR in the continuum and 
            'dered_elines_params':None, # The extragalactic de-attenuated line parameters
            'dered_elines_perror':None, # The extragalactic de-attenuated line parameters errors
            'Av_map': None, # The extinction map.
+           'fit_kin_pa':None, # A pickle file that contains the PA of the velocity map
+           'ne_map':None, # The fits file containing the [SII] line ratio
            'pyqz_pickle': None, # The output of pyqz for each row, stored in a pickle file
           }
 

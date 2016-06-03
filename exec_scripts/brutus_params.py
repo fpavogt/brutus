@@ -32,20 +32,24 @@ brutus_params = {
     'target': 'HCG91c', # The generic name for files created by brutus
     'z_target': 0.02435, # Guess redshift of galaxy
     'inst': 'MUSE', # Which instrument took the data ?
-    'multiprocessing': 8,
+    'multiprocessing': 48,
     'verbose':True,
     'warnings':'default', # 'ignore' = silence known (?) warnings about all-nan's spaxels
                           # 'default' = default system behavior.
 
-	# ---| Location and name of the data file to process |--------------------------------
-    'data_loc': os.path.join(proj_dir,'reduc'), # relative path from this file loc !
+    # ---| Plotting parameters |----------------------------------------------------------
+    'scalebar':[10.,5.0,'top left'], # The location of the scalebar. Set to None if you 
+                                     # don't wwant any. Format: [arcsec, kpc, loc]
+
+    # ---| Location and name of the data file to process |--------------------------------
+    'data_loc': os.path.join(proj_dir,'reduc_1.25'), # relative path from this file loc !
     'data_fn': 'HCG91c_DATACUBE_FINAL_1.25_nosky.fits',
 
-	# ---| Generic locations for plots and products |-------------------------------------
-    'plot_loc': os.path.join(proj_dir,'plots') ,
-    'prod_loc': os.path.join(proj_dir,'products'),
-    'tmp_loc': os.path.join(proj_dir,'products','tmp'),
-    'pyqz_loc': os.path.join(proj_dir,'products','pyqz'),
+    # ---| Generic locations for plots and products |-------------------------------------
+    'plot_loc': os.path.join(proj_dir,'plots_1.25') ,
+    'prod_loc': os.path.join(proj_dir,'products_1.25'),
+    'tmp_loc': os.path.join(proj_dir,'products_1.25','tmp'),
+    'pyqz_loc': os.path.join(proj_dir,'products_1.25','pyqz'),
     
     'fn_list_fn': 'HCG91c_fn_dictionary.pkl', # Name of the dictionary for filenames
     
@@ -185,8 +189,13 @@ brutus_params = {
     'egal_rv': 3.08, # The value of Rv. Use 3.08 for a Calzetti-like law, when using 'fd05'.
     'egal_rva':4.3,  # The value of Rva, if using 'fd05'.   
     
-    # ---| Pyqz |-------------------------------------------------------------------------
+    # ---| fit_kinematic_pa |-------------------------------------------------------------
     
+    'fit_kin': ['ppxf','a'], # Which velocity map to fit ? ppxf = stars, 'a' = elines codes
+    'fit_kin_nsteps': 361, # The angular resolution (361= default=0.5 degrees)
+    'fit_kin_center': [146, 123], # In pixels, the location of the kinematic center
+    
+    # ---| pyqz |-------------------------------------------------------------------------
     
     # Do I want to use the line fluxes corrected for extragalactic attenuation ?
     'pyqz_use_egal_dered': True,
@@ -196,8 +205,6 @@ brutus_params = {
                    '[NII]/[SII]+;[OIII]/[SII]+',
                    #'[NII]/[SII]+;[NII]/Ha;[OIII]/Hb'
                   ],
-    
-        
     }
     
 

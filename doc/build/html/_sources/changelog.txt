@@ -4,8 +4,19 @@ Changelog
 =========
 
 TODO:
- - computed electron density from the [SII] line ratio
- - compute the kinematic PA using fit_kinematic_pa
+ - create an error map associated with the line ratio maps created.
+
+v0.3.1, June 2016, F.P.A. Vogt
+ - tied a step to fit_kinematic_pa to derive the P.A. from the velocity maps.
+ - added new logo to website.
+ - added module to compute the [SII] line ratio - no density for now, just the ratio.
+ - fixed a "feature" in aplpy not showing the outer-nan's-only regions in the plots. Now,
+   each plot shows the full extent of the MUSE cube, irrespective of how few spaxels are
+   actually not NaN's. I use ax._ax1.set_xlim() and ax._ax1.set_ylim() to do so.
+ - added ability to add a scale bar to all the plots. 
+ - added module to create RGB images from 3 line fluxes.
+ - added module to plot line ratio maps.
+ - added a gallery to the website.
 
 v0.3.0, May 2016, F.P.A. Vogt:
  - renamed brian to brutus - to avoid conflict with existing brian module on pypi.
@@ -15,7 +26,7 @@ v0.3.0, May 2016, F.P.A. Vogt:
  - created a "mixed continuum" cube, used in the interactive fit inspection (and elsewhere).
  - created pyqz plots
  - beefed-up the acknowledgment section of the doc to include the reddening laws, the
-   MILES spectral l;ibrary info, the reference to fit_kinematic_pa.
+   MILES spectral library info, the reference to fit_kinematic_pa.
  
 ------------------------------------------------------------------------------------------
  
@@ -47,9 +58,7 @@ v0.1.1, April 2016, F.P.A. Vogt:
  - added interactive plot to inspect the results of the fit - and the ability to save a
    pretty plot from it
  - bugfixes
- 
------------------------------------------------------------------------------------------- 
- 
+  
 v0.1.0, April 2016, F.P.A. Vogt:
  - created overall code structure inspired by pywifes
  - implemented continuum fitting using LOWESS approach

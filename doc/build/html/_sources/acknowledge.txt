@@ -19,9 +19,9 @@ The following Tex-formatted acknowledgment is one way to do so::
     This research has made use of \textsc{brutus}, a Python module to process data cubes 
     from integral field spectrographs hosted at \url{http://fpavogt.github.io/brutus/}. 
     \textsc{brutus} relies on \textsc{statsmodel} (Seabold & Perktold 2010), 
-    \textsc{ppxf} (Cappellari & Emsellem 2004), \textsc{fit_kinematic_pa} 
-    (Krajnovic et al., 2006) \textsc{matplotlib} (Hunter 2007), \textsc{astropy}, 
-    a community-developed core Python package for Astronomy 
+    \textsc{ppxf} (Cappellari & Emsellem 2004), \textsc{fit_kinematic_pa} as described in 
+    Appendix C of Krajnovic et al. (2006), \textsc{matplotlib} (Hunter 2007), 
+    \textsc{astropy}, a community-developed core Python package for Astronomy 
     (Astropy Collaboration et al., 2013), \textsc{photutils}, an affiliated package of 
     \textsc{astropy} for photometry, \textsc{aplpy}, an open-source plotting package for 
     Python hosted at \url{http://aplpy.github.com}, \textsc{montage}, funded by the 
@@ -46,7 +46,7 @@ Finally, you also ought to cite the following works, depending on your use of br
         ranging from -2.32 to +0.22, and ages of 0.0631 to 17.7828 Gyr.
             
     3) The reddening laws:
-        Either the Cardelli, Clayton & Mathis (1989) law, Calzetti et al. (2000) law or 
+        Either the Cardelli, Clayton & Mathis (1989) law, the Calzetti et al. (2000) law or 
         the theoretical model of a turbulent dust screen of **Fischera & Dopita (2005) 
         [default]** for the extragalactic attenuation corrections, and
         the **Fitzpatrick (1999) law [default]** for the galactic extinction.
@@ -63,7 +63,7 @@ Finally, you also ought to cite the following works, depending on your use of br
         
         and you also ought to acknowledge NED itself::
         
-            This research has also made use of the NASA/IPAC Extragalactic Database (NED) 
+            This research has made use of the NASA/IPAC Extragalactic Database (NED) 
             which is operated by the Jet Propulsion Laboratory, California Institute of 
             Technology, under contract with the National Aeronautics and Space Administration. 
         

@@ -19,6 +19,10 @@ import matplotlib.gridspec as gridspec
 import aplpy
 import photutils
 from astropy.stats import sigma_clipped_stats
+import astropy.io.fits as pyfits
+from astropy import wcs
+import pickle
+import os
 
 from brutus_metadata import alligator
 
@@ -84,9 +88,27 @@ def make_galred_plot(lams, alams, etau, Ab, Av, ofn):
     
     plt.savefig(ofn, bbox_inches='tight')
     plt.close() 
+# ----------------------------------------------------------------------------------------      
     
-
-
+def show_scale(ax, scale_length = [10.,5.0], scale_loc='top left'):
+    ''' Adds a scale bar to a given 2-D plot. 
+    
+    :Args:
+        ax: aplpy 'ax' instance
+            The axes to which to add the sale.
+        scale_length: list of float [default: [10.,5.0]]
+                      The scale length in arcsec and kpc
+        scale_loc: string [default: 'top left']
+                   The locaqtion of the scale bar. e.g 'top right', 'bottom left', etc ...
+    '''
+    
+    ax.add_scalebar(scale_length[0]/3600) #Length in degrees
+    
+    mylabel = r'%i$^{\prime\prime}$=%.1fkpc' % (scale_length[0],scale_length[1])
+    
+    ax.scalebar.show(scale_length[0]/3600., label=mylabel, corner = scale_loc, 
+                     color = 'k', frame=True)
+    ax.scalebar.set_linewidth(3)
 # ----------------------------------------------------------------------------------------      
 
 def make_2Dplot(fn, # path to the data (complete!)
@@ -99,6 +121,7 @@ def make_2Dplot(fn, # path to the data (complete!)
                 cmap = None,
                 cblabel = None,
                 cbticks = None,
+                scalebar = None,
                 ):
     '''Creates an image from a 2-D fits image with WCS info.
     
@@ -123,6 +146,8 @@ def make_2Dplot(fn, # path to the data (complete!)
             If set, the label of the colorbar.
         cbticks: list of int [default: None]
             If set, the colorbar ticks.
+        scalebar: list [default: None]
+            If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]
             
     :Returns:
         out: True
@@ -140,21 +165,55 @@ def make_2Dplot(fn, # path to the data (complete!)
     
     if cmap == 'alligator':
         ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
-                            cmap=alligator)
+                            cmap=alligator, interpolation='nearest')
     elif cmap:
         ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
-                            cmap=cmap)
+                            cmap=cmap, interpolation='nearest')
     else:
-        ax1.show_grayscale(invert=True, stretch=stretch,vmax = vmax, vmin=vmin)
+        ax1.show_grayscale(invert=True, stretch=stretch,vmax = vmax, vmin=vmin,
+                           interpolation='nearest')
 
+    # ------------------------------------------------------------------
+    # Here, let's make sure that the full extent of the plot is visible. 
+    # To do so, I need to open the file to know how big the array is. 
+    hdu = pyfits.open(fn)
+    header = hdu[ext].header
+    data = hdu[ext].data
+    hdu.close()
+
+    # What is the size of the map ?
+    (ny,nx) = np.shape(data)
+    
+    # What are the indices of the outermost spaxels ? These are the currents limits.
+    (ys,xs) = np.mgrid[0:ny:1,0:nx:1]
+    
+    xs = xs[data==data]
+    ys = ys[data==data]
+    
+    xpix_min = np.sort(xs.reshape(np.size(xs)))[0]
+    xpix_max = np.sort(xs.reshape(np.size(xs)))[::-1][0]
+    ypix_min = np.sort(ys.reshape(np.size(ys)))[0]
+    ypix_max = np.sort(ys.reshape(np.size(ys)))[::-1][0] 
+    
+    # Ok, then, update the axis limits accordingly. 
+    # NOTE: this is via the matplotlib commands below aplpy, and works with pixels. I think.
+    # From my experiment it should also update the axes tick labels as required.
+    ax1._ax1.set_xlim(0.5-xpix_min,nx+0.5-xpix_min)
+    ax1._ax1.set_ylim(0.5-ypix_min,ny+0.5-ypix_min)
+    ax1._ax1.set_axis_bgcolor((0.5, 0.5, 0.5))
+    # ------------------------------------------------------------------
+    
     ax1.set_tick_color('k')
-
     ax1.add_grid()
  
+    # Do I want to show contours ?
     if contours:
-        ax1.show_contour(fn, hdu=ext, levels=contours,colors=['darkorange']) 
-        #Smooth~seeing
+        ax1.show_contour(fn, hdu=ext, levels=contours, colors=['darkorange']) 
 
+    # Do I want to add a scalebar ?
+    if not(scalebar is None):
+        show_scale(ax1, scale_length = scalebar[:2], scale_loc = scalebar[2])
+    
     # Make it look pretty
     ax1.set_axis_labels(ylabel='Dec. (J2000)')
     ax1.set_axis_labels(xlabel='R.A. (J2000)')
@@ -178,6 +237,272 @@ def make_2Dplot(fn, # path to the data (complete!)
     plt.close(1)
     return True
 # ----------------------------------------------------------------------------------------      
+
+def make_2Dvelplot(fn, # path to the data (complete!)
+                   ext = 1, # Which extension am I looking for ?
+                   ofn = 'plot.pdf', # Savefig filename
+                   contours = False, # Draw any contours 
+                   stretch = 'arcsinh',
+                   vmin = None, 
+                   vmax = None,
+                   cmap = None,
+                   cblabel = None,
+                   cbticks = None,
+                   pa = None, 
+                   center = None,
+                   scalebar = None,
+                   ):
+    '''Creates an image from a 2-D fits image of a velocity field with WCS info and a
+       known position angle.
+    
+    :Args:
+        fn: string
+            The filename (+path!) fo the fits file to display.
+        ext: int (default:1)
+            The extension of the image to display. The data in this extension MUST be 2-D.
+        ofn: string [default:'plot.pdf']
+            The output filename (+path!)
+        contours: bool,list of floats [default: False]
+            If set, shows contours at said levels, e.g. [1,3,5,10.5]
+        stretch: string [default:'arcsinh']
+            The stretch of the image, fed to aplpy.FITSFigure. 'linear', 'arcsinh', ...
+        vmin: float [default: None]
+            If set, the lower bound of the colorbar
+        vmax: float [default: None]
+            If set, the upper bound of the colorbar
+        cmap: string
+            If set, the colormap to use. Use 'alligator' for the special brutus cmap.
+        cblabel: string [default: None]
+            If set, the label of the colorbar.
+        cbticks: list of int [default: None]
+            If set, the colorbar ticks.
+        scalebar: list [default: None]
+            If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]    
+        pa: list [default: None]
+            If set, the P.A. of the velocity field, drawn with a dashed line.
+        center: list [default: None]
+            If set, the location of the center of the velocity field IN PIXELS.
+                
+    :Returns:
+        out: True
+             Always.
+        
+    :Notes:
+        This function absolutely requires WCS coordinates, and a 2-D array.
+    '''
+    
+    # Plot the BW image using the 2d image to indicate the projection
+    plt.close(1)
+    fig1 = plt.figure(1, figsize=(10,9))
+    
+    ax1 = aplpy.FITSFigure(fn, hdu=ext, figure=fig1, north=True)
+    
+    if cmap == 'alligator':
+        ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
+                            cmap=alligator)
+    elif cmap:
+        ax1.show_colorscale(stretch=stretch, vmax = vmax, vmin=vmin, 
+                            cmap=cmap)
+    else:
+        ax1.show_grayscale(invert=True, stretch=stretch,vmax = vmax, vmin=vmin)
+
+    # ------------------------------------------------------------------
+    # Here, let's make sure that the full extent of the plot is visible. 
+    # To do so, I need to open the file to know how big the array is. 
+    hdu = pyfits.open(fn)
+    header = hdu[ext].header
+    data = hdu[ext].data
+    hdu.close()
+
+    # What is the size of the map ?
+    (ny,nx) = np.shape(data)
+    
+    # What are the indices of the outermost spaxels ? These are the currents limits.
+    (ys,xs) = np.mgrid[0:ny:1,0:nx:1]
+    
+    xs = xs[data==data]
+    ys = ys[data==data]
+    
+    xpix_min = np.sort(xs.reshape(np.size(xs)))[0]
+    xpix_max = np.sort(xs.reshape(np.size(xs)))[::-1][0]
+    ypix_min = np.sort(ys.reshape(np.size(ys)))[0]
+    ypix_max = np.sort(ys.reshape(np.size(ys)))[::-1][0] 
+    
+    # Ok, then, update the axis limits accordingly. 
+    # NOTE: this is via the matplotlib commands below aplpy, and works with pixels. I think.
+    # From my experiment it should also update the axes tick labels as required.
+    ax1._ax1.set_xlim(0.5-xpix_min,nx+0.5-xpix_min)
+    ax1._ax1.set_ylim(0.5-ypix_min,ny+0.5-ypix_min)
+    ax1._ax1.set_axis_bgcolor((0.5, 0.5, 0.5))
+    # ------------------------------------------------------------------
+
+    ax1.set_tick_color('k')
+
+    ax1.add_grid()
+ 
+    if contours:
+        ax1.show_contour(fn, hdu=ext, levels=contours, colors=['darkorange']) 
+
+    # Do I want to add a scalebar ?
+    if not(scalebar is None):
+        show_scale(ax1, scale_length = scalebar[:2], scale_loc = scalebar[2])
+
+    # Make it look pretty
+    ax1.set_axis_labels(ylabel='Dec. (J2000)')
+    ax1.set_axis_labels(xlabel='R.A. (J2000)')
+    ax1.tick_labels.set_xformat('hh:mm:ss')
+    ax1.tick_labels.set_yformat('dd:mm:ss')
+    
+    ax1.add_colorbar()
+    ax1.colorbar.set_width(0.2)
+    ax1.colorbar.set_location('top')
+    if cblabel:
+        ax1.colorbar.set_axis_label_text(cblabel)
+        ax1.colorbar.set_axis_label_pad(10)
+    if cbticks:
+        ax1.colorbar.set_ticks(cbticks)
+    ax1.grid.set_color('k')
+    ax1.grid.set_linestyle('dotted')
+    ax1.set_nan_color((0.5,0.5,0.5))
+       
+    if center:
+        if pa:
+            # Very well, I need access to the number of pixels, etc ... 
+            # All I can think of right now is open the fits file by hand ... 
+            # TODO: find a smarter way ?
+            hdu = pyfits.open(fn)
+            header = hdu[ext].header
+            data = hdu[ext].data
+            hdu.close()
+        
+            # Let's deal with the WCS position properly. 
+            # WARNING: usinf pixel2world inside aplpy leads to bad results, if there are 
+            # some nans around the image !
+            # USe astropy.wcs instead
+            w = wcs.WCS(header)
+
+            # What is the size of the map ?
+            (ny,nx) = np.shape(data)
+        
+            xs = np.arange(0,nx,1)
+            
+            # Where do I want to plot my line ?
+            ly = np.tan(np.radians(pa[0]-90.)) * (xs - center[0]) + center[1]
+            line = w.wcs_pix2world( np.array([ [xs[i],ly[i]] for i in range(nx) 
+                                                          if (ly[i]>0) and (ly[i]<ny) ]),0)
+            # Plot the line                                              
+            ax1.show_lines([line.T], lw=4, color='k')
+            ax1.show_lines([line.T], lw=3, color='w', linestyle='--')
+              
+        center_world = w.wcs_pix2world(np.array([center]), 0)
+        
+        # Circle with 1 arcsec diameter.
+        ax1.show_circles(center_world[0][0],
+                         center_world[0][1], 0.5/3600., 
+                         lw=1, color='darkorange', edgecolor='k', facecolor='darkorange')
+
+
+    # Save it
+    fig1.savefig(ofn, bbox_inches='tight')
+    plt.close(1)
+    return True
+# ----------------------------------------------------------------------------------------  
+
+def make_RGBplot(fns, ofn, stretch = 'linear', 
+                 plims = [None, None, None, None, None, None], 
+                 vlims = [None, None, None, None, None, None],
+                 title = None,
+                 scalebar = None,
+                ):
+    '''Creates an RGB image from three fits files.
+    
+    :Args:
+        fn: list strings
+            The filename (+path!) fo the  3 fits file to display (in R, G and B orders).
+        ofn: string
+            The filneame (+path) of the output file.
+        stretch: string [default: 'log']
+                 The stretch to apply to the data, e.g. 'linear', 'log', 'arcsinh'.
+        plims: list of floats [default: [None, None, None, None, None, None]]
+               The limiting percentiles for the plot, as 
+               [pmin_r, pmax_r, pmin_g, pmax_g, pmin_b, pmax_b]
+        vlims: list of floats [default: [None, None, None, None, None, None]]
+               The limtiing values for the plot (superseeds plims), as
+               [vmin_r, vmax_r, vmin_g, vmax_g, vmin_b, vmax_b]
+        scalebar: list [default: None]
+            If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]    
+
+    :Returns:
+        out: True
+             Always.
+    :Notes:
+        This function absolutely requires WCS coordinates, and a 2-D array.
+    '''  
+      
+    # First, make an RGB cube
+    fn_RGB = os.path.join('.','RGB_tmp_cube.fits')
+    aplpy.make_rgb_cube(fns, fn_RGB)
+                          
+    # And an RGB image
+    fn_RGB_im = os.path.join('.','RGB_tmp_im.png')
+    aplpy.make_rgb_image(fn_RGB, fn_RGB_im, 
+                         stretch_r=stretch,
+                         stretch_g=stretch,
+                         stretch_b=stretch,
+                         vmin_r = vlims[0], 
+                         vmin_g = vlims[2], 
+                         vmin_b = vlims[4],
+                         vmax_r = vlims[1], 
+                         vmax_g = vlims[3], 
+                         vmax_b = vlims[5], 
+                         pmin_r = plims[0],
+                         pmax_r = plims[1],
+                         pmin_g = plims[2],
+                         pmax_g = plims[3],
+                         pmin_b = plims[4],
+                         pmax_b = plims[5],
+                         embed_avm_tags = False, make_nans_transparent=True)
+
+    # Plot the RGB image using the 2d image to indicate the projection
+    plt.close(1)
+    fig1 = plt.figure(1, figsize=(10,9))
+
+    fn_RGB_2d = os.path.join('.','RGB_tmp_cube_2d.fits')
+    ax1 = aplpy.FITSFigure(fn_RGB_2d, figure=fig1)
+    ax1.show_rgb(fn_RGB_im, interpolation='nearest')
+
+    ax1.set_tick_color('k')
+ 
+    if not(title is None):
+        ax1.set_title(title, y=1.025)
+ 
+    ax1.add_grid()
+    # Make it look pretty
+    ax1.grid.set_color('k')
+    ax1.grid.set_linestyle('dotted')
+    ax1.set_nan_color((0.5,0.5,0.5))
+    ax1._ax1.set_axis_bgcolor((0.5, 0.5, 0.5))
+
+     # Do I want to add a scalebar ?
+    if not(scalebar is None):
+        show_scale(ax1, scale_length = scalebar[:2], scale_loc = scalebar[2])
+
+    # Make it look pretty
+    ax1.set_axis_labels(ylabel='Dec. (J2000)')
+    ax1.set_axis_labels(xlabel='R.A. (J2000)')
+    ax1.tick_labels.set_xformat('hh:mm:ss')
+    ax1.tick_labels.set_yformat('dd:mm:ss')
+    
+    # Save it
+    fig1.savefig(ofn, bbox_inches='tight')
+    
+    # And remember to delete all the temporary files
+    for f in [fn_RGB_im, fn_RGB_2d, fn_RGB]:
+        os.remove(f)    
+        
+    return True
+
+# ----------------------------------------------------------------------------------------  
 
 class ApManager(object):
     ''' The class managing the interactive aperture selection plot.

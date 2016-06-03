@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Changelog &mdash; brutus 0.3.0 documentation</title>
+  <title>Changelog &mdash; brutus 0.3.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brutus 0.3.0 documentation" href="index.html"/>
+    <link rel="top" title="brutus 0.3.1 documentation" href="index.html"/>
         <link rel="next" title="Acknowledging brutus" href="acknowledge.html"/>
         <link rel="prev" title="FAQ" href="faq.html"/> 
 
@@ -53,6 +53,9 @@
             <a href="index.html" class="icon icon-home"> brutus
           
 
+          
+            
+            <img src="_static/brutus.png" class="logo" />
           
           </a>
 
@@ -83,6 +86,7 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -138,8 +142,21 @@
 <dl class="docutils">
 <dt>TODO:</dt>
 <dd><ul class="first last simple">
-<li>computed electron density from the [SII] line ratio</li>
-<li>compute the kinematic PA using fit_kinematic_pa</li>
+<li>create an error map associated with the line ratio maps created.</li>
+</ul>
+</dd>
+<dt>v0.3.1, June 2016, F.P.A. Vogt</dt>
+<dd><ul class="first last simple">
+<li>tied a step to fit_kinematic_pa to derive the P.A. from the velocity maps.</li>
+<li>added new logo to website.</li>
+<li>added module to compute the [SII] line ratio - no density for now, just the ratio.</li>
+<li>fixed a &#8220;feature&#8221; in aplpy not showing the outer-nan&#8217;s-only regions in the plots. Now,
+each plot shows the full extent of the MUSE cube, irrespective of how few spaxels are
+actually not NaN&#8217;s. I use ax._ax1.set_xlim() and ax._ax1.set_ylim() to do so.</li>
+<li>added ability to add a scale bar to all the plots.</li>
+<li>added module to create RGB images from 3 line fluxes.</li>
+<li>added module to plot line ratio maps.</li>
+<li>added a gallery to the website.</li>
 </ul>
 </dd>
 <dt>v0.3.0, May 2016, F.P.A. Vogt:</dt>
@@ -151,7 +168,7 @@
 <li>created a &#8220;mixed continuum&#8221; cube, used in the interactive fit inspection (and elsewhere).</li>
 <li>created pyqz plots</li>
 <li>beefed-up the acknowledgment section of the doc to include the reddening laws, the
-MILES spectral l;ibrary info, the reference to fit_kinematic_pa.</li>
+MILES spectral library info, the reference to fit_kinematic_pa.</li>
 </ul>
 </dd>
 </dl>
@@ -191,9 +208,6 @@ pretty plot from it</li>
 <li>bugfixes</li>
 </ul>
 </dd>
-</dl>
-<hr class="docutils" />
-<dl class="docutils">
 <dt>v0.1.0, April 2016, F.P.A. Vogt:</dt>
 <dd><ul class="first last simple">
 <li>created overall code structure inspired by pywifes</li>
@@ -252,7 +266,7 @@ apertures of varying radii</li>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

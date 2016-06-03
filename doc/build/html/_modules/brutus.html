@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brutus &mdash; brutus 0.3.0 documentation</title>
+  <title>brutus &mdash; brutus 0.3.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brutus 0.3.0 documentation" href="../index.html"/>
+    <link rel="top" title="brutus 0.3.1 documentation" href="../index.html"/>
         <link rel="up" title="Module code" href="index.html"/> 
 
   
@@ -52,6 +52,9 @@
             <a href="../index.html" class="icon icon-home"> brutus
           
 
+          
+            
+            <img src="../_static/brutus.png" class="logo" />
           
           </a>
 
@@ -82,6 +85,7 @@
             
                 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -178,23 +182,32 @@
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
-<span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
-
+<span class="c1"># Import brutus-specific tools</span>
 <span class="kn">import</span> <span class="nn">brutus_tools</span>
 <span class="kn">import</span> <span class="nn">brutus_cof</span>
 <span class="kn">import</span> <span class="nn">brutus_elf</span>
 <span class="kn">import</span> <span class="nn">brutus_plots</span>
+<span class="kn">import</span> <span class="nn">brutus_red</span>
+<span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="n">__version__</span>
+
+<span class="c1"># Import other important tools, but don&#39;t fail, in case the user doesn&#39;t need them.</span>
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">brutus_ppxf</span>
     <span class="kn">import</span> <span class="nn">ppxf_util</span> <span class="kn">as</span> <span class="nn">util</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Faild to load brutus_ppxf. Is ppxf installed ?&quot;</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">brutus_red</span>
-<span class="kn">from</span> <span class="nn">brutus_metadata</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">fit_kinematic_pa</span> <span class="kn">as</span> <span class="nn">fkp</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Faild to load fit_kinematic_pa. Is it installed ?&quot;</span><span class="p">)</span>
 
-<span class="kn">import</span> <span class="nn">pyqz</span>
-   
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">pyqz</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Faild to load pyqz. Is it installed ?&quot;</span><span class="p">)</span>
+
 <span class="c1"># ---------------------------------------------------------------------------------------- </span>
   
 <div class="viewcode-block" id="run_snr_maps"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_snr_maps">[docs]</a><span class="k">def</span> <span class="nf">run_snr_maps</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
@@ -303,6 +316,7 @@
                             <span class="n">contours</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
                             <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span> 
                             <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;Continuum SNR </span><span class="si">%.2f</span><span class="s1">\AA\ - </span><span class="si">%.2f</span><span class="s1">\AA&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">cont_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+                            <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
                             <span class="p">)</span>  
         <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span> 
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
@@ -310,6 +324,7 @@
                             <span class="n">contours</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">],</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
                             <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">,</span><span class="mi">30</span><span class="p">],</span>
                             <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;</span><span class="si">%.2f</span><span class="s1">\AA\ emission line SNR&#39;</span> <span class="o">%</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;ref_dv_line&#39;</span><span class="p">],</span>
+                            <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
                             <span class="p">)</span>    
         <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span> 
                             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
@@ -317,6 +332,7 @@
                             <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">vmax</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span>
                             <span class="n">cmap</span> <span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                             <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;Spaxels with data&#39;</span><span class="p">,</span>
+                            <span class="n">scalebar</span> <span class="o">=</span> <span class="bp">None</span>
                             <span class="p">)</span>               
                          
     <span class="k">return</span> <span class="n">fn_list</span></div>
@@ -912,7 +928,9 @@
         <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
                                     <span class="n">vmin</span><span class="o">=</span><span class="n">my_vmin</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">my_vmax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">my_cmap</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="n">my_stretch</span><span class="p">,</span> <span class="n">cblabel</span><span class="o">=</span><span class="n">my_label</span><span class="p">,</span> 
-                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="n">my_cbticks</span><span class="p">)</span>                                   
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="n">my_cbticks</span><span class="p">,</span>
+                                    <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
+                                    <span class="p">)</span>                                   
     
     <span class="c1"># Delete the temporary fits file</span>
     <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
@@ -1082,7 +1100,6 @@
 	<span class="c1"># loose the current row. Just live with it.</span>
     <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">start_row</span><span class="p">,</span><span class="n">end_row</span><span class="p">,</span> <span class="n">end_row</span><span class="o">-</span><span class="n">start_row</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>   
 	    
-	    <span class="c1">#TODO: fit only a subset of spaxels with Halpha detected ?</span>
 		<span class="c1"># Alright, now deal with the spaxels outside the user-chosen SNR range.</span>
 		<span class="c1"># Replace them with nan&#39;s</span>
         <span class="n">good_spaxels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">header1</span><span class="p">[</span><span class="s1">&#39;NAXIS2&#39;</span><span class="p">]))</span>
@@ -1462,7 +1479,8 @@
             <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">this_ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> 
                                     <span class="n">vmin</span><span class="o">=</span><span class="n">my_vmin</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="n">my_vmax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">my_cmap</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="n">my_stretch</span><span class="p">,</span> <span class="n">cblabel</span><span class="o">=</span><span class="n">my_label</span><span class="p">,</span> 
-                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="n">my_cbticks</span><span class="p">)</span>                                   
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="n">my_cbticks</span><span class="p">,</span>
+                                    <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],)</span>                                   
     
     <span class="c1"># Delete the temporary fits file</span>
     <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
@@ -1475,7 +1493,8 @@
                                                         <span class="s1">&#39;_eline_mpfit_status.pdf&#39;</span><span class="p">)</span> 
     <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="n">ext</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span><span class="o">=</span><span class="n">ofn</span><span class="p">,</span> <span class="n">contours</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=-</span><span class="mi">16</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
                            <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span><span class="n">stretch</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
-                           <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">cblabel</span><span class="o">=</span><span class="s1">&#39;mpfit status&#39;</span><span class="p">,)</span>
+                           <span class="n">cbticks</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">16</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="p">],</span> <span class="n">cblabel</span><span class="o">=</span><span class="s1">&#39;mpfit status&#39;</span><span class="p">,</span>
+                           <span class="n">scalebar</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fn_list</span></div>
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
@@ -1776,7 +1795,9 @@
                                     <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">xs</span><span class="p">),</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
                                     <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;Aperture idendification number&#39;</span><span class="p">,</span> 
-                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>  
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                    <span class="n">scalebar</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                <span class="p">)</span>  
     
     <span class="c1"># And also save the aperture spectral cube to a fits file</span>
     <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
@@ -1959,9 +1980,266 @@
                                     <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
                                     <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> 
                                     <span class="n">cblabel</span><span class="o">=</span><span class="s1">r&#39;A$_V$ [mag]&#39;</span><span class="p">,</span> 
-                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">)</span>
+                                    <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                    <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
+                                <span class="p">)</span>
                                     
     <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ---------------------------------------------------------------------------------------- </span>
+  
+<div class="viewcode-block" id="run_fit_kinematic_pa"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_fit_kinematic_pa">[docs]</a><span class="k">def</span> <span class="nf">run_fit_kinematic_pa</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> 
+                         <span class="n">vrange</span> <span class="o">=</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">]):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function computes the kinematic position angle for the stars or the gas, </span>
+<span class="sd">    via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus). </span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        do_plot: bool [default: True]</span>
+<span class="sd">                 Whether to make a plot of the kinematic map or not.</span>
+<span class="sd">        vrange: list of int [default: [None,None]]    </span>
+<span class="sd">                The range of the colorbar for the velocity plot.</span>
+<span class="sd">                 </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">                 </span>
+<span class="sd">    :Notes:</span>
+<span class="sd">        pyqz is NOT included with brutus. A separate installation is required.</span>
+<span class="sd">        See http://fpavogt.github.io/pyqz/installation.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Fitting the kinematic position angle.&#39;</span>
+    
+    <span class="n">all_kin_pas</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="c1"># How many kinematic maps do I want to fit ?</span>
+    <span class="k">for</span> <span class="n">kin</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fit_kin&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+            <span class="k">print</span> <span class="s1">&#39;   [</span><span class="si">%s</span><span class="s1">] ...&#39;</span> <span class="o">%</span> <span class="n">kin</span>
+            
+        <span class="c1"># First, I need to load the kinematic maps and the associated errors</span>
+        <span class="k">if</span> <span class="n">kin</span> <span class="o">==</span> <span class="s1">&#39;ppxf&#39;</span><span class="p">:</span> 
+        
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ppxf_sol_map&#39;</span><span class="p">])</span> 
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+            <span class="n">vel</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">dvel</span> <span class="o">=</span> <span class="bp">None</span> <span class="c1"># No error on the velocity coming from ppxf. Will be set to 10km/s </span>
+                        <span class="c1"># by fit_kinematic_pa()</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+        <span class="k">elif</span> <span class="n">kin</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">kin</span><span class="p">)</span>
+            
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+            <span class="n">vel</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">snr</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">vel</span><span class="p">[</span><span class="n">snr</span><span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">kin</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="c1"># Take into account the SNR</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_perror_cube&#39;</span><span class="p">])</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            <span class="n">dvel</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+        <span class="c1"># Correct for the redshift</span>
+        <span class="n">vel</span> <span class="o">-=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span> <span class="c1"># Correct for the velocity</span>
+                
+        <span class="c1"># Very well, I now have my velocity map. How big is it ?</span>
+        <span class="p">(</span><span class="n">ny</span><span class="p">,</span><span class="n">nx</span><span class="p">)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">vel</span><span class="p">)</span>
+        
+        <span class="c1"># Build the array of indices</span>
+        <span class="n">ys</span><span class="p">,</span><span class="n">xs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mgrid</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">ny</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="n">nx</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c1"># Now, I need to recenter this based on the kinematical center for the object</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fit_kin_center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">xs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fit_kin_center&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c1"># Handle the presence of NaNs ...</span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">xs</span><span class="p">[</span><span class="n">vel</span><span class="o">==</span><span class="n">vel</span><span class="p">]</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span><span class="p">[</span><span class="n">vel</span><span class="o">==</span><span class="n">vel</span><span class="p">]</span>
+        <span class="n">vel_nonan</span> <span class="o">=</span> <span class="n">vel</span><span class="p">[</span><span class="n">vel</span><span class="o">==</span><span class="n">vel</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">dvel</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="n">dvel</span> <span class="o">=</span> <span class="n">dvel</span><span class="p">[</span><span class="n">vel</span><span class="o">==</span><span class="n">vel</span><span class="p">]</span>
+    
+        <span class="c1"># Reschape all of it ...    </span>
+        <span class="n">xs</span> <span class="o">=</span> <span class="n">xs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span>
+        <span class="n">ys</span> <span class="o">=</span> <span class="n">ys</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span>
+        <span class="n">vel_nonan</span> <span class="o">=</span> <span class="n">vel_nonan</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">vel_nonan</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">dvel</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="n">dvel</span> <span class="o">=</span> <span class="n">dvel</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">dvel</span><span class="p">))</span>
+            
+        <span class="c1"># Very well, let&#39;s launch the processing</span>
+        <span class="n">all_kin_pas</span><span class="p">[</span><span class="n">kin</span><span class="p">]</span> <span class="o">=</span> <span class="n">fkp</span><span class="o">.</span><span class="n">fit_kinematic_pa</span><span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">,</span> <span class="n">vel_nonan</span><span class="p">,</span> <span class="n">dvel</span> <span class="o">=</span> <span class="n">dvel</span><span class="p">,</span>
+                                                <span class="n">debug</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> 
+                                                <span class="n">nsteps</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fit_kin_nsteps&#39;</span><span class="p">],</span> 
+                                                <span class="n">plot</span> <span class="o">=</span> <span class="bp">False</span><span class="p">)</span>
+    
+        <span class="c1"># Ok, what do I want to do with this ? A plot, and save it for later ?</span>
+        <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
+            
+            <span class="c1"># Create a temporary FITS file</span>
+            <span class="n">fn_tmp</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;tmp_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_tmp.fits&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># Let&#39;s create a temporary fits file with the given velocity map  </span>
+            <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">vel</span> <span class="o">+</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;z_target&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">c</span><span class="p">)</span>
+            <span class="c1"># Add the WCS information</span>
+            <span class="n">tmphdu</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">tmphdu</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+            <span class="n">tmphdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+            
+        
+            <span class="c1"># Alright, let&#39;s make a velocity plot.</span>
+            <span class="k">if</span> <span class="n">kin</span> <span class="ow">in</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">ofn</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_fit_kinematic_pa_</span><span class="si">%s</span><span class="s1">.pdf&#39;</span> <span class="o">%</span> \
+                                                              <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">kin</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ofn</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_fit_kinematic_pa_</span><span class="si">%s</span><span class="s1">.pdf&#39;</span> <span class="o">%</span> <span class="n">kin</span>
+            
+            <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span> <span class="n">ofn</span><span class="p">)</span>
+            
+            <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dvelplot</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">,</span> <span class="c1"># path to the data (complete!)</span>
+                                        <span class="n">ext</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="c1"># Which extension am I looking for ?</span>
+                                        <span class="n">ofn</span> <span class="o">=</span> <span class="n">ofn</span><span class="p">,</span> <span class="c1"># Savefig filename</span>
+                                        <span class="n">contours</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="c1"># Draw any contours </span>
+                                        <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                                        <span class="n">vmin</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                        <span class="n">vmax</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                        <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
+                                        <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;v [km s$^{-1}$]&#39;</span><span class="p">,</span>
+                                        <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                        <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
+                                        <span class="n">pa</span> <span class="o">=</span> <span class="n">all_kin_pas</span><span class="p">[</span><span class="n">kin</span><span class="p">][:</span><span class="mi">2</span><span class="p">],</span> 
+                                        <span class="n">center</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;fit_kin_center&#39;</span><span class="p">],</span>
+                                        <span class="p">)</span>
+            <span class="c1"># Clean up the temporary file</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">fn_tmp</span><span class="p">)</span>
+            
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;fit_kin_pa&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_fit_kinematic_pa.pkl&#39;</span>
+    
+    <span class="c1"># And save these avlues in a pickle file, for future access if needed.</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;fit_kin_pa&#39;</span><span class="p">]),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">all_kin_pas</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+<span class="c1"># ---------------------------------------------------------------------------------------- </span>
+  
+<div class="viewcode-block" id="run_get_ne"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_get_ne">[docs]</a><span class="k">def</span> <span class="nf">run_get_ne</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">do_plot</span> <span class="o">=</span> <span class="bp">True</span><span class="p">,</span> <span class="n">ratio_range</span><span class="o">=</span><span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">]):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    This function computes the kinematic position angle for the stars or the gas, </span>
+<span class="sd">    via the fit_kinematic_pa() routine from M.Cappellari (not included with brutus). </span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        do_plot: bool [default: True]</span>
+<span class="sd">                Whether to make a plot of the electron density map or not.</span>
+<span class="sd">        ratio_range: list [default[None,None]</span>
+<span class="sd">                The line ratio range, for the plot.</span>
+<span class="sd">                 </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">                 </span>
+<span class="sd">    :Notes:</span>
+<span class="sd">        pyqz is NOT included with brutus. A separate installation is required.</span>
+<span class="sd">        See http://fpavogt.github.io/pyqz/installation.html</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Constructing the [SII] line ratio.&#39;</span>
+    
+    
+    <span class="c1"># Alright, let&#39;s load the emission line fluxes</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;pyqz_use_egal_dered&#39;</span><span class="p">]:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_params&#39;</span><span class="p">])</span>
+        <span class="n">fn_e</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_perror&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+        <span class="n">fn_e</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_perror_cube&#39;</span><span class="p">])</span>
+
+    
+    <span class="n">s2h_key</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span>
+    
+    <span class="c1"># Open the files</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="n">hdu_e</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn_e</span><span class="p">)</span>
+    <span class="n">header0_e</span> <span class="o">=</span> <span class="n">hdu_e</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    
+    
+    <span class="c1"># Now loop through these, until I find the lines I need</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+        
+        <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">s2h</span><span class="p">:</span>
+            <span class="n">header_s2h</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+            <span class="n">s2h_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">s2h_err</span> <span class="o">=</span> <span class="n">hdu_e</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">s2l</span><span class="p">:</span>
+            <span class="n">header_s2l</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+            <span class="n">s2l_map</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">s2l_err</span> <span class="o">=</span> <span class="n">hdu_e</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="c1"># Very well, let&#39;s compute the ratio map and error:</span>
+    <span class="n">ratio_map</span> <span class="o">=</span> <span class="n">s2h_map</span><span class="o">/</span><span class="n">s2l_map</span>
+    <span class="n">ratio_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ratio_map</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">s2h_err</span><span class="o">/</span><span class="n">s2h_map</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">s2l_err</span><span class="o">/</span><span class="n">s2l_map</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="c1"># Let&#39;s export this to a dedicated fits file.</span>
+    <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span><span class="n">header0</span><span class="p">)</span>
+    <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ratio_map</span><span class="p">)</span>
+    <span class="n">hdu2</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">ratio_err</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="p">[</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">]:</span>
+        <span class="c1"># Make sure the WCS coordinates are included as well</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">header_s2h</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">suffix</span><span class="p">)</span>
+    
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">,</span><span class="n">hdu2</span><span class="p">])</span>
+    <span class="n">fn_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_[SII]-ratio.fits&#39;</span><span class="p">)</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+    <span class="c1"># Add the filename to the dictionary of filenames</span>
+    <span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;ne_map&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_[SII]-ratio.fits&#39;</span>
+    
+    <span class="c1"># And now, let&#39;s plot it.</span>
+    <span class="k">if</span> <span class="n">do_plot</span><span class="p">:</span>
+         
+            <span class="n">ofn</span> <span class="o">=</span> <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_[SII]-ratio.pdf&#39;</span>
+            
+            <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span> <span class="n">ofn</span><span class="p">)</span>
+            
+            <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="c1"># path to the data (complete!)</span>
+                                        <span class="n">ext</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="c1"># Which extension am I looking for ?</span>
+                                        <span class="n">ofn</span> <span class="o">=</span> <span class="n">ofn</span><span class="p">,</span> <span class="c1"># Savefig filename</span>
+                                        <span class="n">contours</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="c1"># Draw any contours </span>
+                                        <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                                        <span class="n">vmin</span> <span class="o">=</span> <span class="n">ratio_range</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> 
+                                        <span class="n">vmax</span> <span class="o">=</span> <span class="n">ratio_range</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                        <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
+                                        <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;[S\,\textsc{\smaller{II}}] $\lambda$6731 / [S\,\textsc{\smaller{II}}] $\lambda$6716 &#39;</span><span class="p">,</span>
+                                        <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                        <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
+                                        <span class="p">)</span> 
+        
+    
+    <span class="k">return</span> <span class="n">fn_list</span></div>
+
 <span class="c1"># ---------------------------------------------------------------------------------------- </span>
   
 <div class="viewcode-block" id="run_get_QZ"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_get_QZ">[docs]</a><span class="k">def</span> <span class="nf">run_get_QZ</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="n">start_row</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">end_row</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
@@ -1995,7 +2273,6 @@
     
     <span class="c1"># Very well, now I need to open the line fluxes.</span>
     <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;pyqz_use_egal_dered&#39;</span><span class="p">]:</span>
-
         <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_params&#39;</span><span class="p">])</span>
         <span class="n">fn_e</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_perror&#39;</span><span class="p">])</span>
     <span class="k">else</span><span class="p">:</span>
@@ -2078,6 +2355,10 @@
                 <span class="n">nproc</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="c1"># Limit this to 8 for brutus - memory issues ...</span>
+        <span class="k">if</span> <span class="n">nproc</span><span class="o">&gt;</span><span class="mi">8</span><span class="p">:</span>
+            <span class="n">nproc</span> <span class="o">=</span> <span class="mi">8</span>    
 	        
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r</span><span class="s1">   Dealing with spectra in row %2.i, </span><span class="si">%i</span><span class="s1"> at a time ...&#39;</span> <span class="o">%</span> 
                          <span class="p">(</span><span class="n">row</span><span class="p">,</span><span class="n">nproc</span><span class="p">))</span>
@@ -2238,7 +2519,12 @@
         
         
         <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_pyqz_&#39;</span><span class="o">+</span>
-                         <span class="nb">map</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;_vs_&#39;</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+                         <span class="nb">map</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;;&#39;</span><span class="p">,</span><span class="s1">&#39;_vs_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="s1">&#39;_&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;.pdf&#39;</span><span class="p">)</span>
+        
+        <span class="n">mymap</span> <span class="o">=</span> <span class="nb">map</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&lt;&#39;</span><span class="p">,</span><span class="s1">&#39;$&lt;$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&gt;&#39;</span><span class="p">,</span><span class="s1">&#39;$&gt;$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;{&#39;</span><span class="p">,</span><span class="s1">&#39;$\{$&#39;</span><span class="p">)</span>
+        <span class="n">mymap</span> <span class="o">=</span> <span class="n">mymap</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">,</span><span class="s1">&#39;$\}$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;Log&#39;</span><span class="p">,</span><span class="s1">&#39;$\log$&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">,</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+        <span class="n">mymap</span> <span class="o">=</span> <span class="n">mymap</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span><span class="s1">&#39;\_&#39;</span><span class="p">)</span>
+        <span class="n">mylabel</span> <span class="o">=</span> <span class="s1">r&#39;&#39;</span> <span class="o">+</span> <span class="n">mymap</span>
         
         <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn_out</span><span class="p">,</span> <span class="c1"># path to the data (complete!)</span>
                     <span class="n">ext</span> <span class="o">=</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="c1"># Which extension am I looking for ?</span>
@@ -2248,14 +2534,245 @@
                     <span class="n">vmin</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> 
                     <span class="n">vmax</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
                     <span class="n">cmap</span> <span class="o">=</span> <span class="s1">&#39;alligator&#39;</span><span class="p">,</span>
-                    <span class="n">cblabel</span> <span class="o">=</span> <span class="nb">map</span><span class="p">,</span>
+                    <span class="n">cblabel</span> <span class="o">=</span> <span class="n">mylabel</span><span class="p">,</span>
                     <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                    <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
                 <span class="p">)</span>
     
     <span class="k">return</span> <span class="n">fn_list</span>    </div>
-
 <span class="c1"># ----------------------------------------------------------------------------------------</span>
-  
+
+<div class="viewcode-block" id="run_plot_elines_RGB"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_plot_elines_RGB">[docs]</a><span class="k">def</span> <span class="nf">run_plot_elines_RGB</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                        <span class="n">mixes</span> <span class="o">=</span> <span class="p">[[</span><span class="s1">&#39;[NII]&#39;</span><span class="p">,</span><span class="s1">&#39;Ha&#39;</span><span class="p">,</span><span class="s1">&#39;[OIII]&#39;</span><span class="p">],],</span> 
+                        <span class="n">stretches</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;log&#39;</span><span class="p">,],</span>
+                        <span class="n">stretch_plims</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">10.</span><span class="p">,</span><span class="mf">99.5</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span><span class="mf">99.5</span><span class="p">,</span><span class="mf">10.</span><span class="p">,</span><span class="mf">99.5</span><span class="p">],],</span>
+                        <span class="n">stretch_vlims</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">],],</span>
+                        <span class="n">use_egal_dered</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+                       <span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">    This function is designed to make some RGB images from emission lines.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        mixes: list of list [default: [[&#39;[NII]&#39;,&#39;Ha&#39;,&#39;[OIII]&#39;]]]</span>
+<span class="sd">             A list of line triplets indicatin the R, G &amp; B channels.</span>
+<span class="sd">        stretches: list of string [default: [&#39;log&#39;]]</span>
+<span class="sd">                   The stretches to apply to the data, e.g. &#39;linear&#39;, &#39;log&#39;, &#39;arcsinh&#39;.</span>
+<span class="sd">        stretch_plims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]</span>
+<span class="sd">                       The limiting percentiles for the plot, as </span>
+<span class="sd">                       [pmin_r, pmax_r, pmin_g, pmax_g, pmin_b, pmax_b]</span>
+<span class="sd">        stretch_vlims: list of list of floats [default: [[10.,99.5,10.,99.5,10.,99.5],]]</span>
+<span class="sd">                       The limtiing values for the plot (superseeds stretch_plims), as</span>
+<span class="sd">                       [vmin_r, vmax_r, vmin_g, vmax_g, vmin_b, vmax_b]</span>
+<span class="sd">        use_egal_dered: bool [default: False]</span>
+<span class="sd">                        If available, whether to use the line fluxes corrected for </span>
+<span class="sd">                        extragalactic attentuation.</span>
+<span class="sd">             </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">    &#39;&#39;&#39;</span> 
+    
+    <span class="c1"># First, I need to generate 3 individual fits files with the line fluxes</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Creating some RGB emission line images.&#39;</span>
+    
+    <span class="c1"># Very well, now I need to open the line fluxes.</span>
+    <span class="k">if</span> <span class="n">use_egal_dered</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_params&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Alright, now I need to extract the line fluxes</span>
+    <span class="c1"># Open the file</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="c1"># All elines definition are inside elines_pyqz inside brutus_metadata. </span>
+    <span class="c1"># For the ones the user requested, construct a flux map.</span>
+    <span class="n">elines_fluxes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mixes</span><span class="p">):</span>
+        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span><span class="bp">None</span><span class="p">}</span>    
+
+    <span class="c1"># Look at each emission line fitted. Do I need it ?</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">akey</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+    
+        <span class="n">this_header</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+        <span class="n">this_data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                               
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;BR_REFL&#39;</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mixes</span><span class="p">):</span>
+            
+            <span class="k">for</span> <span class="p">(</span><span class="n">cc</span><span class="p">,</span><span class="n">col</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mix</span><span class="p">):</span> <span class="c1"># Search all possible lines</span>
+                <span class="k">if</span> <span class="n">lam</span> <span class="ow">in</span> <span class="n">elines_pyqz</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span> <span class="c1"># Wavelength match ? I found a line.</span>
+            
+                    <span class="n">flux</span> <span class="o">=</span> <span class="n">this_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                
+                    <span class="c1"># Take into account the SNR</span>
+                    <span class="n">flux</span><span class="p">[</span><span class="n">this_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">akey</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            
+                    <span class="c1"># Already exists ? - then I found a line with multiple components</span>
+                    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span> 
+                        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flux</span> <span class="c1"># append the flux</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="o">=</span> <span class="n">flux</span> <span class="c1"># Save the data for later</span>
+                       
+    <span class="c1"># Close the hdus</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Very well, I now have all my line fluxes. Let&#39;s deal with each RGB set one at a time.</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mixes</span><span class="p">):</span>
+
+        <span class="n">fns</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
+                 <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_RGB_</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">-</span><span class="si">%s</span><span class="s1">.pdf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mix</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mix</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                 
+        <span class="c1"># Now, let&#39; create 3 independant temporary fits file with WCS coordinates</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">cc</span><span class="p">,</span><span class="n">col</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mix</span><span class="p">):</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span><span class="s1">&#39;RGB_tmp_</span><span class="si">%i</span><span class="s1">.fits&#39;</span> <span class="o">%</span> <span class="n">cc</span><span class="p">)</span>
+            <span class="n">fns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+            
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">],</span> <span class="n">header</span> <span class="o">=</span> <span class="n">header1</span><span class="p">)</span>
+            <span class="c1"># Add the wcs info</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">header1</span><span class="p">)</span>
+            <span class="n">outfits</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">([</span><span class="n">hdu</span><span class="p">])</span>
+            <span class="n">outfits</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    
+        <span class="c1"># Great, I am now ready to call the plotting function</span>
+        <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_RGBplot</span><span class="p">(</span><span class="n">fns</span><span class="p">,</span> <span class="n">ofn</span><span class="p">,</span>  <span class="n">stretch</span> <span class="o">=</span> <span class="n">stretches</span><span class="p">[</span><span class="n">m</span><span class="p">],</span>
+                                  <span class="n">plims</span> <span class="o">=</span> <span class="n">stretch_plims</span><span class="p">[</span><span class="n">m</span><span class="p">],</span> <span class="n">vlims</span> <span class="o">=</span> <span class="n">stretch_vlims</span><span class="p">[</span><span class="n">m</span><span class="p">],</span>
+                                  <span class="n">title</span> <span class="o">=</span> <span class="s1">r&#39;RGB: </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>  <span class="p">(</span><span class="n">mix</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">mix</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">mix</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
+                                  <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">])</span>
+    
+        <span class="c1"># And remember to delete all the temporary files</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fns</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>    
+    
+    <span class="k">return</span> <span class="n">fn_list</span>    </div>
+<span class="c1"># ----------------------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="run_plot_flux_ratio"><a class="viewcode-back" href="../modules/brutus.html#brutus.run_plot_flux_ratio">[docs]</a><span class="k">def</span> <span class="nf">run_plot_flux_ratio</span><span class="p">(</span><span class="n">fn_list</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">suffix</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                        <span class="n">ratios</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;[NII]/[OIII]&#39;</span><span class="p">,],</span>
+                        <span class="n">vrange</span> <span class="o">=</span> <span class="p">[[</span><span class="bp">None</span><span class="p">,</span><span class="bp">None</span><span class="p">],],</span>
+                        <span class="n">use_egal_dered</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+                       <span class="p">):</span>   
+    <span class="sd">&#39;&#39;&#39; </span>
+<span class="sd">    This function is designed to make some images from emission lines flux ratios.</span>
+<span class="sd">    </span>
+<span class="sd">    :Args:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The dictionary containing all filenames created by brutus.</span>
+<span class="sd">        params: dictionary</span>
+<span class="sd">                The dictionary containing all paramaters set by the user. </span>
+<span class="sd">        suffix: string [default: None]</span>
+<span class="sd">                The tag of this step, to be used in all files generated for rapid id.</span>
+<span class="sd">        ratios: list of string [default: [&#39;[NII]/[OIII]&#39;]]</span>
+<span class="sd">             A list of line ratios to plot.</span>
+<span class="sd">        vrange: list of lists [default: [[Mone,None]]]</span>
+<span class="sd">                The plot range.</span>
+<span class="sd">        use_egal_dered: bool [default: False]</span>
+<span class="sd">                        If available, whether to use the line fluxes corrected for </span>
+<span class="sd">                        extragalactic attentuation.</span>
+<span class="sd">             </span>
+<span class="sd">    :Returns:</span>
+<span class="sd">        fn_list: dictionary</span>
+<span class="sd">                 The updated dictionary of filenames. </span>
+<span class="sd">    &#39;&#39;&#39;</span> 
+    
+       <span class="c1"># First, I need to generate 3 individual fits files with the line fluxes</span>
+    <span class="k">if</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+        <span class="k">print</span> <span class="s1">&#39;-&gt; Creating some line ratio images.&#39;</span>
+    
+    <span class="c1"># Very well, now I need to open the line fluxes.</span>
+    <span class="k">if</span> <span class="n">use_egal_dered</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;dered_elines_params&#39;</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span><span class="n">fn_list</span><span class="p">[</span><span class="s1">&#39;elines_params_cube&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Alright, now I need to extract the line fluxes</span>
+    <span class="c1"># Open the file</span>
+    <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="n">header0</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+    <span class="n">header1</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+
+    <span class="c1"># All elines definition are inside elines_pyqz inside brutus_metadata. </span>
+    <span class="c1"># For the ones the user requested, construct a flux map.</span>
+    <span class="n">elines_fluxes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ratios</span><span class="p">):</span>
+        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="bp">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="bp">None</span><span class="p">}</span>    
+
+    <span class="c1"># Look at each emission line fitted. Do I need it ?</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">akey</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+    
+        <span class="n">this_header</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">header</span>
+        <span class="n">this_data</span> <span class="o">=</span> <span class="n">hdu</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                               
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">this_header</span><span class="p">[</span><span class="s1">&#39;BR_REFL&#39;</span><span class="p">]</span>
+        
+        <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ratios</span><span class="p">):</span>
+            
+            <span class="k">for</span> <span class="p">(</span><span class="n">cc</span><span class="p">,</span><span class="n">col</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)):</span> <span class="c1"># Search all possible lines</span>
+                <span class="k">if</span> <span class="n">lam</span> <span class="ow">in</span> <span class="n">elines_pyqz</span><span class="p">[</span><span class="n">col</span><span class="p">]:</span> <span class="c1"># Wavelength match ? I found a line.</span>
+            
+                    <span class="n">flux</span> <span class="o">=</span> <span class="n">this_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                
+                    <span class="c1"># Take into account the SNR</span>
+                    <span class="n">flux</span><span class="p">[</span><span class="n">this_data</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">&lt;</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;elines&#39;</span><span class="p">][</span><span class="n">akey</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+            
+                    <span class="c1"># Already exists ? - then I found a line with multiple components</span>
+                    <span class="k">if</span> <span class="ow">not</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">):</span> 
+                        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="o">+=</span> <span class="n">flux</span> <span class="c1"># append the flux</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="n">cc</span><span class="p">]</span> <span class="o">=</span> <span class="n">flux</span> <span class="c1"># Save the data for later</span>
+                       
+    <span class="c1"># Close the hdus</span>
+    <span class="n">hdu</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    
+    <span class="c1"># Very well, I now have all my line fluxes. Let&#39;s deal with each set one at a time.</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">mix</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ratios</span><span class="p">):</span>
+        
+        <span class="n">ofn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;plot_loc&#39;</span><span class="p">],</span>
+                 <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ratio_</span><span class="si">%s</span><span class="s1">_vs_</span><span class="si">%s</span><span class="s1">.pdf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                                                                      <span class="n">mix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+                 
+        <span class="c1"># Now, let&#39; create a fits file with WCS coordinates</span>
+        <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;prod_loc&#39;</span><span class="p">],</span>
+                 <span class="n">suffix</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="o">+</span><span class="s1">&#39;_ratio_</span><span class="si">%s</span><span class="s1">_vs_</span><span class="si">%s</span><span class="s1">.fits&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">mix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                                                                       <span class="n">mix</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
+            
+        <span class="n">hdu0</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">(</span><span class="n">header</span> <span class="o">=</span> <span class="n">header0</span><span class="p">)</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">elines_fluxes</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="c1"># Make sure the WCS coordinates are included as well</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_wcs</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">header1</span><span class="p">)</span>
+        <span class="c1"># Also include a brief mention about which version of brutus is being used</span>
+        <span class="n">hdu1</span> <span class="o">=</span> <span class="n">brutus_tools</span><span class="o">.</span><span class="n">hdu_add_brutus</span><span class="p">(</span><span class="n">hdu1</span><span class="p">,</span><span class="n">suffix</span><span class="p">)</span>
+        <span class="c1"># Add the line reference wavelength for future references</span>
+        <span class="n">hdu1</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;BR_RATIO&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">mix</span><span class="p">,</span> <span class="s1">&#39;line ratio&#39;</span><span class="p">)</span>
+            
+        <span class="n">hdu</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdus</span><span class="o">=</span><span class="p">[</span><span class="n">hdu0</span><span class="p">,</span><span class="n">hdu1</span><span class="p">])</span>
+        <span class="n">hdu</span><span class="o">.</span><span class="n">writeto</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">clobber</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        
+        <span class="c1"># Great, I am now ready to call the plotting function</span>
+        <span class="n">brutus_plots</span><span class="o">.</span><span class="n">make_2Dplot</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">ofn</span> <span class="o">=</span> <span class="n">ofn</span><span class="p">,</span> <span class="n">contours</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> 
+                                 <span class="n">stretch</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span>
+                                 <span class="n">vmin</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> 
+                                 <span class="n">vmax</span> <span class="o">=</span> <span class="n">vrange</span><span class="p">[</span><span class="n">m</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span>
+                                 <span class="n">cmap</span> <span class="o">=</span> <span class="n">alligator</span><span class="p">,</span>
+                                 <span class="n">cblabel</span> <span class="o">=</span> <span class="s1">r&#39;$\log$ </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">mix</span><span class="p">,</span>
+                                 <span class="n">cbticks</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
+                                 <span class="n">scalebar</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;scalebar&#39;</span><span class="p">],</span>
+                                <span class="p">)</span>
+                                
+    
+    <span class="k">return</span> <span class="n">fn_list</span>  </div>
 </pre></div>
 
            </div>
@@ -2289,7 +2806,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

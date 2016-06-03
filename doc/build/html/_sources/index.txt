@@ -13,22 +13,11 @@ brutus |release|
 
 
 .. image:: _static/09_HCG91c_eline-a-6562.81_F.png 
-    :width: 220px
-
-.. image:: _static/09_HCG91c_eline-a-6562.81_v.png
-    :width: 220px
+    :width: 325px
     
-.. image:: _static/17_HCG91c_pyqz_<Tot[O]+12{KDE}>.png
-    :width: 220px
- 
-.. image:: _static/11_HCG91c_ap_list_6562.81.png
-    :width: 220px        
+.. image:: _static/20_HCG91c_RGB_[SII]+-[NII]-[OIII].png
+    :width: 325px
 
-.. image:: _static/12_HCG91c_ap_map.png
-    :width: 220px 
-    
-.. image:: _static/17_HCG91c_pyqz_<LogQ{KDE}>.png
-    :width: 220px 
 
 brutus is a set of Python modules designed to process datacubes from Integral Field 
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. **The focus 
@@ -63,7 +52,7 @@ brutus can use up to ``ny`` cpus at once (where ``nx*ny`` is the number of spaxe
 datacube; ``ny~300`` for one MUSE cube) to speed up the processing of large datasets. 
 brutus also exploits existing tools with proven track-records developed by the community 
 and individuals, including `Astropy <http://www.astropy.org/>`_, 
-`pyneb <http://www.iac.es/proyecto/PyNeb/>`_,
+`pyneb <http://www.iac.es/proyecto/PyNeb/>`_ (soon ?),
 `statsmodels <http://statsmodels.sourceforge.net/>`_, 
 `APLyp <https://aplpy.github.io/>`_, 
 `ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_, 
@@ -84,13 +73,14 @@ Contents
    :maxdepth: 1
 
    Home <self>
+   gallery
    installation
    running
    faq
    changelog
    acknowledge
    modules/modules
-
+    
 
 Indices and tables
 --------------------
