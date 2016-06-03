@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brutus 0.3.0 &mdash; brutus 0.3.0 documentation</title>
+  <title>brutus 0.3.1 &mdash; brutus 0.3.1 documentation</title>
   
 
   
@@ -30,8 +30,8 @@
   
 
   
-    <link rel="top" title="brutus 0.3.0 documentation" href="#"/>
-        <link rel="next" title="Installing brutus" href="installation.html"/> 
+    <link rel="top" title="brutus 0.3.1 documentation" href="#"/>
+        <link rel="next" title="Gallery" href="gallery.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -52,6 +52,9 @@
             <a href="#" class="icon icon-home"> brutus
           
 
+          
+            
+            <img src="_static/brutus.png" class="logo" />
           
           </a>
 
@@ -82,6 +85,7 @@
             
                 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -118,7 +122,7 @@
   <ul class="wy-breadcrumbs">
     <li><a href="#">Docs</a> &raquo;</li>
       
-    <li>brutus 0.3.0</li>
+    <li>brutus 0.3.1</li>
       <li class="wy-breadcrumbs-aside">
         
           
@@ -133,19 +137,15 @@
            <div itemprop="articleBody">
             
   <div class="section" id="brutus-release">
-<h1>brutus 0.3.0<a class="headerlink" href="#brutus-release" title="Permalink to this headline">¶</a></h1>
+<h1>brutus 0.3.1<a class="headerlink" href="#brutus-release" title="Permalink to this headline">¶</a></h1>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">These pages describe brutus 0.3.0. The module is currently under construction, and
+<p class="last">These pages describe brutus 0.3.1. The module is currently under construction, and
 NOT yet ready for deployment. For more information, send an email to
 <a class="reference external" href="mailto:frederic&#46;vogt&#37;&#52;&#48;alumni&#46;anu&#46;edu&#46;au">frederic<span>&#46;</span>vogt<span>&#64;</span>alumni<span>&#46;</span>anu<span>&#46;</span>edu<span>&#46;</span>au</a>.</p>
 </div>
-<a class="reference internal image-reference" href="_images/09_HCG91c_eline-a-6562.81_F.png"><img alt="_images/09_HCG91c_eline-a-6562.81_F.png" src="_images/09_HCG91c_eline-a-6562.81_F.png" style="width: 220px;" /></a>
-<a class="reference internal image-reference" href="_images/09_HCG91c_eline-a-6562.81_v.png"><img alt="_images/09_HCG91c_eline-a-6562.81_v.png" src="_images/09_HCG91c_eline-a-6562.81_v.png" style="width: 220px;" /></a>
-<a class="reference internal image-reference" href="_images/17_HCG91c_pyqz_&lt;Tot[O]+12{KDE}&gt;.png"><img alt="_images/17_HCG91c_pyqz_&lt;Tot[O]+12{KDE}&gt;.png" src="_images/17_HCG91c_pyqz_&lt;Tot[O]+12{KDE}&gt;.png" style="width: 220px;" /></a>
-<a class="reference internal image-reference" href="_images/11_HCG91c_ap_list_6562.81.png"><img alt="_images/11_HCG91c_ap_list_6562.81.png" src="_images/11_HCG91c_ap_list_6562.81.png" style="width: 220px;" /></a>
-<a class="reference internal image-reference" href="_images/12_HCG91c_ap_map.png"><img alt="_images/12_HCG91c_ap_map.png" src="_images/12_HCG91c_ap_map.png" style="width: 220px;" /></a>
-<a class="reference internal image-reference" href="_images/17_HCG91c_pyqz_&lt;LogQ{KDE}&gt;.png"><img alt="_images/17_HCG91c_pyqz_&lt;LogQ{KDE}&gt;.png" src="_images/17_HCG91c_pyqz_&lt;LogQ{KDE}&gt;.png" style="width: 220px;" /></a>
+<a class="reference internal image-reference" href="_images/09_HCG91c_eline-a-6562.81_F.png"><img alt="_images/09_HCG91c_eline-a-6562.81_F.png" src="_images/09_HCG91c_eline-a-6562.81_F.png" style="width: 325px;" /></a>
+<a class="reference internal image-reference" href="_images/20_HCG91c_RGB_[SII]+-[NII]-[OIII].png"><img alt="_images/20_HCG91c_RGB_[SII]+-[NII]-[OIII].png" src="_images/20_HCG91c_RGB_[SII]+-[NII]-[OIII].png" style="width: 325px;" /></a>
 <p>brutus is a set of Python modules designed to process datacubes from Integral Field
 Spectrographs, and in particular MUSE on the VLT/UT-4 at Paranal Observatory. <strong>The focus
 of brutus is primarily set on performing a detailed emission line analysis, including a
@@ -178,7 +178,7 @@ emission line spectra.</li>
 datacube; <code class="docutils literal"><span class="pre">ny~300</span></code> for one MUSE cube) to speed up the processing of large datasets.
 brutus also exploits existing tools with proven track-records developed by the community
 and individuals, including <a class="reference external" href="http://www.astropy.org/">Astropy</a>,
-<a class="reference external" href="http://www.iac.es/proyecto/PyNeb/">pyneb</a>,
+<a class="reference external" href="http://www.iac.es/proyecto/PyNeb/">pyneb</a> (soon ?),
 <a class="reference external" href="http://statsmodels.sourceforge.net/">statsmodels</a>,
 <a class="reference external" href="https://aplpy.github.io/">APLyp</a>,
 <a class="reference external" href="http://www-astro.physics.ox.ac.uk/~mxc/software/">ppxf</a>,
@@ -194,6 +194,7 @@ and individuals, including <a class="reference external" href="http://www.astrop
 <div class="toctree-wrapper compound">
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faq.html">FAQ</a></li>
@@ -233,7 +234,7 @@ Python module.  If not, see <a class="reference external" href="http://www.gnu.o
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="installation.html" class="btn btn-neutral float-right" title="Installing brutus" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="gallery.html" class="btn btn-neutral float-right" title="Gallery" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
     </div>
@@ -265,7 +266,7 @@ Python module.  If not, see <a class="reference external" href="http://www.gnu.o
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

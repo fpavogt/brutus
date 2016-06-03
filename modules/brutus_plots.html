@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>brutus_plots module &mdash; brutus 0.3.0 documentation</title>
+  <title>brutus_plots module &mdash; brutus 0.3.1 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
   
 
   
-    <link rel="top" title="brutus 0.3.0 documentation" href="../index.html"/>
+    <link rel="top" title="brutus 0.3.1 documentation" href="../index.html"/>
         <link rel="up" title="Functions" href="modules.html"/>
         <link rel="next" title="brutus_ppxf module" href="brutus_ppxf.html"/>
         <link rel="prev" title="brutus_mpfit module" href="brutus_mpfit.html"/> 
@@ -54,6 +54,9 @@
             <a href="../index.html" class="icon icon-home"> brutus
           
 
+          
+            
+            <img src="../_static/brutus.png" class="logo" />
           
           </a>
 
@@ -84,6 +87,7 @@
             
                 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../gallery.html">Gallery</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installing brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../running.html">Running brutus</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../faq.html">FAQ</a></li>
@@ -390,7 +394,7 @@ and visualize how well/bad they were fitted.</p>
 
 <dl class="function">
 <dt id="brutus_plots.make_2Dplot">
-<code class="descclassname">brutus_plots.</code><code class="descname">make_2Dplot</code><span class="sig-paren">(</span><em>fn</em>, <em>ext=1</em>, <em>ofn='plot.pdf'</em>, <em>contours=False</em>, <em>stretch='arcsinh'</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>cmap=None</em>, <em>cblabel=None</em>, <em>cbticks=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#make_2Dplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.make_2Dplot" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">brutus_plots.</code><code class="descname">make_2Dplot</code><span class="sig-paren">(</span><em>fn</em>, <em>ext=1</em>, <em>ofn='plot.pdf'</em>, <em>contours=False</em>, <em>stretch='arcsinh'</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>cmap=None</em>, <em>cblabel=None</em>, <em>cbticks=None</em>, <em>scalebar=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#make_2Dplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.make_2Dplot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates an image from a 2-D fits image with WCS info.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -426,6 +430,123 @@ and visualize how well/bad they were fitted.</p>
 </dd>
 <dt>cbticks: list of int [default: None]</dt>
 <dd><p class="first last">If set, the colorbar ticks.</p>
+</dd>
+<dt>scalebar: list [default: None]</dt>
+<dd><p class="first last">If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: True</dt>
+<dd><p class="first last">Always.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">This function absolutely requires WCS coordinates, and a 2-D array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus_plots.make_2Dvelplot">
+<code class="descclassname">brutus_plots.</code><code class="descname">make_2Dvelplot</code><span class="sig-paren">(</span><em>fn</em>, <em>ext=1</em>, <em>ofn='plot.pdf'</em>, <em>contours=False</em>, <em>stretch='arcsinh'</em>, <em>vmin=None</em>, <em>vmax=None</em>, <em>cmap=None</em>, <em>cblabel=None</em>, <em>cbticks=None</em>, <em>pa=None</em>, <em>center=None</em>, <em>scalebar=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#make_2Dvelplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.make_2Dvelplot" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Creates an image from a 2-D fits image of a velocity field with WCS info and a</dt>
+<dd>known position angle.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn: string</dt>
+<dd><p class="first last">The filename (+path!) fo the fits file to display.</p>
+</dd>
+<dt>ext: int (default:1)</dt>
+<dd><p class="first last">The extension of the image to display. The data in this extension MUST be 2-D.</p>
+</dd>
+<dt>ofn: string [default:&#8217;plot.pdf&#8217;]</dt>
+<dd><p class="first last">The output filename (+path!)</p>
+</dd>
+<dt>contours: bool,list of floats [default: False]</dt>
+<dd><p class="first last">If set, shows contours at said levels, e.g. [1,3,5,10.5]</p>
+</dd>
+<dt>stretch: string [default:&#8217;arcsinh&#8217;]</dt>
+<dd><p class="first last">The stretch of the image, fed to aplpy.FITSFigure. &#8216;linear&#8217;, &#8216;arcsinh&#8217;, ...</p>
+</dd>
+<dt>vmin: float [default: None]</dt>
+<dd><p class="first last">If set, the lower bound of the colorbar</p>
+</dd>
+<dt>vmax: float [default: None]</dt>
+<dd><p class="first last">If set, the upper bound of the colorbar</p>
+</dd>
+<dt>cmap: string</dt>
+<dd><p class="first last">If set, the colormap to use. Use &#8216;alligator&#8217; for the special brutus cmap.</p>
+</dd>
+<dt>cblabel: string [default: None]</dt>
+<dd><p class="first last">If set, the label of the colorbar.</p>
+</dd>
+<dt>cbticks: list of int [default: None]</dt>
+<dd><p class="first last">If set, the colorbar ticks.</p>
+</dd>
+<dt>scalebar: list [default: None]</dt>
+<dd><p class="first last">If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]</p>
+</dd>
+<dt>pa: list [default: None]</dt>
+<dd><p class="first last">If set, the P.A. of the velocity field, drawn with a dashed line.</p>
+</dd>
+<dt>center: list [default: None]</dt>
+<dd><p class="first last">If set, the location of the center of the velocity field IN PIXELS.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first docutils">
+<dt>out: True</dt>
+<dd><p class="first last">Always.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Notes:</th><td class="field-body"><p class="first last">This function absolutely requires WCS coordinates, and a 2-D array.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="brutus_plots.make_RGBplot">
+<code class="descclassname">brutus_plots.</code><code class="descname">make_RGBplot</code><span class="sig-paren">(</span><em>fns, ofn, stretch='linear', plims=[None, None, None, None, None, None], vlims=[None, None, None, None, None, None], title=None, scalebar=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#make_RGBplot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.make_RGBplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an RGB image from three fits files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first docutils">
+<dt>fn: list strings</dt>
+<dd><p class="first last">The filename (+path!) fo the  3 fits file to display (in R, G and B orders).</p>
+</dd>
+<dt>ofn: string</dt>
+<dd><p class="first last">The filneame (+path) of the output file.</p>
+</dd>
+<dt>stretch: string [default: &#8216;log&#8217;]</dt>
+<dd><p class="first last">The stretch to apply to the data, e.g. &#8216;linear&#8217;, &#8216;log&#8217;, &#8216;arcsinh&#8217;.</p>
+</dd>
+<dt>plims: list of floats [default: [None, None, None, None, None, None]]</dt>
+<dd><p class="first last">The limiting percentiles for the plot, as 
+[pmin_r, pmax_r, pmin_g, pmax_g, pmin_b, pmax_b]</p>
+</dd>
+<dt>vlims: list of floats [default: [None, None, None, None, None, None]]</dt>
+<dd><p class="first last">The limtiing values for the plot (superseeds plims), as
+[vmin_r, vmax_r, vmin_g, vmax_g, vmin_b, vmax_b]</p>
+</dd>
+<dt>scalebar: list [default: None]</dt>
+<dd><p class="first last">If set, adds a scale bar to the plot. Format: [lenght arcsec, length kpc, loc]</p>
 </dd>
 </dl>
 </td>
@@ -522,6 +643,31 @@ plt.Circle.</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="brutus_plots.show_scale">
+<code class="descclassname">brutus_plots.</code><code class="descname">show_scale</code><span class="sig-paren">(</span><em>ax, scale_length=[10.0, 5.0], scale_loc='top left'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/brutus_plots.html#show_scale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#brutus_plots.show_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a scale bar to a given 2-D plot.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Args:</th><td class="field-body"><dl class="first last docutils">
+<dt>ax: aplpy &#8216;ax&#8217; instance</dt>
+<dd><p class="first last">The axes to which to add the sale.</p>
+</dd>
+<dt>scale_length: list of float [default: [10.,5.0]]</dt>
+<dd><p class="first last">The scale length in arcsec and kpc</p>
+</dd>
+<dt>scale_loc: string [default: &#8216;top left&#8217;]</dt>
+<dd><p class="first last">The locaqtion of the scale bar. e.g &#8216;top right&#8217;, &#8216;bottom left&#8217;, etc ...</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 
 
@@ -565,7 +711,7 @@ plt.Circle.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.0',
+            VERSION:'0.3.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

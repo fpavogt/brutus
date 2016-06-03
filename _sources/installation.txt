@@ -38,15 +38,15 @@ The basic packages below are required for brutus to work properly:
 * `aplpy <https://aplpy.github.io/>`_
 * montage (`download <http://montage.ipac.caltech.edu/docs/download.html>`_ | `install instructions <http://montage.ipac.caltech.edu/docs/build.html>`_)
 * `astropy <http://www.astropy.org/>`_
+* `photutils <http://photutils.readthedocs.io/en/latest/>`_
+* `statsmodel <http://statsmodels.sourceforge.net/>`_
 
-The packages below might be required, depending what step is being executed. Install what
-you need:
+The packages below might be required, depending on what step is being executed. Install 
+what you need:
 
-* `statsmodel <http://statsmodels.sourceforge.net/>`_ [LOWESS continuum fitting; pyqz]
-* `photutils <http://photutils.readthedocs.io/en/latest/>`_ [structure identification]
-* `ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_ [ppxf continuum fitting]
-* `fit_kinematics_pa <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_ [Kinematic fitting]
-
+* `ppxf <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_
+* `fit_kinematics_pa <http://www-astro.physics.ox.ac.uk/~mxc/software/>`_ 
+* `pyqz <http://fpavogt.github.io/pyqz/>`_ 
 .. _plotting:
 
 A note on the brutus plots
